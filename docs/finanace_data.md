@@ -184,3 +184,7 @@ TL;DR:
 • Educational quant
 • Community resources
 
+
+
+
+https://github.com/PacktPublishing/Python-Algorithmic-Trading-Cookbook
