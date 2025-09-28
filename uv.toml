@@ -22,3 +22,27 @@ system-site-packages = false
 [tool.uv.parallel]
 enabled = true
 jobs = 4
+
+# Testing configuration
+[tool.uv.test]
+pytest-runner = true
+coverage = true
+coverage-threshold = 80
+
+# Development dependencies for testing
+[tool.uv.dev-dependencies]
+pytest = ">=7.0"
+pytest-cov = ">=4.0"
+pytest-mock = ">=3.0"
+pytest-xdist = ">=3.0"
+pytest-benchmark = ">=4.0"
+black = ">=23.0"
+flake8 = ">=6.0"
+mypy = ">=1.0"
+bandit = ">=1.7"
+safety = ">=2.0"
+
+# Migration notes from Poetry
+# Previous Poetry configuration has been migrated to UV
+# poetry.lock minimal - only contained local assetutilities dependency
+# All dependencies now managed via pyproject.toml and UV

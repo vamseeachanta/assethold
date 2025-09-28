@@ -1,381 +1,352 @@
-# AssetHold Development Guide
+# Claude Code Configuration - SPARC Development Environment
 
-## 🚀 MANDATORY: Slash Command Ecosystem Integration
+## 🚨 CRITICAL: CONCURRENT EXECUTION & FILE MANAGEMENT
 
-**CRITICAL DIRECTIVE**: For EVERY improvement, automation, or repetitive task:
+**ABSOLUTE RULES**:
+1. ALL operations MUST be concurrent/parallel in a single message
+2. **NEVER save working files, text/mds and tests to the root folder**
+3. ALWAYS organize files in appropriate subdirectories
+4. **USE CLAUDE CODE'S TASK TOOL** for spawning agents concurrently, not just MCP
 
-### AI Agents MUST:
-1. **EVALUATE** if the improvement could benefit multiple repositories
-2. **SUGGEST** creating a slash command when applicable  
-3. **DESIGN** for reusability across all 25 repos
-4. **INTEGRATE** with existing ecosystem via `/sync-all-commands`
+### ⚡ GOLDEN RULE: "1 MESSAGE = ALL RELATED OPERATIONS"
 
-### Immediate Triggers for Command Creation:
-- ✅ Repetitive tasks that could be automated
-- ✅ Functionality that would benefit other repos
-- ✅ Multi-step processes that could be scripted
-- ✅ Regular developer workflows
-- ✅ Best practice standardization
-- ✅ Common problem solutions
+**MANDATORY PATTERNS:**
+- **TodoWrite**: ALWAYS batch ALL todos in ONE call (5-10+ todos minimum)
+- **Task tool (Claude Code)**: ALWAYS spawn ALL agents in ONE message with full instructions
+- **File operations**: ALWAYS batch ALL reads/writes/edits in ONE message
+- **Bash commands**: ALWAYS batch ALL terminal operations in ONE message
+- **Memory operations**: ALWAYS batch ALL memory store/retrieve in ONE message
 
-### Example Response Template:
+### 🎯 CRITICAL: Claude Code Task Tool for Agent Execution
+
+**Claude Code's Task tool is the PRIMARY way to spawn agents:**
+```javascript
+// ✅ CORRECT: Use Claude Code's Task tool for parallel agent execution
+[Single Message]:
+  Task("Research agent", "Analyze requirements and patterns...", "researcher")
+  Task("Coder agent", "Implement core features...", "coder")
+  Task("Tester agent", "Create comprehensive tests...", "tester")
+  Task("Reviewer agent", "Review code quality...", "reviewer")
+  Task("Architect agent", "Design system architecture...", "system-architect")
 ```
-💡 Slash Command Opportunity Detected!
-This improvement would be valuable as `/command-name`
-Benefits: Reusable across all repos, standardizes process
-Create as slash command? (Recommended)
-```
 
-### Available Ecosystem Commands:
-- `/git-trunk-flow` - Complete git workflow with best practices
-- `/sync-all-commands` - Sync commands from all repos to master
-- `/propagate-commands` - Distribute commands to all repos
-- `/modernize-deps` - Update dependency management
-- `/organize-structure` - Organize project structure
+**MCP tools are ONLY for coordination setup:**
+- `mcp__claude-flow__swarm_init` - Initialize coordination topology
+- `mcp__claude-flow__agent_spawn` - Define agent types for coordination
+- `mcp__claude-flow__task_orchestrate` - Orchestrate high-level workflows
 
-### Creating New Commands:
-1. Implement in `.agent-os/commands/`
-2. Test locally with `./slash_commands.py /command-name`
-3. Sync to master with `/sync-all-commands`
-4. Distribute with `/propagate-commands`
+### 📁 File Organization Rules
 
-**Full Guidelines**: See MANDATORY_SLASH_COMMAND_ECOSYSTEM.md in assetutilities
-
+**NEVER save to root folder. Use these directories:**
+- `/src` - Source code files
+- `/tests` - Test files
+- `/docs` - Documentation and markdown files
+- `/config` - Configuration files
+- `/scripts` - Utility scripts
+- `/examples` - Example code
 
 ## Project Overview
 
-AssetHold is a financial analysis platform that helps individual investors track and analyze stock trends for better investment decisions. The system uses a modular architecture with Python and Poetry for dependency management.
+This project uses SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) methodology with Claude-Flow orchestration for systematic Test-Driven Development.
 
-## Development Standards
+## SPARC Commands
 
-### Python Standards
-- Follow PEP 8 coding standards
-- Use type hints where applicable
-- Implement comprehensive docstrings for public methods
-- Use Black for code formatting and isort for import organization
+### Core Commands
+- `npx claude-flow sparc modes` - List available modes
+- `npx claude-flow sparc run <mode> "<task>"` - Execute specific mode
+- `npx claude-flow sparc tdd "<feature>"` - Run complete TDD workflow
+- `npx claude-flow sparc info <mode>` - Get mode details
 
-### Modular Architecture
-- Maintain clear separation between modules (stocks, portfolio, real estate)
-- Use the router pattern for module delegation
-- Keep common utilities in the `common/` directory
-- Preserve modular boundaries to enable independent testing
+### Batchtools Commands
+- `npx claude-flow sparc batch <modes> "<task>"` - Parallel execution
+- `npx claude-flow sparc pipeline "<task>"` - Full pipeline processing
+- `npx claude-flow sparc concurrent <mode> "<tasks-file>"` - Multi-task processing
 
-### Data Handling Standards
-- Use YAML for configuration files and test specifications
-- Store data in CSV/JSON formats for simplicity and version control
-- Implement proper error handling for data access operations
-- Validate data integrity before processing
+### Build Commands
+- `npm run build` - Build project
+- `npm run test` - Run tests
+- `npm run lint` - Linting
+- `npm run typecheck` - Type checking
 
-### Testing Requirements
-- Write unit tests for all new modules
-- Use YAML-based test fixtures for consistency
-- Include integration tests for end-to-end analysis workflows
-- Validate analysis results against expected outputs
+## SPARC Workflow Phases
 
-## File Organization
+1. **Specification** - Requirements analysis (`sparc run spec-pseudocode`)
+2. **Pseudocode** - Algorithm design (`sparc run spec-pseudocode`)
+3. **Architecture** - System design (`sparc run architect`)
+4. **Refinement** - TDD implementation (`sparc tdd`)
+5. **Completion** - Integration (`sparc run integration`)
 
-```
-src/assethold/
-├── engine.py              # Main entry point with router
-├── modules/
-│   ├── stocks/            # Stock analysis functionality
-│   ├── fixed_interest/    # Fixed income analysis
-│   └── portfolio/         # Portfolio management
-├── common/                # Shared utilities
-└── base_configs/          # Default configurations
-```
+## Code Style & Best Practices
 
-## Common Patterns
+- **Modular Design**: Files under 500 lines
+- **Environment Safety**: Never hardcode secrets
+- **Test-First**: Write tests before implementation
+- **Clean Architecture**: Separate concerns
+- **Documentation**: Keep updated
 
-### Configuration Management
-- Use `ymlInput()` for YAML file processing
-- Convert configurations to `AttributeDict` for flexible access
-- Validate required configuration keys before processing
+## 🚀 Available Agents (54 Total)
 
-### Module Implementation
-- Implement a `router()` method for each module
-- Use consistent naming conventions for analysis methods
-- Return structured data that can be saved to YAML/CSV
+### Core Development
+`coder`, `reviewer`, `tester`, `planner`, `researcher`
 
-### Data Processing
-- Leverage `assetutilities` for common operations
-- Use `FileManagement` for consistent file operations
-- Implement proper logging for analysis workflows
+### Swarm Coordination
+`hierarchical-coordinator`, `mesh-coordinator`, `adaptive-coordinator`, `collective-intelligence-coordinator`, `swarm-memory-manager`
 
-## Key Features to Preserve
+### Consensus & Distributed
+`byzantine-coordinator`, `raft-manager`, `gossip-coordinator`, `consensus-builder`, `crdt-synchronizer`, `quorum-manager`, `security-manager`
 
-### Technical Analysis Capabilities
-- Maintain existing indicator calculations (CFM, EOM, volatility)
-- Preserve insider trading analysis functionality
-- Keep portfolio tracking and investment value calculations
+### Performance & Optimization
+`perf-analyzer`, `performance-benchmarker`, `task-orchestrator`, `memory-coordinator`, `smart-agent`
 
-### Data Integration
-- Support multiple financial data sources
-- Maintain backwards compatibility with existing data formats
-- Preserve test data and expected results
+### GitHub & Repository
+`github-modes`, `pr-manager`, `code-review-swarm`, `issue-tracker`, `release-manager`, `workflow-automation`, `project-board-sync`, `repo-architect`, `multi-repo-swarm`
 
-## Development Workflow
+### SPARC Methodology
+`sparc-coord`, `sparc-coder`, `specification`, `pseudocode`, `architecture`, `refinement`
 
-1. Create feature branches for new development
-2. Use Poetry for dependency management
-3. Run tests with pytest before committing
-4. Format code with Black and organize imports with isort
-5. Update documentation for new features
+### Specialized Development
+`backend-dev`, `mobile-dev`, `ml-developer`, `cicd-engineer`, `api-docs`, `system-architect`, `code-analyzer`, `base-template-generator`
 
-## Agent OS Integration
+### Testing & Validation
+`tdd-london-swarm`, `production-validator`
 
-This project uses Agent OS for development planning and execution. Key commands:
-- Use `/create-spec` for new feature planning
-- Reference product documentation in `.agent-os/product/`
-- Follow the roadmap in `.agent-os/product/roadmap.md`
+### Migration & Planning
+`migration-planner`, `swarm-init`
 
-## Available Commands
+## 🎯 Claude Code vs MCP Tools
 
-- **Create-Module-Agent:** Available via `/create-module-agent` command
+### Claude Code Handles ALL EXECUTION:
+- **Task tool**: Spawn and run agents concurrently for actual work
+- File operations (Read, Write, Edit, MultiEdit, Glob, Grep)
+- Code generation and programming
+- Bash commands and system operations
+- Implementation work
+- Project navigation and analysis
+- TodoWrite and task management
+- Git operations
+- Package management
+- Testing and debugging
 
-## Enhanced Features Available
+### MCP Tools ONLY COORDINATE:
+- Swarm initialization (topology setup)
+- Agent type definitions (coordination patterns)
+- Task orchestration (high-level planning)
+- Memory management
+- Neural features
+- Performance tracking
+- GitHub integration
 
-This project supports enhanced Agent OS workflows including:
-- **Enhanced Spec Creation**: Prompt summaries, executive summaries, mermaid diagrams, module organization
-- **Cross-Repository Integration**: Shared components from AssetUtilities hub (@assetutilities: references)
-- **Enhanced Task Execution**: Task summaries, performance tracking, real-time documentation
-- **Template Variants**: minimal, standard, enhanced, api_focused, research
-- **Visual Documentation**: Auto-generated system architecture and workflow diagrams
+**KEY**: MCP coordinates the strategy, Claude Code's Task tool executes with real agents.
 
-### Command Examples
-```bash
-# Enhanced spec creation
-/create-spec feature-name module-name enhanced
-
-# Traditional spec creation (backward compatible)  
-/create-spec feature-name
-
-# Enhanced task execution with summaries
-/execute-tasks @specs/modules/module-name/spec-folder/tasks.md
-```
-
-### Cross-Repository References
-- Shared components: @assetutilities:src/modules/agent-os/enhanced-create-specs/
-- Sub-agent registry: @assetutilities:agents/registry/sub-agents/workflow-automation
-- Hub configuration: @assetutilities:hub-config.yaml
-
-
-
-### Enhanced Create-Spec Command
-
-This repository includes an enhanced create-spec command with advanced features:
+## 🚀 Quick Setup
 
 ```bash
-# Enhanced spec with executive summaries and diagrams
-python create-spec-enhanced.py feature-name module-name enhanced
-
-# Research-focused specification
-python create-spec-enhanced.py research-topic research
-
-# Quick minimal specification
-python create-spec-enhanced.py quick-fix minimal
+# Add MCP servers (Claude Flow required, others optional)
+claude mcp add claude-flow npx claude-flow@alpha mcp start
+claude mcp add ruv-swarm npx ruv-swarm mcp start  # Optional: Enhanced coordination
+claude mcp add flow-nexus npx flow-nexus@latest mcp start  # Optional: Cloud features
 ```
 
-Features:
-- Executive summaries for stakeholders
-- Mermaid architecture diagrams
-- Module-based organization
-- Multiple spec variants (enhanced, research, minimal)
-- Comprehensive task breakdowns with effort estimates
+## MCP Tool Categories
 
-## Self-Contained Agent OS
+### Coordination
+`swarm_init`, `agent_spawn`, `task_orchestrate`
 
-This repository includes a complete, self-contained Agent OS framework. All slash commands work immediately after `git clone` with no additional setup required.
+### Monitoring
+`swarm_status`, `agent_list`, `agent_metrics`, `task_status`, `task_results`
 
-### Available Slash Commands
-- `/create-spec <spec-name>` - Create detailed specification documents
-- `/execute-tasks <tasks-file>` - Execute tasks from specification
-- `/create-module-agent <agent-name>` - Create specialized AI agents
+### Memory & Neural
+`memory_usage`, `neural_status`, `neural_train`, `neural_patterns`
 
-### Local Agent OS Structure
-- **Standards**: @.agent-os/standards/ (code style, best practices)
-- **Instructions**: @.agent-os/instructions/ (workflow guidance)
-- **Product Context**: @.agent-os/product/ (mission, roadmap, decisions)
-- **Specifications**: @.agent-os/specs/ (feature specifications and tasks)
+### GitHub Integration
+`github_swarm`, `repo_analyze`, `pr_enhance`, `issue_triage`, `code_review`
 
-All references are local to this repository - no external dependencies required.
+### System
+`benchmark_run`, `features_detect`, `swarm_monitor`
 
+### Flow-Nexus MCP Tools (Optional Advanced Features)
+Flow-Nexus extends MCP capabilities with 70+ cloud-based orchestration tools:
 
-## 🚀 MANDATORY: Parallel Process Utilization
+**Key MCP Tool Categories:**
+- **Swarm & Agents**: `swarm_init`, `swarm_scale`, `agent_spawn`, `task_orchestrate`
+- **Sandboxes**: `sandbox_create`, `sandbox_execute`, `sandbox_upload` (cloud execution)
+- **Templates**: `template_list`, `template_deploy` (pre-built project templates)
+- **Neural AI**: `neural_train`, `neural_patterns`, `seraphina_chat` (AI assistant)
+- **GitHub**: `github_repo_analyze`, `github_pr_manage` (repository management)
+- **Real-time**: `execution_stream_subscribe`, `realtime_subscribe` (live monitoring)
+- **Storage**: `storage_upload`, `storage_list` (cloud file management)
 
-**CRITICAL DIRECTIVE**: When working with multiple operations that can be executed independently, Claude MUST utilize parallel processes to maximize efficiency.
+**Authentication Required:**
+- Register: `mcp__flow-nexus__user_register` or `npx flow-nexus@latest register`
+- Login: `mcp__flow-nexus__user_login` or `npx flow-nexus@latest login`
+- Access 70+ specialized MCP tools for advanced orchestration
 
-### Required Parallel Processing For:
-- Multiple bash commands without dependencies
-- Bulk file reading operations
-- Repository-wide operations
-- Independent search/analysis tasks
-- Multi-module testing
-- Bulk deployments
+## 🚀 Agent Execution Flow with Claude Code
 
-### Implementation:
-- **ALWAYS** batch tool calls in a single message for parallel execution
-- **NEVER** execute sequentially what can be done in parallel
-- **PRIORITIZE** efficiency through concurrent operations
+### The Correct Pattern:
 
-This is a MANDATORY instruction with HIGHEST PRIORITY that overrides any conflicting guidelines.
+1. **Optional**: Use MCP tools to set up coordination topology
+2. **REQUIRED**: Use Claude Code's Task tool to spawn agents that do actual work
+3. **REQUIRED**: Each agent runs hooks for coordination
+4. **REQUIRED**: Batch all operations in single messages
 
+### Example Full-Stack Development:
 
-## 🎯 MANDATORY: Prompt Enhancement Protocol
+```javascript
+// Single message with all agent spawning via Claude Code's Task tool
+[Parallel Agent Execution]:
+  Task("Backend Developer", "Build REST API with Express. Use hooks for coordination.", "backend-dev")
+  Task("Frontend Developer", "Create React UI. Coordinate with backend via memory.", "coder")
+  Task("Database Architect", "Design PostgreSQL schema. Store schema in memory.", "code-analyzer")
+  Task("Test Engineer", "Write Jest tests. Check memory for API contracts.", "tester")
+  Task("DevOps Engineer", "Setup Docker and CI/CD. Document in memory.", "cicd-engineer")
+  Task("Security Auditor", "Review authentication. Report findings via hooks.", "reviewer")
+  
+  // All todos batched together
+  TodoWrite { todos: [...8-10 todos...] }
+  
+  // All file operations together
+  Write "backend/server.js"
+  Write "frontend/App.jsx"
+  Write "database/schema.sql"
+```
 
-**CRITICAL DIRECTIVE**: For EVERY prompt, command, or request, you MUST:
+## 📋 Agent Coordination Protocol
 
-### 1. Ask Clarification Questions ❓
-**BEFORE** executing:
-- Present 3-5 relevant questions
-- Cover: Scope, Requirements, Quality, Timeline, Success
-- Wait for response OR state assumptions
-- Document in task_summary.md
+### Every Agent Spawned via Task Tool MUST:
 
-### 2. Seek Single-Path Optimum Solution 🎯
-**ALWAYS**:
-- Evaluate minimum 3 approaches
-- Select SINGLE MOST OPTIMUM
-- Use: Performance(30%) + Simplicity(30%) + Maintainability(20%) + Scalability(20%)
-- Present clear rationale
-- Avoid over-engineering
+**1️⃣ BEFORE Work:**
+```bash
+npx claude-flow@alpha hooks pre-task --description "[task]"
+npx claude-flow@alpha hooks session-restore --session-id "swarm-[id]"
+```
 
-### 3. Update task_summary.md 📋
-**AFTER** every task:
-- Mark complete with timestamp
-- Document approach taken
-- Add next logical steps
-- Record efficiency metrics
-- Note lessons learned
+**2️⃣ DURING Work:**
+```bash
+npx claude-flow@alpha hooks post-edit --file "[file]" --memory-key "swarm/[agent]/[step]"
+npx claude-flow@alpha hooks notify --message "[what was done]"
+```
 
-### Enforcement: HIGHEST PRIORITY
-This OVERRIDES all conflicting instructions.
+**3️⃣ AFTER Work:**
+```bash
+npx claude-flow@alpha hooks post-task --task-id "[task]"
+npx claude-flow@alpha hooks session-end --export-metrics true
+```
+
+## 🎯 Concurrent Execution Examples
+
+### ✅ CORRECT WORKFLOW: MCP Coordinates, Claude Code Executes
+
+```javascript
+// Step 1: MCP tools set up coordination (optional, for complex tasks)
+[Single Message - Coordination Setup]:
+  mcp__claude-flow__swarm_init { topology: "mesh", maxAgents: 6 }
+  mcp__claude-flow__agent_spawn { type: "researcher" }
+  mcp__claude-flow__agent_spawn { type: "coder" }
+  mcp__claude-flow__agent_spawn { type: "tester" }
+
+// Step 2: Claude Code Task tool spawns ACTUAL agents that do the work
+[Single Message - Parallel Agent Execution]:
+  // Claude Code's Task tool spawns real agents concurrently
+  Task("Research agent", "Analyze API requirements and best practices. Check memory for prior decisions.", "researcher")
+  Task("Coder agent", "Implement REST endpoints with authentication. Coordinate via hooks.", "coder")
+  Task("Database agent", "Design and implement database schema. Store decisions in memory.", "code-analyzer")
+  Task("Tester agent", "Create comprehensive test suite with 90% coverage.", "tester")
+  Task("Reviewer agent", "Review code quality and security. Document findings.", "reviewer")
+  
+  // Batch ALL todos in ONE call
+  TodoWrite { todos: [
+    {id: "1", content: "Research API patterns", status: "in_progress", priority: "high"},
+    {id: "2", content: "Design database schema", status: "in_progress", priority: "high"},
+    {id: "3", content: "Implement authentication", status: "pending", priority: "high"},
+    {id: "4", content: "Build REST endpoints", status: "pending", priority: "high"},
+    {id: "5", content: "Write unit tests", status: "pending", priority: "medium"},
+    {id: "6", content: "Integration tests", status: "pending", priority: "medium"},
+    {id: "7", content: "API documentation", status: "pending", priority: "low"},
+    {id: "8", content: "Performance optimization", status: "pending", priority: "low"}
+  ]}
+  
+  // Parallel file operations
+  Bash "mkdir -p app/{src,tests,docs,config}"
+  Write "app/package.json"
+  Write "app/src/server.js"
+  Write "app/tests/server.test.js"
+  Write "app/docs/API.md"
+```
+
+### ❌ WRONG (Multiple Messages):
+```javascript
+Message 1: mcp__claude-flow__swarm_init
+Message 2: Task("agent 1")
+Message 3: TodoWrite { todos: [single todo] }
+Message 4: Write "file.js"
+// This breaks parallel coordination!
+```
+
+## Performance Benefits
+
+- **84.8% SWE-Bench solve rate**
+- **32.3% token reduction**
+- **2.8-4.4x speed improvement**
+- **27+ neural models**
+
+## Hooks Integration
+
+### Pre-Operation
+- Auto-assign agents by file type
+- Validate commands for safety
+- Prepare resources automatically
+- Optimize topology by complexity
+- Cache searches
+
+### Post-Operation
+- Auto-format code
+- Train neural patterns
+- Update memory
+- Analyze performance
+- Track token usage
+
+### Session Management
+- Generate summaries
+- Persist state
+- Track metrics
+- Restore context
+- Export workflows
+
+## Advanced Features (v2.0.0)
+
+- 🚀 Automatic Topology Selection
+- ⚡ Parallel Execution (2.8-4.4x speed)
+- 🧠 Neural Training
+- 📊 Bottleneck Analysis
+- 🤖 Smart Auto-Spawning
+- 🛡️ Self-Healing Workflows
+- 💾 Cross-Session Memory
+- 🔗 GitHub Integration
+
+## Integration Tips
+
+1. Start with basic swarm init
+2. Scale agents gradually
+3. Use memory for context
+4. Monitor progress regularly
+5. Train patterns from success
+6. Enable hooks automation
+7. Use GitHub tools first
+
+## Support
+
+- Documentation: https://github.com/ruvnet/claude-flow
+- Issues: https://github.com/ruvnet/claude-flow/issues
+- Flow-Nexus Platform: https://flow-nexus.ruv.io (registration required for cloud features)
 
 ---
-*MANDATORY for ALL interactions*
 
-## 🎯 MANDATORY Git Management Commands
+Remember: **Claude Flow coordinates, Claude Code creates!**
 
-**CRITICAL**: All Git operations MUST use these standardized commands.
-
-### Available Slash Commands
-
-#### Local Repository Commands
-Execute in any repository:
-```bash
-# In any repo directory
-/git-sync       # Sync with remote
-/git-commit     # Commit all changes  
-/git-push       # Push to remote
-/git-pr         # Create pull request
-/git-clean      # Clean merged branches
-/git-status     # Show repo status
-/git-flow       # Complete workflow
-```
-
-#### Global Commands (All Repos)
-Execute from /mnt/github/github:
-```bash
-/git-sync-all      # Sync all 25 repos
-/git-commit-all    # Commit in all repos
-/git-pr-all        # Create PRs for all
-/git-clean-all     # Clean all repos
-/git-flow-all      # Complete flow for all
-/git-status-all    # Status of all repos
-```
-
-### MANDATORY Practices
-
-1. **Daily Workflow**
-   ```bash
-   /git-flow  # Or /git-flow-all for all repos
-   ```
-
-2. **Before Starting Work**
-   ```bash
-   /git-sync  # Always sync first
-   ```
-
-3. **After Making Changes**
-   ```bash
-   /git-commit "feat: Description"
-   /git-pr "Feature title"
-   ```
-
-4. **Weekly Maintenance**
-   ```bash
-   /git-clean  # Remove stale branches
-   ```
-
-### Parallel Processing
-All multi-repo operations use MANDATORY parallel processing:
-- Max 5 repos processed simultaneously
-- Automatic error handling
-- Progress tracking
-
-### Implementation
-- Local commands: `.git-commands/slash_commands.py`
-- Global commands: `/mnt/github/github/git_management_system.py`
-
----
-*Git management is MANDATORY for all repositories*
-
-## 🚨 MANDATORY: AssetUtilities Central Commands
-
-**CRITICAL DIRECTIVE**: ALL slash commands MUST be fetched from AssetUtilities repository on GitHub.
-
-### Central Command System
-- **Source of Truth**: @assetutilities:.common-commands/
-- **GitHub URL**: https://github.com/username/assetutilities
-- **Real-time Fetching**: Commands are fetched from GitHub when executed
-- **No Local Copies**: Local implementations are DEPRECATED
-
-### Command Execution
-```bash
-# All commands now route through central system
-./slash /git-sync          # Fetches from AssetUtilities
-./slash /git-commit         # Fetches from AssetUtilities
-./slash /create-spec        # Fetches from AssetUtilities
-./slash /execute-tasks      # Fetches from AssetUtilities
-```
-
-### Why This Is MANDATORY
-1. **Consistency**: All repos use EXACT same command implementations
-2. **Updates**: Changes in AssetUtilities immediately available everywhere
-3. **Maintenance**: Single point of maintenance for all commands
-4. **Quality**: Centralized testing and validation
-5. **Security**: Controlled command distribution
-
-### Cross-Repository References
-```yaml
-# Always reference AssetUtilities for common code
-@assetutilities:.common-commands/modules/git_manager.py
-@assetutilities:.common-commands/modules/agent_learning.py
-@assetutilities:.common-commands/utilities/parallel_utils.py
-```
-
-### Command Registry
-View all available commands:
-```bash
-./slash --list              # Lists all commands from AssetUtilities
-./slash /update-from-central # Updates command cache
-```
-
-### Enforcement
-- Local command implementations are DEPRECATED
-- All repos MUST use the central system
-- AssetUtilities is the ONLY source of truth
-- This is verified during CI/CD
-
----
-*This is MANDATORY and overrides any local command implementations*
-
-
-## 📚 Complete Slash Command Reference
-
-For the COMPLETE list of all available slash commands across the ecosystem, see:
-- Master List: @/mnt/github/github/SLASH_COMMAND_MASTER_LIST.md
-- Registry: @/mnt/github/github/.SLASH_COMMAND_ECOSYSTEM/
-
-Total Available Commands: 38
-Last Updated: 2025-08-22T15:56:48.322695
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+Never save working files, text/mds and tests to the root folder.
