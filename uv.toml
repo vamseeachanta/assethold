@@ -1,7 +1,17 @@
-# UV Configuration - Single Environment Setup
+# UV Configuration - Modernized for assethold
+# Version: 2.0.0
+# UV Version: 0.4.0+
+# Last Updated: 2025-09-28
+
 [project]
 name = "assethold"
-requires-python = ">=3.8"
+version = "0.1.0"
+description = "Asset management and financial analysis tools"
+requires-python = ">=3.9"
+
+dependencies = [
+    # Core dependencies managed in pyproject.toml
+]
 
 [tool.uv]
 python = "3.11"
@@ -9,11 +19,29 @@ system = false
 compile = true
 seed = true
 
+# Development dependencies (updated versions)
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "pytest-mock>=3.12.0",
+    "pytest-xdist>=3.5.0",
+    "pytest-benchmark>=4.0.0",
+    "black>=24.0.0",
+    "ruff>=0.5.0",
+    "mypy>=1.10.0",
+    "bandit>=1.7.6",
+    "safety>=3.0.0",
+    "ipython>=8.20.0",
+    "jupyter>=1.0.0",
+]
+
+# Package installation settings
 [tool.uv.pip]
 index-url = "https://pypi.org/simple"
 pre = false
 no-cache = false
 
+# Virtual environment
 [tool.uv.venv]
 prompt = "assethold"
 system-site-packages = false
@@ -23,26 +51,28 @@ system-site-packages = false
 enabled = true
 jobs = 4
 
-# Testing configuration
-[tool.uv.test]
-pytest-runner = true
-coverage = true
-coverage-threshold = 80
+# UV Scripts for common tasks
+[tool.uv.scripts]
+test = "pytest tests/ -v"
+test-cov = "pytest tests/ --cov=src --cov-report=term-missing"
+test-bench = "pytest tests/ --benchmark-only"
+lint = "ruff check . && black --check . && mypy src/"
+format = "ruff check . --fix && black ."
+typecheck = "mypy src/ --strict"
+security = "bandit -r src/ && safety check"
+dev = "python -m IPython"
+notebook = "jupyter notebook"
+clean = """
+    rm -rf build dist *.egg-info .coverage htmlcov .pytest_cache .mypy_cache .ruff_cache
+    find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+"""
+update = "uv pip compile --upgrade && uv lock --upgrade"
 
-# Development dependencies for testing
-[tool.uv.dev-dependencies]
-pytest = ">=7.0"
-pytest-cov = ">=4.0"
-pytest-mock = ">=3.0"
-pytest-xdist = ">=3.0"
-pytest-benchmark = ">=4.0"
-black = ">=23.0"
-flake8 = ">=6.0"
-mypy = ">=1.0"
-bandit = ">=1.7"
-safety = ">=2.0"
+# UV Sources for local dependencies
+[tool.uv.sources]
+assetutilities = { path = "../assetutilities" }
 
-# Migration notes from Poetry
-# Previous Poetry configuration has been migrated to UV
-# poetry.lock minimal - only contained local assetutilities dependency
+# Migration notes
+# Successfully migrated from Poetry to UV
 # All dependencies now managed via pyproject.toml and UV
+# Use 'uv sync' to install all dependencies
