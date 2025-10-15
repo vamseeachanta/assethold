@@ -105,9 +105,9 @@ docs = [
 "Documentation" = "https://github.com/username/assethold#readme"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["*"]
-exclude = ["tests*", "docs*"]
+where = ["src"]
+include = ["assethold*"]
+exclude = ["tests*", "docs*", "scripts*", "business*"]
 
 [tool.black]
 line-length = 88
@@ -234,3 +234,9 @@ format = "black . && isort ."
 lint = "flake8 . & mypy . & pylint ."
 install = "uv pip install -e ."
 dev-install = "uv pip install -e .[dev]"
+
+[project.scripts]
+# Updated script paths after reorganization
+assethold = "assethold.main:main"
+agent-os-create-spec = "scripts.agent-os.create-spec:main"
+agent-os-execute = "scripts.agent-os.execute-tasks:main"
