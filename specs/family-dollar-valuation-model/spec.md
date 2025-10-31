@@ -3,10 +3,11 @@
 > Spec: Family Dollar Valuation Model
 > Created: 2025-10-11
 > Status: Planning
+> **Extends:** @.agent-os/specs/commercial-property-valuation-framework/spec.md
 
 ## Overview
 
-Develop a comprehensive valuation model for Family Dollar (and similar convenience store) properties that systematically evaluates investment opportunities based on location quality, traffic patterns (VPD), tenant creditworthiness, lease terms, and market conditions. This model will provide data-driven investment decisions and consistent property evaluation across multiple opportunities.
+Develop a specialized implementation of the Commercial Property Valuation Framework specifically for Family Dollar (and similar convenience store) properties. This implementation inherits the core universal location scoring, cap rate adjustment methodology, and benchmarking capabilities from the framework while adding convenience store-specific optimizations, risk factors, and market intelligence. This model will serve as the reference implementation demonstrating how to extend the generic framework for specific property types.
 
 ## User Stories
 
@@ -72,8 +73,35 @@ As an investor, I want to understand the specific risks associated with a Family
 
 3. **HTML Valuation Report** - Professional investment report with interactive Plotly visualizations showing location score breakdown, cap rate sensitivity analysis, and comparable properties comparison
 
+## Framework Integration
+
+This spec **inherits from** and **extends** the Commercial Property Valuation Framework:
+
+**Core Framework:**
+- @.agent-os/specs/commercial-property-valuation-framework/spec.md
+
+**Inherited Components:**
+- Universal location scoring engine (VPD, intersection, demographics, visibility, competition)
+- Cap rate adjustment methodology (location, tenant, lease term adjustments)
+- Property comparison and benchmarking database
+- Valuation calculator and sensitivity analysis
+- Risk scenario modeling framework
+- Interactive HTML reporting with Plotly visualizations
+
+**Family Dollar-Specific Extensions:**
+- Convenience store category template (`retail-convenience.yaml`)
+- Family Dollar tenant risk factors (post-PE sale analysis)
+- Dollar store competition density scoring (Dollar General, Dollar Tree proximity)
+- Convenience store market cap rates (regional variations)
+- Family Dollar-specific comparable property identification
+
 ## Spec Documentation
 
 - Tasks: @.agent-os/specs/family-dollar-valuation-model/tasks.md
 - Technical Specification: @.agent-os/specs/family-dollar-valuation-model/sub-specs/technical-spec.md
 - Tests Specification: @.agent-os/specs/family-dollar-valuation-model/sub-specs/tests.md
+
+**Framework Reference:**
+- Core Framework Spec: @.agent-os/specs/commercial-property-valuation-framework/spec.md
+- Framework Technical Spec: @.agent-os/specs/commercial-property-valuation-framework/sub-specs/technical-spec.md
+- Framework Database Schema: @.agent-os/specs/commercial-property-valuation-framework/sub-specs/database-schema.md
