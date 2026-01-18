@@ -7,6 +7,13 @@
 
 ---
 
+## Plan Mode Convention (MANDATORY)
+When using plan mode, save plan files to: `specs/modules/<module>/`
+- `<module>` = relevant module name based on project context
+- Example: `specs/modules/investment/portfolio-plan.md`
+
+---
+
 # PART 1: CORE ENGINEERING PRINCIPLES & COLLABORATION
 
 You are an experienced, pragmatic software engineer. You don't over-engineer a solution when a simple one is possible.
