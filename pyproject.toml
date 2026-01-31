@@ -33,7 +33,6 @@ dependencies = [
     "dash==3.0.4",
     "dash_bootstrap_components==2.0.2",
     "deepdiff",
-    "excel2img",
     "excel2img; sys_platform=='win32'",
     "fake_headers",
     "finvizfinance==1.1.0",
@@ -41,7 +40,7 @@ dependencies = [
     "flask_httpauth==4.8.0",
     "flask_restful==0.3.10",
     "flask_wtf==1.2.2",
-    "gitpython==3.1.31",
+    "gitpython>=3.1.40",
     "jinja2",
     "loguru",
     "matplotlib",
@@ -56,7 +55,7 @@ dependencies = [
     "plotly==6.0.1",
     "PyPDF2",
     "pytest",
-    "python-certifi-win32",
+    "python-certifi-win32; sys_platform=='win32'",
     "python-docx",
     "pyyaml==6.0.2",
     "ruamel.yaml",
@@ -205,6 +204,10 @@ python = "3.11"
 system = false
 seed = true
 compile = true
+required-environments = ["sys_platform == 'linux'", "sys_platform == 'win32'", "sys_platform == 'darwin'"]
+
+[tool.uv.sources]
+assetutilities = { path = "../assetutilities" }
 
 [tool.uv.pip]
 index-url = "https://pypi.org/simple"
@@ -235,8 +238,15 @@ lint = "flake8 . & mypy . & pylint ."
 install = "uv pip install -e ."
 dev-install = "uv pip install -e .[dev]"
 
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.0.0",
+    "pytest-mock>=3.15.1",
+    "pytest-xdist>=3.8.0",
+]
+
 [project.scripts]
 # Updated script paths after reorganization
 assethold = "assethold.main:main"
-agent-os-create-spec = "scripts.agent-os.create-spec:main"
-agent-os-execute = "scripts.agent-os.execute-tasks:main"
+agent_os_create_spec = "scripts.agent_os.create_spec:main"
+agent_os_execute = "scripts.agent_os.execute_tasks:main"
