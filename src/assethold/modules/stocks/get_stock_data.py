@@ -1,8 +1,9 @@
 # Standard library imports
 import datetime
 import json
+import logging
 import os
-import logging 
+import time
 
 # Third party imports
 import pandas as pd
@@ -249,11 +250,23 @@ class GetStockData():
         df = finviz_overview.ScreenerView()
         df.head()
 
-    def get_daily_data_by_ticker(self, cfg, ticker):
+    def get_daily_data_by_ticker(self, cfg, ticker, max_retries=5):
         period = cfg['data']['period']
         if ticker is not None:
             yf_ticker = yf.Ticker(str(ticker))
-            df = yf_ticker.history(period=period)
+            for attempt in range(max_retries):
+                try:
+                    df = yf_ticker.history(period=period)
+                    break
+                except yf.exceptions.YFRateLimitError:
+                    if attempt == max_retries - 1:
+                        raise
+                    wait = 2 ** attempt
+                    logging.warning(
+                        f"Rate limited fetching {ticker}, retrying in {wait}s "
+                        f"(attempt {attempt + 1}/{max_retries})"
+                    )
+                    time.sleep(wait)
             df.reset_index(inplace=True)
 
         daily = {'data': df, 'status': True}
