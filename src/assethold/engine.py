@@ -4,7 +4,6 @@ import os
 import sys
 
 # Third party imports
-from assetutilities.common.data import SaveData
 from assetutilities.common.file_management import FileManagement
 from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.utilities import save_application_cfg
@@ -12,8 +11,6 @@ from assetutilities.common.yml_utilities import ymlInput
 
 # Reader imports
 from assethold.modules.stocks.stocks import Stocks
-
-library_name = "assethold"
 
 
 def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
