@@ -4,7 +4,6 @@ import os
 import sys
 
 # Third party imports
-from assetutilities.common.ApplicationManager import ConfigureApplicationInputs
 from assetutilities.common.data import SaveData
 from assetutilities.common.file_management import FileManagement
 from assetutilities.common.update_deep import AttributeDict
@@ -16,9 +15,6 @@ from assethold.modules.stocks.stocks import Stocks
 
 library_name = "assethold"
 
-stks = Stocks()
-fm = FileManagement()
-save_data = SaveData()
 
 def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict:
 
@@ -31,6 +27,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
     basename = cfg["basename"]
 
+    fm = FileManagement()
     if config_flag:
         cfg_base = cfg
         cfg_base = fm.router(cfg_base)
@@ -40,6 +37,7 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     logging.info(f"{basename}, application ... START")
 
     if basename in "stocks":
+        stks = Stocks()
         cfg_base = stks.router(cfg_base)
     else:
         raise Exception(f"Analysis for basename: {basename} not found. ... FAIL")

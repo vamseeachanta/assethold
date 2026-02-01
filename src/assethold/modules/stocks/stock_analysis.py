@@ -12,14 +12,14 @@ from assethold.modules.stocks.investment_value import InvestmentValue
 from assethold.modules.stocks.investment_value_ffn import InvestmentValueFfn
 from assethold.modules.stocks.portfolio import Portfolio
 
-portfolio = Portfolio()
-iv = InvestmentValue()
-ivf = InvestmentValueFfn()
 
 class StockAnalysis():
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, portfolio=None, investment_value=None, investment_value_ffn=None):
         self.cfg = cfg
+        self.portfolio = portfolio or Portfolio()
+        self.iv = investment_value or InvestmentValue()
+        self.ivf = investment_value_ffn or InvestmentValueFfn()
         self.insider_analysis_by_relation_df = pd.DataFrame()
         self.insider_analysis_by_timeline_df = pd.DataFrame()
         self.call_effective_value_df = pd.DataFrame()
@@ -53,13 +53,13 @@ class StockAnalysis():
             analysis = {'data': analysis_output, 'status': status}
 
         elif 'analysis' in cfg and cfg['analysis'].get('portfolio', False):
-            cfg = portfolio.router(cfg)
+            cfg = self.portfolio.router(cfg)
         elif 'analysis' in cfg and cfg['analysis'].get('investment', False):
             ticker_data = data['daily']['data']
-            cfg = iv.router(cfg, ticker_data)
+            cfg = self.iv.router(cfg, ticker_data)
         elif 'analysis' in cfg and cfg['analysis'].get('ffn', False):
             ticker_data = data['daily']['data']
-            cfg = ivf.router(cfg, ticker_data)
+            cfg = self.ivf.router(cfg, ticker_data)
         else:
             raise Exception("Analysis not requested by user.")
 
