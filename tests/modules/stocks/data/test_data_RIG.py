@@ -1,6 +1,5 @@
 # Standard library imports
 import os
-import sys
 
 import pytest
 
@@ -27,10 +26,6 @@ def test_run_process():
     file_is_valid, pytest_output_file = is_file_valid_func(pytest_output_file, os.path.dirname(__file__))
     if file_is_valid:
         expected_result = ymlInput(pytest_output_file, updateYml=None)
-
-        if len(sys.argv) > 1:
-            sys.argv.pop()
-
         run_process(input_file, expected_result)
     else:
         print(f"File {pytest_output_file} is not valid")

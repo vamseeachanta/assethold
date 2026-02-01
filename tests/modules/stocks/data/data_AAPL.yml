@@ -2,6 +2,7 @@ basename: stock
 
 data:
   flag: True
+  period: 1y
 
 
 input:

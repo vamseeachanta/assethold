@@ -50,23 +50,22 @@ def validate_arguments_run_methods(inputfile):
     Validate inputs for following run methods:
     - module (i.e. python -m digitalmodel input.yml)
     - from python file (i.e. )
+
+    When inputfile is explicitly provided as a function argument,
+    it takes priority over sys.argv (e.g. when called from tests or
+    other Python code).
     """
 
-    if len(sys.argv) > 1 and inputfile is not None:
-        raise Exception(
-            "2 Input files provided via arguments & function. Please provide only 1 file ... FAIL"
-        )
+    if inputfile is not None:
+        if not os.path.isfile(inputfile):
+            raise FileNotFoundError(f"Input file {inputfile} not found ... FAIL")
+        return inputfile
 
     if len(sys.argv) > 1:
         if not os.path.isfile(sys.argv[1]):
             raise FileNotFoundError(f"Input file {sys.argv[1]} not found ... FAIL")
-        else:
-            inputfile = sys.argv[1]
+        return sys.argv[1]
 
-    if len(sys.argv) <= 1:
-        if not os.path.isfile(inputfile):
-            raise FileNotFoundError(f"Input file {inputfile} not found ... FAIL")
-        else:
-            sys.argv.append(inputfile)
-
-    return inputfile
+    raise ValueError(
+        "No input file provided via function argument or command-line argument ... FAIL"
+    )
