@@ -2,6 +2,8 @@
 import os
 import sys
 
+import pytest
+
 # Reader imports
 from assethold.engine import engine
 
@@ -12,6 +14,7 @@ def run_process(input_file, expected_result={}):
     cfg = engine(input_file)
     assert(cfg[cfg['basename']]['status']['daily'] == True)
 
+@pytest.mark.integration
 def test_run_process():
     input_file = 'eod_data.yml'
     # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
@@ -21,6 +24,3 @@ def test_run_process():
         sys.argv.pop()
 
     run_process(input_file, expected_result={})
-
-
-test_run_process()
