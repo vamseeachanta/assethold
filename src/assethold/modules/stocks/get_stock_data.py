@@ -10,7 +10,7 @@ import yfinance as yf
 from finvizfinance.quote import finvizfinance
 from yahoo_fin.stock_info import tickers_dow, tickers_nasdaq, tickers_sp500
 from assetutilities.common.update_deep import update_deep_dictionary
-from assetutilities.common.visualization.visualization_templates import (
+from assetutilities.common.visualization.visualization_templates_matplotlib import (
     VisualizationTemplates,
 )
 from assetutilities.engine import engine as aus_engine

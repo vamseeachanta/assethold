@@ -30,12 +30,9 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
             raise ValueError("cfg is None")
 
     basename = cfg["basename"]
-    # application_manager = ConfigureApplicationInputs(basename)
-    # application_manager.configure(cfg, library_name)
 
     if config_flag:
         cfg_base = cfg
-        # cfg_base = application_manager.cfg
         cfg_base = fm.router(cfg_base)
     else:
         cfg_base = cfg
@@ -43,10 +40,9 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
     logging.info(f"{basename}, application ... START")
 
     if basename in "stocks":
-        #cfg = stks.router(cfg)
-        cfg_base = stks.router(cfg_base)   
+        cfg_base = stks.router(cfg_base)
     else:
-       raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
+        raise Exception(f"Analysis for basename: {basename} not found. ... FAIL")
 
     save_application_cfg(cfg_base=cfg_base)
     logging.info(f"{basename}, application ... END")
@@ -62,21 +58,19 @@ def validate_arguments_run_methods(inputfile):
     """
 
     if len(sys.argv) > 1 and inputfile is not None:
-        raise (
-            Exception(
-                "2 Input files provided via arguments & function. Please provide only 1 file ... FAIL"
-            )
+        raise Exception(
+            "2 Input files provided via arguments & function. Please provide only 1 file ... FAIL"
         )
 
     if len(sys.argv) > 1:
         if not os.path.isfile(sys.argv[1]):
-            raise (FileNotFoundError(f"Input file {sys.argv[1]} not found ... FAIL"))
+            raise FileNotFoundError(f"Input file {sys.argv[1]} not found ... FAIL")
         else:
             inputfile = sys.argv[1]
 
     if len(sys.argv) <= 1:
         if not os.path.isfile(inputfile):
-            raise (FileNotFoundError(f"Input file {inputfile} not found ... FAIL"))
+            raise FileNotFoundError(f"Input file {inputfile} not found ... FAIL")
         else:
             sys.argv.append(inputfile)
 

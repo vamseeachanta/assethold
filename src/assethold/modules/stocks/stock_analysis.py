@@ -40,7 +40,7 @@ class StockAnalysis():
         if 'analysis' in cfg and cfg['analysis'].get('breakout', False):
             daily_data = data['daily']['data']
             daily_data['Date'] = pd.to_datetime(daily_data['Date'])
-            if 'period' == None:
+            if 'period' in cfg.get('data', {}):
                 period = cfg['data']['period']
                 daily_data = daily_data[daily_data['Date'] > pd.Timestamp.now() - pd.Timedelta(days=period)] 
             cfg, breakout_trend = self.breakout_trend_analysis(cfg, daily_data)

@@ -25,21 +25,14 @@ classifiers = [
 dependencies = [
     "assetutilities",
     "beautifulsoup4==4.13.4",
-    "bs4",
-    "build",
     "bumpver==2024.1130",
-    "chardet",
-    "crochet",
     "dash==3.0.4",
     "dash_bootstrap_components==2.0.2",
     "deepdiff",
     "excel2img; sys_platform=='win32'",
-    "fake_headers",
+    "ffn",
     "finvizfinance==1.1.0",
     "flask",
-    "flask_httpauth==4.8.0",
-    "flask_restful==0.3.10",
-    "flask_wtf==1.2.2",
     "gitpython>=3.1.40",
     "jinja2",
     "loguru",
@@ -48,31 +41,18 @@ dependencies = [
     "numpy_financial==1.0.0",
     "openpyxl",
     "pandas==2.2.3",
-    "pandoc",
-    "parsel",
-    "plantuml",
-    "playwright",
     "plotly==6.0.1",
     "PyPDF2",
-    "pytest",
     "python-certifi-win32; sys_platform=='win32'",
     "python-docx",
     "pyyaml==6.0.2",
     "ruamel.yaml",
-    "ruff",
-    "scrapy==2.12",
     "sec_edgar_downloader==5.0.3",
-    "selenium",
     "sqlalchemy==2.0.40",
     "sympy>=1.13.3",
     "ta==0.11.0",
-    "tabula",
-    "twine",
-    "undetected-chromedriver",
     "urllib3==2.4.0",
-    "utm",
     "webcolors",
-    "wkhtmltopdf",
     "xlsxwriter",
     "xmltodict==0.14.2",
     "yahoo_fin==0.8.9.1",
@@ -81,8 +61,12 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "build",
+    "twine",
+    "ruff",
     "pytest>=7.0",
     "pytest-cov>=4.0",
+    "pytest-mock>=3.0",
     "black>=23.0",
     "flake8>=6.0",
     "mypy>=1.0",
@@ -215,28 +199,6 @@ extra-index-url = []
 no-cache = false
 pre = false
 
-# MANDATORY: Parallel Processing Configuration
-[tool.parallel]
-enabled = true
-max_workers = 5
-use_threading = false  # Use multiprocessing for CPU-bound tasks
-use_asyncio = true     # Use asyncio for I/O-bound tasks
-batch_size = 10
-
-[tool.parallel.rules]
-# Define when to use parallel processing
-file_operations = "always"      # File reading/writing
-http_requests = "always"        # API calls
-data_processing = "threshold"   # Based on data size
-threshold_size = 1000           # Items before parallel kicks in
-
-[tool.scripts]
-# Common scripts that use parallel processing
-test = "pytest -n auto"
-format = "black . && isort ."
-lint = "flake8 . & mypy . & pylint ."
-install = "uv pip install -e ."
-dev-install = "uv pip install -e .[dev]"
 
 [dependency-groups]
 dev = [
@@ -245,8 +207,3 @@ dev = [
     "pytest-xdist>=3.8.0",
 ]
 
-[project.scripts]
-# Updated script paths after reorganization
-assethold = "assethold.main:main"
-agent_os_create_spec = "scripts.agent_os.create_spec:main"
-agent_os_execute = "scripts.agent_os.execute_tasks:main"
