@@ -29,6 +29,20 @@ class StockAnalysis():
         self.insider_df_sell = pd.DataFrame()
         self.status = {'insider': {}}
 
+    @staticmethod
+    def _period_to_days(period):
+        """Convert a yfinance period string (e.g. '1y', '6mo', '5d') to days."""
+        period = str(period).strip().lower()
+        if period.endswith('y'):
+            return int(period[:-1]) * 365
+        if period.endswith('mo'):
+            return int(period[:-2]) * 30
+        if period.endswith('d'):
+            return int(period[:-1])
+        if period.endswith('wk'):
+            return int(period[:-2]) * 7
+        return int(period)
+
     def router(self, cfg, data):
         """
         Router function for StockAnalysis
@@ -41,8 +55,8 @@ class StockAnalysis():
             daily_data = data['daily']['data']
             daily_data['Date'] = pd.to_datetime(daily_data['Date'])
             if 'period' in cfg.get('data', {}):
-                period = cfg['data']['period']
-                daily_data = daily_data[daily_data['Date'] > pd.Timestamp.now() - pd.Timedelta(days=period)] 
+                period_days = self._period_to_days(cfg['data']['period'])
+                daily_data = daily_data[daily_data['Date'] > pd.Timestamp.now() - pd.Timedelta(days=period_days)]
             cfg, breakout_trend = self.breakout_trend_analysis(cfg, daily_data)
 
             analysis_output = {

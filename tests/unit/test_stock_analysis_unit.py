@@ -177,3 +177,26 @@ class TestStocksDI:
         stocks = Stocks()
         assert stocks.data_provider is not None
         assert stocks.analyzer is not None
+
+
+class TestPeriodToDays:
+    """Tests for _period_to_days yfinance period string conversion."""
+
+    def test_years(self):
+        assert StockAnalysis._period_to_days('1y') == 365
+        assert StockAnalysis._period_to_days('2y') == 730
+
+    def test_months(self):
+        assert StockAnalysis._period_to_days('6mo') == 180
+        assert StockAnalysis._period_to_days('3mo') == 90
+
+    def test_days(self):
+        assert StockAnalysis._period_to_days('5d') == 5
+        assert StockAnalysis._period_to_days('30d') == 30
+
+    def test_weeks(self):
+        assert StockAnalysis._period_to_days('1wk') == 7
+        assert StockAnalysis._period_to_days('4wk') == 28
+
+    def test_numeric_fallback(self):
+        assert StockAnalysis._period_to_days('365') == 365
