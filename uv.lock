@@ -116,6 +116,10 @@ docs = [
     { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "sphinx-rtd-theme" },
 ]
+providers = [
+    { name = "diskcache" },
+    { name = "finnhub-python" },
+]
 test = [
     { name = "pytest", version = "8.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "pytest", version = "9.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
@@ -140,8 +144,10 @@ requires-dist = [
     { name = "dash", specifier = "==3.0.4" },
     { name = "dash-bootstrap-components", specifier = "==2.0.2" },
     { name = "deepdiff" },
+    { name = "diskcache", marker = "extra == 'providers'", specifier = ">=5.6.0" },
     { name = "excel2img", marker = "sys_platform == 'win32'" },
     { name = "ffn" },
+    { name = "finnhub-python", marker = "extra == 'providers'", specifier = ">=2.4.0" },
     { name = "finvizfinance", specifier = "==1.1.0" },
     { name = "flake8", marker = "extra == 'dev'", specifier = ">=6.0" },
     { name = "flask" },
@@ -182,7 +188,7 @@ requires-dist = [
     { name = "yahoo-fin", specifier = "==0.8.9.1" },
     { name = "yfinance", specifier = "==0.2.57" },
 ]
-provides-extras = ["dev", "test", "docs"]
+provides-extras = ["dev", "test", "docs", "providers"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1457,6 +1463,15 @@ wheels = [
 ]
 
 [[package]]
+name = "diskcache"
+version = "5.6.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/3f/21/1c1ffc1a039ddcc459db43cc108658f32c57d271d7289a2794e401d0fdb6/diskcache-5.6.3.tar.gz", hash = "sha256:2c3a3fa2743d8535d832ec61c2054a1641f41775aa7c556758a109941e33e4fc", size = 67916, upload-time = "2023-08-31T06:12:00.316Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3f/27/4570e78fc0bf5ea0ca45eb1de3818a23787af9b390c0b0a0033a1b8236f9/diskcache-5.6.3-py3-none-any.whl", hash = "sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19", size = 45550, upload-time = "2023-08-31T06:11:58.822Z" },
+]
+
+[[package]]
 name = "distlib"
 version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1628,6 +1643,18 @@ resolution-markers = [
 sdist = { url = "https://files.pythonhosted.org/packages/1d/65/ce7f1b70157833bf3cb851b556a37d4547ceafc158aa9b34b36782f23696/filelock-3.20.3.tar.gz", hash = "sha256:18c57ee915c7ec61cff0ecf7f0f869936c7c30191bb0cf406f1341778d0834e1", size = 19485, upload-time = "2026-01-09T17:55:05.421Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b5/36/7fb70f04bf00bc646cd5bb45aa9eddb15e19437a28b8fb2b4a5249fac770/filelock-3.20.3-py3-none-any.whl", hash = "sha256:4b0dda527ee31078689fc205ec4f1c1bf7d56cf88b6dc9426c4f230e46c2dce1", size = 16701, upload-time = "2026-01-09T17:55:04.334Z" },
+]
+
+[[package]]
+name = "finnhub-python"
+version = "2.4.27"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/03/86/6bcf8c3514683198ad07160efd2426d4898275a3e11cdd3ebed659e75d7a/finnhub_python-2.4.27.tar.gz", hash = "sha256:c4402f481005bbb48f72acfa14d7c91e95af1b1c8367ba2f4457eebe4e61b611", size = 13613, upload-time = "2026-01-26T04:39:58.352Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ea/97/6b0e320f7825345ba5754d2da337086598bd04076aa18e0269812ef4f5f3/finnhub_python-2.4.27-py3-none-any.whl", hash = "sha256:2e5bd70ea9c41c077224d9eaebaa2b9c66e0445d4b4d2768fee20a56ce2af07f", size = 12013, upload-time = "2026-01-26T04:39:56.909Z" },
 ]
 
 [[package]]

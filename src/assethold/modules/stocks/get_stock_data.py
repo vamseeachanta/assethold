@@ -16,6 +16,17 @@ from assetutilities.common.visualization.visualization_templates_matplotlib impo
 )
 from assetutilities.engine import engine as aus_engine
 
+from assethold.modules.stocks.cache import (
+    fetch_with_fallback,
+    make_cache_key,
+    TTL_OHLCV,
+    TTL_COMPANY_INFO,
+    TTL_INSIDER,
+    TTL_OPTIONS,
+    TTL_INSTITUTIONS,
+)
+from assethold.modules.stocks.providers import finnhub_provider
+
 viz_templates = VisualizationTemplates()
 
 
@@ -93,14 +104,6 @@ class GetStockData():
         
         return cfg, data
 
-    def get_EOD_data_from_yfinance(self, cfg, ticker):
-        period = cfg['input']['data_settings']['eod']['period']
-        yf_ticker = yf.Ticker(str(ticker))
-        company_info = yf_ticker.info
-        df = yf_ticker.history(period=period)
-
-        return df
-
     def add_rolling_averages(self, daily):
         df = daily['data']
         for days_rolling in self.days_rolling_array:
@@ -112,11 +115,20 @@ class GetStockData():
         return daily
 
     def get_company_data_by_ticker(self, ticker):
-        yf_ticker = yf.Ticker(str(ticker))
-        info_data = yf_ticker.info
+        cache_key = make_cache_key("company_info", ticker)
 
+        def _yfinance_fetch():
+            yf_ticker = yf.Ticker(str(ticker))
+            return yf_ticker.info
+
+        def _finnhub_fetch():
+            return finnhub_provider.get_company_info(ticker)
+
+        fallback_fn = _finnhub_fetch if finnhub_provider.is_available() else None
+        info_data = fetch_with_fallback(
+            cache_key, TTL_COMPANY_INFO, _yfinance_fetch, fallback_fn
+        )
         info = {'data': info_data, 'status': True}
-
         return info
 
     def add_stats_to_info(self, daily, info_data):
@@ -136,36 +148,33 @@ class GetStockData():
         return info
 
     def get_insider_information(self, cfg, ticker):
-        status = False
-        insider_info_finviz = self.get_insider_information_from_finviz(cfg,ticker)
-        sec_data = self.get_sec_data(ticker)
-        sec_form4 = sec_data.get('sec_form4')
-        if len(sec_form4) > 0:
-            insider_df = sec_form4
-            insider_df = self.insider_data_clean_and_add_share_ratio(insider_df)
-            status = True
-        elif len(insider_info_finviz) > 0:
-            insider_df = insider_info_finviz
-            insider_df = self.insider_data_clean_and_add_share_ratio(insider_df)
-            status = True
-        else:
-            self.status.update({'insider_info': False})
-            insider_df = pd.DataFrame()
+        cache_key = make_cache_key("insider", ticker)
 
+        def _primary_fetch():
+            """Original finviz+SEC logic as primary."""
+            insider_info_finviz = self.get_insider_information_from_finviz(cfg, ticker)
+            sec_data = self.get_sec_data(ticker)
+            sec_form4 = sec_data.get('sec_form4')
+            if len(sec_form4) > 0:
+                insider_df = sec_form4
+            elif len(insider_info_finviz) > 0:
+                insider_df = insider_info_finviz
+            else:
+                return pd.DataFrame()
+            return self.insider_data_clean_and_add_share_ratio(insider_df)
+
+        def _finnhub_fetch():
+            return finnhub_provider.get_insider_transactions(ticker)
+
+        fallback_fn = _finnhub_fetch if finnhub_provider.is_available() else None
+        insider_df = fetch_with_fallback(
+            cache_key, TTL_INSIDER, _primary_fetch, fallback_fn
+        )
+        status = len(insider_df) > 0 if isinstance(insider_df, pd.DataFrame) else False
         insider = {'data': insider_df, 'status': status}
-
         return insider
 
 
-
-    def get_stock_price_data(self, cfg):
-        try:
-            self.status.update({'price': True})
-            ticker = cfg['stocks'][0]['ticker']
-            self.get_data_from_yfinance(ticker)
-        except:
-            self.status.update({'price': False})
-            raise ("No valid data source found")
 
     def get_insider_information_from_finviz(self, cfg, stock_ticker):
         self.status['insider']['finviz'] = {}
@@ -209,12 +218,23 @@ class GetStockData():
             self.ratings_df = pd.DataFrame()
 
     def get_options_data(self):
-        self.status.update({'options': True})
-        try:
+        cache_key = make_cache_key(
+            "options", getattr(self, '_current_ticker', 'unknown')
+        )
+
+        def _yfinance_fetch():
+            option_data = {}
             option_dates = list(self.yf_ticker.options)
             for date in option_dates:
                 option_chain = self.get_option_data_by_date(date)
-                self.option_data.update({date: option_chain})
+                option_data[date] = option_chain
+            return option_data
+
+        self.status.update({'options': True})
+        try:
+            self.option_data = fetch_with_fallback(
+                cache_key, TTL_OPTIONS, _yfinance_fetch
+            )
         except Exception:
             self.status.update({'options': False})
             self.option_data = {}
@@ -227,33 +247,13 @@ class GetStockData():
         }
         return option_chain_dict
 
-    def get_data_from_tiingo(self):
-        # Third party imports
-        import pandas_datareader as pdr
-        api_key = '512e3063ad18b5116a83cf7ce7d852af4181917c'
-        self.stock_data_array = []
-        for stock_info in self.cfg.stocks:
-            stock_ticker = stock_info['ticker']
-            self.company_info['stock_ticker'] = stock_ticker
-            df = pdr.get_data_tiingo(stock_ticker, api_key=api_key)
-            df['date'] = [index_value[1] for index_value in df.index]
-            for days_rolling in self.days_rolling_array:
-                df[str(days_rolling) + '_day_rolling'] = df.close.rolling(
-                    window=days_rolling).mean()
-            self.stock_data_array.append(df)
 
-    def get_screened_stocks(self):
-        # Third party imports
-        from finvizfinance.screener.overview import Overview
-        finviz_overview = Overview()
-        filters_dict = {'Exchange': 'AMEX', 'Sector': 'Basic Materials'}
-        finviz_overview.set_filter(filters_dict=filters_dict)
-        df = finviz_overview.ScreenerView()
-        df.head()
 
     def get_daily_data_by_ticker(self, cfg, ticker, max_retries=5):
         period = cfg['data']['period']
-        if ticker is not None:
+        cache_key = make_cache_key("ohlcv", ticker, period=period)
+
+        def _yfinance_fetch():
             yf_ticker = yf.Ticker(str(ticker))
             for attempt in range(max_retries):
                 try:
@@ -269,73 +269,19 @@ class GetStockData():
                     )
                     time.sleep(wait)
             df.reset_index(inplace=True)
+            return df
 
+        def _finnhub_fetch():
+            return finnhub_provider.get_daily_ohlcv(ticker, period=period)
+
+        fallback_fn = _finnhub_fetch if finnhub_provider.is_available() else None
+        df = fetch_with_fallback(cache_key, TTL_OHLCV, _yfinance_fetch, fallback_fn)
         daily = {'data': df, 'status': True}
         return daily
 
-    def add_rolling_averages_to_df(self, df):
-        days_rolling_array = self.days_rolling_array
-        for days_rolling in days_rolling_array:
-            df[str(days_rolling) + '_day_rolling'] = df.Close.rolling(
-                window=days_rolling).mean()
 
-        return df
 
-    def get_data_from_yfinance(self, ticker=None):
-        period = self.cfg.get('period', '5y')
-        self.stock_data_array = []
-        period = self.cfg.get('period', '5y')
-        for stock_info in self.cfg['input']['data']['eod']['stocks']:
-            stock_ticker = stock_info['ticker']
-            self.yf_ticker = yf.Ticker(str(stock_ticker))
-            self.company_info['stock_ticker'] = stock_ticker
-            self.company_info['info'] = self.yf_ticker.info
-            df = self.yf_ticker.history(period=period)
-            df.reset_index(inplace=True)
-            for days_rolling in self.days_rolling_array:
-                df[str(days_rolling) + '_day_rolling'] = df.Close.rolling(
-                    window=days_rolling).mean()
-            self.stock_data_array.append(df)
 
-    def get_data_from_morningstar(self):
-        data_source = 'morningstar'
-
-        # Standard library imports
-        import datetime
-
-        # Third party imports
-        import pandas_datareader.data as web
-
-        start = datetime.datetime(2010, 1, 1)
-        end = datetime.datetime(2013, 1, 27)
-        f = web.DataReader('OXY', data_source, start, end)
-
-        print(web.DataReader('OXY', data_source, start, end))
-
-    def get_data_from_iex(self):
-        days_rolling_array = self.days_rolling_array
-        # Standard library imports
-        import os
-        os.environ["IEX_API_KEY"] = self.cfg.default['data_sources']['iex'][
-            'api_key']
-        # {'tiingo': {'flag': None}}
-        # Standard library imports
-        from datetime import datetime, timedelta
-
-        # Third party imports
-        import pandas_datareader.data as web
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=5479)
-
-        self.stock_data_array = []
-        for stock_info in self.cfg.stocks:
-            stock_ticker = stock_info['ticker']
-            df = web.DataReader(stock_ticker, 'iex', start_date, end_date)
-            df['date'] = [index_value for index_value in df.index]
-            for days_rolling in days_rolling_array:
-                df[str(days_rolling) + '_day_rolling'] = df.close.rolling(
-                    window=days_rolling).mean()
-            self.stock_data_array.append(df)
 
     def get_sec_data(self, ticker):
         try:
@@ -428,25 +374,27 @@ class GetStockData():
     
 
     def get_yf_institutions(self, ticker):
-        
-        self.yf_ticker = yf.Ticker(str(ticker))
-        self.institutional_holders = self.yf_ticker.get_institutional_holders(proxy=None, as_dict=False)
-        self.major_holders = self.yf_ticker.get_major_holders(proxy=None, as_dict=False)
+        cache_key = make_cache_key("institutions", ticker)
 
-    def get_institutional_holders(self, proxy=None, as_dict=False):
-        self._holders.proxy = proxy or self.proxy
-        data = self._holders.institutional
-        if data is not None:
-            if as_dict:
-                return data.to_dict()
-            return data
+        def _yfinance_fetch():
+            yf_ticker = yf.Ticker(str(ticker))
+            institutional = yf_ticker.get_institutional_holders(
+                proxy=None, as_dict=False
+            )
+            major = yf_ticker.get_major_holders(proxy=None, as_dict=False)
+            return {'institutional': institutional, 'major': major}
+
+        try:
+            result = fetch_with_fallback(
+                cache_key, TTL_INSTITUTIONS, _yfinance_fetch
+            )
+            self.institutional_holders = result.get('institutional')
+            self.major_holders = result.get('major')
+        except Exception:
+            self.institutional_holders = None
+            self.major_holders = None
+
         
-    def get_major_holders(self, proxy=None, as_dict=False):
-        self._holders.proxy = proxy or self.proxy
-        data = self._holders.major
-        if as_dict:
-            return data.to_dict()
-        return data
     
     def save_daily_data_plot(self, cfg, csv_groups):
 
