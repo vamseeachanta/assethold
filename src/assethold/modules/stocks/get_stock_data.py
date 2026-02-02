@@ -53,8 +53,9 @@ class GetStockData():
         return cfg,data
 
     def save_results(self, cfg, daily_data_df_copy):
-        # file_name = cfg['input']['ticker'] + '_daily_data.csv'
-        # file_name = os.path.join(cfg['Analysis']['result_folder'], file_name)
+        if 'Analysis' not in cfg or 'analysis_root_folder' not in cfg.get('Analysis', {}):
+            logging.warning("Skipping save_results: 'Analysis.analysis_root_folder' not configured")
+            return
         file_name = cfg['input']['ticker'] + '_data_copy.csv'
         file_name = os.path.join(cfg['Analysis']['analysis_root_folder'], file_name)
         daily_data_df_copy.to_csv(file_name, index=False)

@@ -53,7 +53,7 @@ class StockAnalysis():
         analysis = {}
         if 'analysis' in cfg and cfg['analysis'].get('breakout', False):
             daily_data = data['daily']['data']
-            daily_data['Date'] = pd.to_datetime(daily_data['Date'])
+            daily_data['Date'] = pd.to_datetime(daily_data['Date'], utc=True).dt.tz_localize(None)
             if 'period' in cfg.get('data', {}):
                 period_days = self._period_to_days(cfg['data']['period'])
                 daily_data = daily_data[daily_data['Date'] > pd.Timestamp.now() - pd.Timedelta(days=period_days)]
