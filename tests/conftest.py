@@ -3,6 +3,24 @@
 # Pytest configuration and shared fixtures for assethold financial asset management testing
 # This file contains shared fixtures and configuration for all tests
 
+# IMPORTANT: Mock dependencies BEFORE any imports
+import sys
+from unittest.mock import MagicMock
+
+# Mock heavy external dependencies that may not be installed
+# These mocks allow tests to run without all dependencies
+_mock_modules = [
+    'ffn', 'yfinance', 'yahoo_fin', 'yahoo_fin.stock_info',
+    'finvizfinance', 'finvizfinance.quote', 'sec_edgar_downloader',
+    'ta', 'diskcache', 'finnhub', 'plotly', 'plotly.express',
+    'plotly.graph_objects', 'plotly.subplots', 'plotly.io',
+    'dash', 'dash_bootstrap_components',
+]
+
+for module_name in _mock_modules:
+    sys.modules[module_name] = MagicMock()
+
+# NOW import everything else
 import pytest
 import os
 import tempfile
