@@ -1,0 +1,88 @@
+# Stock Watchlist Configuration
+
+stocks:
+  - ticker: AAPL
+    alert_thresholds:
+      rsi_oversold: 30
+      rsi_overbought: 70
+      price_drop_pct: 5.0
+      volume_spike: 2.0
+    monitoring_frequency: daily
+
+  - ticker: MSFT
+    alert_thresholds:
+      rsi_oversold: 30
+      rsi_overbought: 70
+      price_drop_pct: 5.0
+      volume_spike: 2.0
+    monitoring_frequency: daily
+
+  - ticker: XOM
+    alert_thresholds:
+      rsi_oversold: 35
+      rsi_overbought: 65
+      price_drop_pct: 4.0
+      volume_spike: 1.8
+    monitoring_frequency: daily
+
+  - ticker: CVX
+    alert_thresholds:
+      rsi_oversold: 35
+      rsi_overbought: 65
+      price_drop_pct: 4.0
+      volume_spike: 1.8
+    monitoring_frequency: daily
+
+  - ticker: SLB
+    alert_thresholds:
+      rsi_oversold: 30
+      rsi_overbought: 70
+      price_drop_pct: 6.0
+      volume_spike: 2.5
+    monitoring_frequency: daily
+
+  - ticker: HAL
+    alert_thresholds:
+      rsi_oversold: 30
+      rsi_overbought: 70
+      price_drop_pct: 6.0
+      volume_spike: 2.5
+    monitoring_frequency: daily
+
+  - ticker: COP
+    alert_thresholds:
+      rsi_oversold: 35
+      rsi_overbought: 65
+      price_drop_pct: 4.5
+      volume_spike: 2.0
+    monitoring_frequency: daily
+
+  - ticker: OXY
+    alert_thresholds:
+      rsi_oversold: 35
+      rsi_overbought: 65
+      price_drop_pct: 5.0
+      volume_spike: 2.2
+    monitoring_frequency: daily
+
+  - ticker: BP
+    alert_thresholds:
+      rsi_oversold: 35
+      rsi_overbought: 65
+      price_drop_pct: 4.0
+      volume_spike: 1.8
+    monitoring_frequency: daily
+
+  - ticker: TTE
+    alert_thresholds:
+      rsi_oversold: 35
+      rsi_overbought: 65
+      price_drop_pct: 4.0
+      volume_spike: 1.8
+    monitoring_frequency: daily
+
+# Global settings
+settings:
+  default_monitoring_frequency: daily
+  cache_ttl_hours: 24
+  rate_limit_seconds: 2.0
