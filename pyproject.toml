@@ -56,7 +56,7 @@ dependencies = [
     "xlsxwriter",
     "xmltodict==0.14.2",
     "yahoo_fin==0.8.9.1",
-    "yfinance==0.2.57"
+    "yfinance>=1.2.0"
 ]
 
 [project.optional-dependencies]

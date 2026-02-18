@@ -44,6 +44,79 @@ Mapping Dashboard UI to the financial analysis
 | Option <br> Call | fc.fanalysis | df_call_analysis | done | - [x] ok?
 | Option <br> Put | fc.fanalysis | TBA | done | - [x] ok?
 
+## Daily Portfolio Strategy
+
+Produces a daily Build/Hold/Trim recommendation for each position in your Fidelity portfolio.
+
+### Prerequisites
+
+```bash
+# Install dependencies via uv (recommended)
+uv sync
+```
+
+### Quick start
+
+```bash
+# Run from the assethold repo root — writes Markdown + HTML to reports/daily-strategy/
+uv run python -m assethold.analysis.daily_strategy
+
+# Print terminal summary only (no files written)
+uv run python -m assethold.analysis.daily_strategy --no-write
+
+# Compare arbitrary tickers alongside portfolio positions
+uv run python -m assethold.analysis.daily_strategy --compare AAPL,MSFT,NVDA
+
+# Use a custom config file
+uv run python -m assethold.analysis.daily_strategy --config /path/to/daily_strategy.yaml
+```
+
+Reports are written in two formats:
+- `reports/daily-strategy/YYYY-MM-DD.html` — **primary**: interactive Plotly charts, sectioned layout
+- `reports/daily-strategy/YYYY-MM-DD.md` — archival Markdown for git diffing
+
+### How to read the report
+
+| Signal | Score | Meaning |
+|--------|-------|---------|
+| STRONG BUILD ▲▲ | > 0.50 | High conviction buy opportunity |
+| BUILD ▲ | 0.20 – 0.50 | Moderate buying opportunity |
+| HOLD — | ±0.20 | No clear action needed |
+| TRIM ▼ | -0.50 – -0.20 | Consider reducing position |
+| STRONG TRIM ▼▼ | < -0.50 | Strong case to reduce |
+
+### Signals used (weighted composite)
+
+| Sub-signal | Weight | Logic |
+|-----------|--------|-------|
+| RSI momentum | 25% | RSI < 30 → bullish; RSI > 70 → bearish |
+| 52-week position | 20% | Near 52w low → bullish; near high → bearish |
+| Price vs SMA-50 | 20% | Below SMA-50 → bullish |
+| Price vs SMA-200 | 15% | Below SMA-200 → bullish |
+| Insider trend (90d) | 10% | Open-market buys → bullish; sells → bearish |
+| Portfolio weight | 10% | Drift from target triggers build/trim |
+
+### Position modes (configured in `config/daily_strategy.yaml`)
+
+- **managed** — full signal range (e.g. BRKB, VOO with 25% target weight)
+- **trim_only** — score clamped to ≤ 0; build signals suppressed (e.g. XOM, RIG)
+
+### Data sources
+
+- **Portfolio holdings**: reconstructed from Fidelity transaction CSVs (net shares per position)
+- **Market data**: yfinance (price, RSI-14, SMA-50/200, 52-week range, P/E, P/B)
+- **Insider activity**: yfinance SEC Form 4 filings (open-market buys/sells, 90-day window)
+- All data is cached locally (OHLCV: 4h TTL; fundamentals/insider: 24h TTL)
+
+### Scheduling (cron example)
+
+```cron
+# Run daily at 6:30 PM ET (after US market close)
+30 18 * * 1-5 cd /path/to/assethold && uv run python -m assethold.analysis.daily_strategy
+```
+
+---
+
 ## Debt
 
 Library TODO list to keep track of ideas.

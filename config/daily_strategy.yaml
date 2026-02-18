@@ -1,0 +1,99 @@
+# Daily Portfolio Strategy — Configuration
+# All loader settings are here: update this file if Fidelity changes CSV format,
+# adds new action types, or introduces new money-market tickers.
+
+# ---------------------------------------------------------------------------
+# Fidelity CSV loader settings
+# ---------------------------------------------------------------------------
+loader:
+  # Override the data directory. Null = use FIDELITY_DATA_DIR env var, then
+  # fall back to <workspace-root>/achantas-data/_finance/fidelity.
+  data_dir: null
+
+  # Column name mapping.  Update here if Fidelity renames a column header.
+  columns:
+    run_date: "Run Date"
+    account: "Account"
+    account_number: "Account Number"
+    action: "Action"
+    symbol: "Symbol"
+    description: "Description"
+    quantity: "Quantity"
+    price: "Price ($)"
+    amount: "Amount ($)"
+
+  # Action field prefixes that mean shares were purchased.
+  buy_action_prefixes:
+    - "YOU BOUGHT"
+    - "REINVESTMENT"
+
+  # Action field prefixes that mean shares were sold.
+  sell_action_prefixes:
+    - "YOU SOLD"
+
+  # Tickers to ignore — cash sweeps and money-market funds that are not
+  # investable long-term positions.
+  skip_tickers:
+    - "SPAXX"    # Fidelity Government Money Market
+    - "QPIGQ"    # FDIC insured deposit (IRA cash)
+    - "FCASH"    # Fidelity cash
+    - "73102V105" # Polar Power (delisted/reverse-split artifact)
+
+  # Substrings that, if found in the Account field, mark the account as a
+  # non-tradeable employee/retirement plan (no market-data lookup performed).
+  employee_account_patterns:
+    - "CENCORA"
+    - "EMPLOYEE INV"
+
+# ---------------------------------------------------------------------------
+# Ticker alias mapping
+# ---------------------------------------------------------------------------
+# Maps Fidelity ticker symbols to Yahoo Finance symbols where they differ.
+# Positions are always displayed using the Fidelity ticker; aliases are only
+# used when fetching market data.
+ticker_aliases:
+  BRKB: BRK-B   # Fidelity omits the hyphen; Yahoo Finance requires it
+
+# ---------------------------------------------------------------------------
+# Signal engine settings
+# ---------------------------------------------------------------------------
+scoring:
+  rsi_oversold: 30          # RSI below this → maximum build signal
+  rsi_overbought: 70        # RSI above this → maximum trim signal
+  sma_history_days: 252     # Trading days of price history to fetch
+  info_cache_ttl_hours: 24  # How long to cache yfinance .info (fundamentals)
+  price_cache_ttl_hours: 4  # How long to cache intraday OHLCV
+
+# ---------------------------------------------------------------------------
+# Per-ticker targets and position modes
+# ---------------------------------------------------------------------------
+# mode: managed  → full signal range (Strong Build ↔ Strong Trim)
+# mode: trim_only → position can only signal HOLD or TRIM (no positive build
+#                   signal from weight drift; RSI/SMA build signals suppressed)
+#
+# target_weight (%) applies to managed positions.
+# max_weight    (%) triggers trim signal if position exceeds this threshold.
+# ---------------------------------------------------------------------------
+# Watchlist / comparison tickers
+# ---------------------------------------------------------------------------
+# These are analysed and ranked alongside portfolio positions when running
+# with --compare or when watchlist is non-empty.
+# Watchlist tickers use shares=0 and account="Watchlist" — no weight signal.
+watchlist:
+  - AAPL
+  - MSFT
+  - NVDA
+
+targets:
+  BRKB:
+    mode: managed
+    target_weight: 25.0
+  VOO:
+    mode: managed
+    target_weight: 25.0
+  XOM:
+    mode: trim_only
+    max_weight: 15.0
+  RIG:
+    mode: trim_only
+    max_weight: 10.0
