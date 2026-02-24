@@ -16,8 +16,6 @@ Classes:
 
 from __future__ import annotations
 
-from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
 import pandas as pd
@@ -40,9 +38,12 @@ _DEEP_VALUE_THRESHOLD: float = 80.0
 def score_pe_ratio(pe: Optional[float]) -> float:
     """Return a 0-10 value score for a trailing P/E ratio.
 
-    Lower P/E indicates better value; missing data yields 0 (neutral).
+    Lower P/E indicates better value; missing or negative data yields 0
+    (neutral / not meaningful). Negative P/E means the company is
+    loss-making and should not be rewarded as cheap.
 
     Bands:
+        <= 0  → 0  (loss-making or undefined)
         < 10  → 10
         10-15 → 8
         15-20 → 6
@@ -50,7 +51,7 @@ def score_pe_ratio(pe: Optional[float]) -> float:
         > 25  → 2
         None  → 0
     """
-    if pe is None:
+    if pe is None or pe <= 0:
         return 0.0
     if pe < 10:
         return 10.0
@@ -66,17 +67,20 @@ def score_pe_ratio(pe: Optional[float]) -> float:
 def score_pb_ratio(pb: Optional[float]) -> float:
     """Return a 0-10 value score for a price-to-book ratio.
 
-    Lower P/B indicates better value; missing data yields 0 (neutral).
+    Lower P/B indicates better value; missing or negative data yields 0
+    (neutral / not meaningful). Negative P/B indicates negative book value
+    (stockholder deficit) and should not be rewarded.
 
     Bands:
-        < 1  → 10
-        1-2  → 8
-        2-3  → 6
-        3-5  → 4
-        > 5  → 2
-        None → 0
+        <= 0  → 0  (negative book value or undefined)
+        < 1   → 10
+        1-2   → 8
+        2-3   → 6
+        3-5   → 4
+        > 5   → 2
+        None  → 0
     """
-    if pb is None:
+    if pb is None or pb <= 0:
         return 0.0
     if pb < 1:
         return 10.0
@@ -92,9 +96,12 @@ def score_pb_ratio(pb: Optional[float]) -> float:
 def score_ev_ebitda(ev_ebitda: Optional[float]) -> float:
     """Return a 0-10 value score for an EV/EBITDA multiple.
 
-    Lower EV/EBITDA indicates better value; missing data yields 0 (neutral).
+    Lower EV/EBITDA indicates better value; missing or negative data yields 0
+    (neutral / not meaningful). Negative EV/EBITDA typically means negative
+    EBITDA (operating losses) and should not be rewarded.
 
     Bands:
+        <= 0  → 0  (negative EBITDA / undefined)
         < 8   → 10
         8-12  → 8
         12-16 → 6
@@ -102,7 +109,7 @@ def score_ev_ebitda(ev_ebitda: Optional[float]) -> float:
         > 20  → 2
         None  → 0
     """
-    if ev_ebitda is None:
+    if ev_ebitda is None or ev_ebitda <= 0:
         return 0.0
     if ev_ebitda < 8:
         return 10.0
@@ -345,85 +352,7 @@ class SectorPeerRanker:
 # ---------------------------------------------------------------------------
 # Output: CSV and console table
 # ---------------------------------------------------------------------------
+# FundamentalsReport is in fundamentals_report.py (split for 400-line limit).
+# Re-exported here to keep the public API at assethold.fundamentals.
 
-_DISPLAY_COLUMNS = [
-    "ticker", "sector", "pe", "pb", "ev_ebitda",
-    "pe_pct", "pb_pct", "ev_ebitda_pct",
-    "score", "deep_value", "dividend_yield", "forward_eps",
-]
-
-_DEEP_VALUE_MARKER = " ** DEEP VALUE **"
-
-
-class FundamentalsReport:
-    """Render a scored-and-ranked fundamentals DataFrame to CSV and console.
-
-    Usage::
-
-        reporter = FundamentalsReport()
-        csv_path = reporter.to_csv(df, output_dir)
-        print(reporter.console_table(df))
-    """
-
-    def to_csv(self, df: pd.DataFrame, output_dir: Path) -> Path:
-        """Write the fundamentals DataFrame to a dated CSV file.
-
-        Args:
-            df:         DataFrame returned by FundamentalsScorer.fetch_and_rank
-                        (optionally enriched by SectorPeerRanker).
-            output_dir: Directory to write into.  Created if absent.
-
-        Returns:
-            Path to the written CSV file.
-        """
-        output_dir = Path(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
-        date_str = datetime.today().strftime("%Y-%m-%d")
-        filename = f"fundamentals-{date_str}.csv"
-        path = output_dir / filename
-        df.to_csv(path, index=False)
-        return path
-
-    def console_table(self, df: pd.DataFrame) -> str:
-        """Render the fundamentals DataFrame as a fixed-width console table.
-
-        Deep-value holdings (where deep_value == True) are marked with
-        " ** DEEP VALUE **" at the end of their row.
-
-        Args:
-            df: Fundamentals DataFrame (scored and ranked).
-
-        Returns:
-            Multi-line string suitable for printing.
-        """
-        cols = [c for c in _DISPLAY_COLUMNS if c in df.columns]
-        present = df[cols].copy()
-
-        lines: list[str] = []
-        header = " | ".join(f"{c:<14}" for c in cols)
-        separator = "-" * len(header)
-        lines.append("Fundamentals Scoring Report")
-        lines.append(separator)
-        lines.append(header)
-        lines.append(separator)
-
-        for _, row in present.iterrows():
-            parts = []
-            for c in cols:
-                val = row[c]
-                if val is None or (isinstance(val, float) and pd.isna(val)):
-                    parts.append(f"{'N/A':<14}")
-                elif isinstance(val, bool):
-                    parts.append(f"{'True' if val else 'False':<14}")
-                elif isinstance(val, float):
-                    parts.append(f"{val:<14.2f}")
-                else:
-                    parts.append(f"{str(val):<14}")
-            row_str = " | ".join(parts)
-            deep = row.get("deep_value", False)
-            if deep is True:
-                row_str += _DEEP_VALUE_MARKER
-            lines.append(row_str)
-
-        lines.append(separator)
-        return "\n".join(lines)
+from assethold.fundamentals_report import FundamentalsReport  # noqa: F401, E402

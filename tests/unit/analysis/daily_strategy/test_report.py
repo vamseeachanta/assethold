@@ -7,6 +7,8 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import numpy as np
+import pandas as pd
 import pytest
 
 # Stub yfinance so fetcher module imports cleanly.
@@ -17,6 +19,7 @@ from assethold.analysis.daily_strategy.fetcher import MarketSnapshot
 from assethold.analysis.daily_strategy.loader import Position
 from assethold.analysis.daily_strategy.report import DailyStrategyReport
 from assethold.analysis.daily_strategy.signals import PositionSignal
+from assethold.risk_metrics import position_risk
 
 
 # ---------------------------------------------------------------------------
@@ -201,3 +204,93 @@ class TestEdgeCases:
         md = reporter.render([nontradeable], report_date=datetime(2026, 2, 17))
         # Should not crash; non-tradeable excluded from combined portfolio value
         assert "CENCORA EMPLOYEE INV" in md
+
+
+# ---------------------------------------------------------------------------
+# Risk metrics wiring
+# ---------------------------------------------------------------------------
+
+
+def _make_risk_metrics() -> dict:
+    """Build a synthetic risk_metrics dict for two tickers."""
+    np.random.seed(42)
+    brkb_ret = pd.Series(np.random.normal(0.001, 0.02, 252))
+    xom_ret = pd.Series(np.random.normal(0.0008, 0.018, 252))
+    return {
+        "BRKB": position_risk(brkb_ret),
+        "XOM": position_risk(xom_ret),
+    }
+
+
+class TestRiskMetricsWiring:
+    def test_render_with_risk_metrics_does_not_crash(self, tmp_path):
+        reporter = _reporter(tmp_path)
+        risk_metrics = _make_risk_metrics()
+        md = reporter.render(
+            [_sig("BRKB"), _sig("XOM", "TRIM", -0.35)],
+            report_date=datetime(2026, 2, 17),
+            risk_metrics=risk_metrics,
+        )
+        assert isinstance(md, str)
+        assert len(md) > 0
+
+    def test_render_with_risk_metrics_contains_risk_section(self, tmp_path):
+        reporter = _reporter(tmp_path)
+        risk_metrics = _make_risk_metrics()
+        md = reporter.render(
+            [_sig("BRKB"), _sig("XOM", "TRIM", -0.35)],
+            report_date=datetime(2026, 2, 17),
+            risk_metrics=risk_metrics,
+        )
+        assert "Risk Metrics" in md
+
+    def test_render_with_risk_metrics_contains_var_label(self, tmp_path):
+        reporter = _reporter(tmp_path)
+        risk_metrics = _make_risk_metrics()
+        md = reporter.render(
+            [_sig("BRKB")],
+            report_date=datetime(2026, 2, 17),
+            risk_metrics=risk_metrics,
+        )
+        assert "VaR" in md
+
+    def test_render_with_risk_metrics_contains_sharpe_label(self, tmp_path):
+        reporter = _reporter(tmp_path)
+        risk_metrics = _make_risk_metrics()
+        md = reporter.render(
+            [_sig("BRKB")],
+            report_date=datetime(2026, 2, 17),
+            risk_metrics=risk_metrics,
+        )
+        assert "Sharpe" in md
+
+    def test_render_without_risk_metrics_omits_risk_section(self, tmp_path):
+        reporter = _reporter(tmp_path)
+        md = reporter.render(
+            [_sig("BRKB")],
+            report_date=datetime(2026, 2, 17),
+        )
+        assert "Risk Metrics" not in md
+
+    def test_render_risk_section_contains_ticker_names(self, tmp_path):
+        reporter = _reporter(tmp_path)
+        risk_metrics = _make_risk_metrics()
+        md = reporter.render(
+            [_sig("BRKB"), _sig("XOM", "TRIM", -0.35)],
+            report_date=datetime(2026, 2, 17),
+            risk_metrics=risk_metrics,
+        )
+        assert "BRKB" in md
+        assert "XOM" in md
+
+    def test_write_with_risk_metrics_creates_file(self, tmp_path):
+        reporter = _reporter(tmp_path)
+        risk_metrics = _make_risk_metrics()
+        path = reporter.write(
+            [_sig("BRKB")],
+            report_date=datetime(2026, 2, 17),
+            risk_metrics=risk_metrics,
+        )
+        assert path.exists()
+        content = path.read_text()
+        assert "Risk Metrics" in content

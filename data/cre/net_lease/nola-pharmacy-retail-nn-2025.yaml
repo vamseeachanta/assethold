@@ -1,0 +1,127 @@
+# CRE Net Lease Data Point — New Orleans Retail Pharmacy (NN)
+# Source: Due-diligence data room review (offering materials + lease + financials)
+# Data abstracted per data-room confidentiality obligations.
+# No proprietary listing platform data is reproduced here.
+# ---------------------------------------------------------------------------
+
+asset_id: nola-pharmacy-nn-001
+address: "11297 Lake Forest Blvd, New Orleans, LA 70128"
+lat: 30.0218
+lon: -89.8570
+state: LA
+city: New Orleans
+msa: New Orleans-Metairie
+
+# Public record
+parcel_id: "39W016593"
+year_built: 2000
+building_sqft: 14920
+land_acres: 1.9
+land_sqft: 82677
+zoning: C1                  # General Commercial
+ownership: fee_simple
+corner_location: true
+drive_thru: true
+parking_spaces: 76
+parking_ratio_per_1000sf: 5.09
+
+# Traffic counts (publicly available / per offering materials)
+aadt_primary_road: 13500    # Bullard Ave
+aadt_secondary_road: 3100   # Lake Forest Blvd
+aadt_highway: 123700        # Interstate 10
+annual_foot_traffic: 477000 # Third-party foot-traffic analytics
+foot_traffic_national_pct: 91
+foot_traffic_state_pct: 89
+
+# Lease terms (from executed lease document in data room)
+# Original lease executed Dec 1998; rent commencement Feb 2000
+# Current base term per rent roll:
+lease_start: "2000-09-30"
+lease_end: "2030-09-29"
+renewal_options:
+  - count: 6
+    years_each: 5             # 30 total option years, through ~2060
+
+tenant:
+  tenant_type: national_pharmacy_chain
+  guaranty: corporate
+  credit_profile: investment_grade_parent   # publicly traded Fortune-500 subsidiary
+  lease_type: NN
+  tenant_since_year: 2000
+  sales_reporting: true
+  exclusivity: true           # exclusive use protection within 500 ft
+  rofr: true                  # right of first refusal on property sale
+
+financials:
+  fixed_rent_annual: 284000.0
+  fixed_rent_monthly: 23667.0
+  noi: 284000.0               # per offering materials (100% occupied, single tenant)
+  rent_psf_annual: 19.03
+  rent_psf_monthly: 1.59
+  # Percentage rent structure (from original lease; exceeds fixed rent only above threshold)
+  percentage_rent_merch_rate: 0.020   # 2.0% of merchandise gross sales
+  percentage_rent_food_rate: 0.005    # 0.5% of food gross sales
+  percentage_rent_rx_rate: 0.005      # 0.5% of eligible Rx sales
+  total_rent_cap_annual: 552000.0     # hard cap: fixed + percentage combined
+
+# Historical percentage-rent statements from tenant
+# (net payment $0 in both years — percentage rent did not exceed fixed rent)
+sales_history:
+  - period_label: "FY2022"          # Oct 2021 – Sep 2022
+    merchandise_sales: 1640103.01
+    food_sales: 534995.00
+    rx_sales: -2424.21              # net after exclusions/credits
+    fixed_rent: 284000.04
+    percentage_rent_calculated: 35464.92
+    percentage_rent_paid: 0.0       # did not exceed fixed rent; $0 additional
+
+  - period_label: "FY2024"          # Oct 2023 – Sep 2024
+    merchandise_sales: 1436639.63
+    food_sales: 533423.50
+    rx_sales: -83034.54             # net after exclusions/credits
+    fixed_rent: 284000.04
+    percentage_rent_calculated: 30984.74
+    percentage_rent_paid: 0.0       # did not exceed fixed rent; $0 additional
+
+# Owner operating P&L — entity name abstracted
+owner_pnl:
+  - period_label: "CY2025"          # Jan–Dec 2025 (full calendar year)
+    rental_income: 285486.79
+    expense_insurance: 4591.47
+    expense_property_mgmt: 8520.00
+    expense_repairs: 8428.64
+    expense_legal: 791.00
+    expense_bank_charges: 209.90
+    expense_office: 11.00
+    debt_service_interest: 155062.39  # mortgage interest (financing cost)
+    # Derived: noi_before_debt ≈ 262,934  |  net_income ≈ 107,872
+
+demographics:
+  demo_year: 2024
+  pop_1mi: 8512
+  pop_3mi: 58390
+  pop_5mi: 73832
+  avg_hhi_1mi: 91311.0
+  avg_hhi_3mi: 64388.0
+  avg_hhi_5mi: 62989.0
+  employees_1mi: 1809
+  employees_3mi: 16827
+  employees_5mi: 21865
+
+# ---------------------------------------------------------------------------
+# Investment highlights (abstracted from offering materials)
+# ---------------------------------------------------------------------------
+# - Single-tenant NN lease; tenant pays taxes, insurance, HVAC, interior
+# - Landlord: exterior, roof, structural, utility lines, parking lot replacement
+# - Corporate guaranty from nationally recognised pharmacy chain
+# - Long-term site occupancy since 2000; 6 × 5-year renewal options remaining
+# - Percentage rent upside tied to store gross sales performance
+# - Hard corner signalised intersection; double drive-thru pharmacy
+# - Top-decile foot traffic nationally (third-party analytics)
+# - 1-mile avg HHI $91K; stable residential trade area
+# - New Orleans MSA: healthcare / energy / higher-education employment base
+# ---------------------------------------------------------------------------
+# resources_pending_review:
+#   - url: https://selfstoragerenegades.com/part1   # 403 — access blocked at time of review
+#   - url: https://cremafund.com                    # CSS-only content — no extractable data
+# ---------------------------------------------------------------------------

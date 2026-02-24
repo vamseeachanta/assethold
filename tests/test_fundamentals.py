@@ -48,6 +48,14 @@ class TestScorePeRatio:
         from assethold.fundamentals import score_pe_ratio
         assert score_pe_ratio(30.0) == 2.0
 
+    def test_negative_pe_returns_zero(self):
+        from assethold.fundamentals import score_pe_ratio
+        assert score_pe_ratio(-5.0) == 0.0
+
+    def test_zero_pe_returns_zero(self):
+        from assethold.fundamentals import score_pe_ratio
+        assert score_pe_ratio(0.0) == 0.0
+
 
 # ---------------------------------------------------------------------------
 # score_pb_ratio
@@ -82,6 +90,14 @@ class TestScorePbRatio:
         from assethold.fundamentals import score_pb_ratio
         assert score_pb_ratio(6.0) == 2.0
 
+    def test_negative_pb_returns_zero(self):
+        from assethold.fundamentals import score_pb_ratio
+        assert score_pb_ratio(-1.0) == 0.0
+
+    def test_zero_pb_returns_zero(self):
+        from assethold.fundamentals import score_pb_ratio
+        assert score_pb_ratio(0.0) == 0.0
+
 
 # ---------------------------------------------------------------------------
 # score_ev_ebitda
@@ -115,6 +131,14 @@ class TestScoreEvEbitda:
     def test_ev_ebitda_above_20_scores_2(self):
         from assethold.fundamentals import score_ev_ebitda
         assert score_ev_ebitda(25.0) == 2.0
+
+    def test_negative_ev_ebitda_returns_zero(self):
+        from assethold.fundamentals import score_ev_ebitda
+        assert score_ev_ebitda(-3.0) == 0.0
+
+    def test_zero_ev_ebitda_returns_zero(self):
+        from assethold.fundamentals import score_ev_ebitda
+        assert score_ev_ebitda(0.0) == 0.0
 
 
 # ---------------------------------------------------------------------------

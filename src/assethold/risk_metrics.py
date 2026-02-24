@@ -210,6 +210,10 @@ def sortino_ratio(
 ) -> float:
     """Return the annualised Sortino ratio (uses downside deviation).
 
+    Downside deviation is the RMS of the below-threshold excess returns
+    computed over ALL periods (not just the negative ones), which is the
+    standard definition used in practice.
+
     Parameters
     ----------
     returns:
@@ -226,15 +230,13 @@ def sortino_ratio(
     _validate_returns(returns, "returns")
     daily_rf = risk_free_rate / periods
     excess = returns - daily_rf
-    downside = excess[excess < 0]
-    if downside.empty:
-        # No negative excess returns — ratio is effectively infinite;
-        # return the Sharpe equivalent instead.
-        return sharpe_ratio(returns, risk_free_rate, periods)
-    downside_std = float(np.sqrt((downside ** 2).mean()))
+    # Downside deviation: RMS of min(excess, 0) over all N periods
+    downside_excess = np.minimum(excess.values, 0.0)
+    downside_std = float(np.sqrt(np.mean(downside_excess ** 2)))
     if math.isclose(downside_std, 0.0, abs_tol=1e-12):
+        # All returns at or above the target — return the Sharpe equivalent
         return sharpe_ratio(returns, risk_free_rate, periods)
-    return float(excess.mean() / downside_std * math.sqrt(periods))
+    return float(float(excess.mean()) / downside_std * math.sqrt(periods))
 
 
 # ---------------------------------------------------------------------------

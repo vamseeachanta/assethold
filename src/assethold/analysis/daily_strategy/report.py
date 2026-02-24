@@ -16,6 +16,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+import pandas as pd
+
 from assethold.analysis.daily_strategy.history import SignalChange
 from assethold.analysis.daily_strategy.signals import PositionSignal
 from assethold.portfolio.sector_tracker import SectorBreakdown, RebalancingSuggestion
@@ -60,6 +62,7 @@ class DailyStrategyReport:
         sector_breakdown: Optional[SectorBreakdown] = None,
         sector_suggestions: Optional[list[RebalancingSuggestion]] = None,
         risk_metrics: Optional[dict] = None,
+        fundamentals_df: Optional[pd.DataFrame] = None,
     ) -> str:
         """
         Render the full report as a Markdown string.
@@ -73,6 +76,9 @@ class DailyStrategyReport:
             sector_suggestions: Optional rebalancing suggestions to append.
             risk_metrics:       Optional dict mapping ticker -> position_risk() output.
                                 When provided, a "Risk Metrics" section is appended.
+            fundamentals_df:    Optional DataFrame from FundamentalsScorer /
+                                SectorPeerRanker.  When provided, a
+                                "Fundamentals Scoring" section is appended.
 
         Returns:
             Markdown string.
@@ -160,6 +166,12 @@ class DailyStrategyReport:
             lines.append("")
             lines.extend(self._risk_metrics_section(risk_metrics))
 
+        # -- Fundamentals scoring section -----------------------------------
+        if fundamentals_df is not None and not fundamentals_df.empty:
+            lines.append("---")
+            lines.append("")
+            lines.extend(self._fundamentals_section(fundamentals_df))
+
         # -- Methodology footer ---------------------------------------------
         lines.append("---")
         lines.append("")
@@ -168,7 +180,7 @@ class DailyStrategyReport:
         lines.append(
             "Signals are a weighted composite of RSI momentum (25%), 52-week position (20%), "
             "price vs SMA-50 (20%), price vs SMA-200 (15%), and portfolio weight drift (10%). "
-            "P/E vs sector comparison is deferred to v2. "
+            "Fundamentals scoring (P/E, P/B, EV/EBITDA) adds a sector-peer value lens (WRK-322). "
             "`managed` positions use full signal range; `trim_only` positions (individual stocks) "
             "are capped at HOLD — build signals are suppressed."
         )
@@ -189,6 +201,7 @@ class DailyStrategyReport:
         sector_breakdown: Optional[SectorBreakdown] = None,
         sector_suggestions: Optional[list[RebalancingSuggestion]] = None,
         risk_metrics: Optional[dict] = None,
+        fundamentals_df: Optional[pd.DataFrame] = None,
     ) -> Path:
         """
         Render and write the report to disk.
@@ -208,6 +221,7 @@ class DailyStrategyReport:
                 sector_breakdown=sector_breakdown,
                 sector_suggestions=sector_suggestions,
                 risk_metrics=risk_metrics,
+                fundamentals_df=fundamentals_df,
             )
         )
         return path
@@ -348,6 +362,74 @@ class DailyStrategyReport:
                     f"Sells: {insider.sells_90d} | "
                     f"Net shares: {insider.net_shares_90d:+,.0f}"
                 )
+
+        return lines
+
+    def _fundamentals_section(self, df: pd.DataFrame) -> list[str]:
+        """Render fundamentals DataFrame as a Markdown section.
+
+        Args:
+            df: Scored and ranked holdings DataFrame from FundamentalsScorer /
+                SectorPeerRanker.
+
+        Returns:
+            List of Markdown lines for the Fundamentals Scoring section.
+        """
+        lines: list[str] = ["## Fundamentals Scoring", ""]
+        lines.append(
+            "Value scoring (P/E, P/B, EV/EBITDA) with sector-peer percentile ranks. "
+            "Composite: P/E × 0.35 + P/B × 0.35 + EV/EBITDA × 0.30 (higher = more value)."
+        )
+        lines.append("")
+
+        col_map = {
+            "ticker": "Ticker",
+            "sector": "Sector",
+            "pe": "P/E",
+            "pe_pct": "P/E %ile",
+            "pb": "P/B",
+            "pb_pct": "P/B %ile",
+            "ev_ebitda": "EV/EBITDA",
+            "ev_ebitda_pct": "EV %ile",
+            "score": "Score",
+            "deep_value": "Deep Value",
+        }
+        visible = [c for c in col_map if c in df.columns]
+        if not visible:
+            lines.append("*No fundamentals data available.*")
+            lines.append("")
+            return lines
+
+        header = "| " + " | ".join(col_map[c] for c in visible) + " |"
+        sep = "| " + " | ".join("---" for _ in visible) + " |"
+        lines.append(header)
+        lines.append(sep)
+
+        for _, row in df.iterrows():
+            cells = []
+            for c in visible:
+                val = row.get(c)
+                if val is None or (isinstance(val, float) and pd.isna(val)):
+                    cells.append("N/A")
+                elif c == "deep_value":
+                    cells.append("YES" if val is True else ("" if val is False else "N/A"))
+                elif c in ("score", "pe", "pb", "ev_ebitda"):
+                    cells.append(f"{val:.2f}" if isinstance(val, float) else str(val))
+                elif c in ("pe_pct", "pb_pct", "ev_ebitda_pct"):
+                    cells.append(f"{val:.0f}%" if isinstance(val, float) else str(val))
+                else:
+                    cells.append(str(val))
+            lines.append("| " + " | ".join(cells) + " |")
+
+        lines.append("")
+        deep_mask = df.get("deep_value", pd.Series(dtype=object)) == True  # noqa: E712
+        deep_value_rows = df[deep_mask]
+        if not deep_value_rows.empty:
+            tickers = ", ".join(deep_value_rows["ticker"].tolist())
+            lines.append(
+                f"**Deep-value opportunities (top quintile vs sector peers):** {tickers}"
+            )
+            lines.append("")
 
         return lines
 

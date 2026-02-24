@@ -1,0 +1,54 @@
+# GIS module default configuration
+# WRK-023: Property development timeline and future projections
+#
+# Override any of these values by passing a config dict to the module functions.
+
+geocoder:
+  user_agent: "assethold-gis/0.1"
+  buffer_km: 2.0
+  timeout: 10
+
+imagery:
+  max_cloud_pct: 20.0
+  year_step: 5
+  default_start_year: 1990
+  # Preferred source order — first available with acceptable cloud cover is used
+  sources:
+    - landsat-c2
+    - sentinel-2
+
+change_detection:
+  ndvi_loss_threshold: -0.15   # NDVI decrease below this → vegetation loss event
+  ndvi_gain_threshold: 0.15    # NDVI increase above this → vegetation gain event
+  pixel_area_sqm: 900.0        # 30 m Landsat pixel area
+
+projection:
+  aoi_area_sqkm: 12.57         # π × (2 km)² buffer area
+  horizon_years:
+    - 5
+    - 10
+    - 15
+  zoning_realisation_rate_per_year: 0.06  # 6 %/year → ~30 % at 5 yr horizon
+  max_annual_growth_cap: 0.20  # Cap extrapolation at ±20 %/year
+
+kml_export:
+  output_dir: "data/gis"
+  imagery_overlay_transparency: 0.6   # 0=opaque, 1=transparent
+  projection_fill_opacity: 0.25
+
+report:
+  output_dir: "data/gis"
+  embed_folium_map: true
+
+# External API credentials
+# Set these via environment variables; do not commit real values here
+api_keys:
+  usgs_earthexplorer:
+    username: "${USGS_EE_USERNAME}"
+    password: "${USGS_EE_PASSWORD}"
+  copernicus:
+    username: "${COPERNICUS_USERNAME}"
+    password: "${COPERNICUS_PASSWORD}"
+  google_earth_engine:
+    service_account: "${GEE_SERVICE_ACCOUNT}"
+    key_file: "${GEE_KEY_FILE}"
