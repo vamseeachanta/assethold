@@ -6,10 +6,18 @@ Fundamentals scoring module.
 Provides functions to fetch and score equity holdings by key valuation
 metrics (P/E, P/B, EV/EBITDA) sourced from yfinance, and to rank a
 portfolio by composite value attractiveness.
+
+Classes:
+    FundamentalsScorer  — score and rank holdings by composite value score
+    SectorPeerRanker    — add percentile ranks within GICS sector peers;
+                          flag deep-value opportunities
+    FundamentalsReport  — render scored holdings to CSV and console output
 """
 
 from __future__ import annotations
 
+from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
@@ -18,6 +26,11 @@ try:
     import yfinance  # type: ignore[import]
 except ImportError:
     yfinance = None  # type: ignore[assignment]
+
+# Minimum sector-peer count required to assign a deep-value flag
+_DEEP_VALUE_MIN_PEERS: int = 5
+# Top quintile threshold: score_pct >= 80% within sector = deep value
+_DEEP_VALUE_THRESHOLD: float = 80.0
 
 
 # ---------------------------------------------------------------------------
@@ -107,14 +120,17 @@ def score_ev_ebitda(ev_ebitda: Optional[float]) -> float:
 # ---------------------------------------------------------------------------
 
 def fetch_fundamentals(ticker: str) -> dict:
-    """Fetch P/E, P/B, EV/EBITDA, and forward EPS for a ticker via yfinance.
+    """Fetch P/E, P/B, EV/EBITDA, forward EPS, sector, and dividend yield
+    for a ticker via yfinance.
 
     Args:
         ticker: Stock ticker symbol (case-insensitive; normalised to upper).
 
     Returns:
-        Dict with keys: ticker, pe, pb, ev_ebitda, forward_eps.
-        Missing fields are represented as None.
+        Dict with keys: ticker, pe, pb, ev_ebitda, forward_eps,
+        sector, dividend_yield.
+        Missing numeric fields are represented as None.
+        Missing sector returns "Unknown".
 
     Raises:
         ImportError: If yfinance is not installed.
@@ -134,6 +150,8 @@ def fetch_fundamentals(ticker: str) -> dict:
         "pb": info.get("priceToBook") or None,
         "ev_ebitda": info.get("enterpriseToEbitda") or None,
         "forward_eps": info.get("forwardEps") or None,
+        "sector": str(info.get("sector") or "Unknown"),
+        "dividend_yield": info.get("dividendYield") or None,
     }
 
 
@@ -203,8 +221,209 @@ class FundamentalsScorer:
 
         Returns:
             DataFrame with columns ticker, pe, pb, ev_ebitda, forward_eps,
-            score; sorted by score descending.
+            sector, dividend_yield, score; sorted by score descending.
         """
         holdings = [fetch_fundamentals(t) for t in tickers]
         ranked = self.rank(holdings)
         return pd.DataFrame(ranked)
+
+
+# ---------------------------------------------------------------------------
+# Sector peer ranker
+# ---------------------------------------------------------------------------
+
+def _percentile_rank_lower_is_better(
+    values: list[Optional[float]],
+    target_idx: int,
+) -> Optional[float]:
+    """Return the percentile rank of values[target_idx] where lower raw values
+    earn a higher percentile (more value-attractive).
+
+    A holding with the lowest raw metric (cheapest) gets close to 100.0.
+
+    Returns None when the target value is None.
+    """
+    target = values[target_idx]
+    if target is None:
+        return None
+
+    valid = [v for v in values if v is not None]
+    n = len(valid)
+    if n == 1:
+        return 100.0
+
+    # Count how many valid peers have a value >= target (equal or more expensive)
+    worse_or_equal = sum(1 for v in valid if v >= target)
+    return round(worse_or_equal / n * 100.0, 1)
+
+
+def _percentile_rank_higher_is_better(
+    values: list[Optional[float]],
+    target_idx: int,
+) -> Optional[float]:
+    """Return the percentile rank where higher raw values earn a higher percentile.
+
+    Used for composite score (higher score = more value-attractive).
+
+    Returns None when the target value is None.
+    """
+    target = values[target_idx]
+    if target is None:
+        return None
+
+    valid = [v for v in values if v is not None]
+    n = len(valid)
+    if n == 1:
+        return 100.0
+
+    # Count how many valid peers have a value <= target (worse or equal score)
+    worse_or_equal = sum(1 for v in valid if v <= target)
+    return round(worse_or_equal / n * 100.0, 1)
+
+
+class SectorPeerRanker:
+    """Add sector-peer percentile ranks and deep-value flags to holdings.
+
+    Holdings are grouped by their ``sector`` field (GICS sector string).
+    Within each group, each holding receives a percentile rank per metric
+    (pe_pct, pb_pct, ev_ebitda_pct) where 100 = cheapest peer.
+
+    A ``deep_value`` boolean is set when the composite ``score`` percentile
+    within the sector is >= 80% (top quintile of value).  Requires at least
+    5 sector peers to be meaningful; set to None otherwise.
+    """
+
+    def add_sector_percentiles(self, holdings: list[dict]) -> list[dict]:
+        """Enrich holdings with per-sector percentile ranks and deep-value flag.
+
+        Args:
+            holdings: List of holding dicts.  Each must have at minimum a
+                      ``sector`` key.  Supported metric keys: pe, pb,
+                      ev_ebitda, score.
+
+        Returns:
+            New list of enriched dicts (shallow copies) with added keys:
+            pe_pct, pb_pct, ev_ebitda_pct, deep_value.
+        """
+        # Group indices by sector
+        sector_indices: dict[str, list[int]] = {}
+        for idx, h in enumerate(holdings):
+            sector = h.get("sector", "Unknown")
+            sector_indices.setdefault(sector, []).append(idx)
+
+        enriched = [dict(h) for h in holdings]
+
+        for sector, indices in sector_indices.items():
+            group = [enriched[i] for i in indices]
+
+            for metric in ("pe", "pb", "ev_ebitda"):
+                values: list[Optional[float]] = [h.get(metric) for h in group]
+                for local_idx, global_idx in enumerate(indices):
+                    pct = _percentile_rank_lower_is_better(values, local_idx)
+                    enriched[global_idx][f"{metric}_pct"] = pct
+
+            # Deep-value flag: based on composite score percentile
+            n_peers = len(indices)
+            score_values: list[Optional[float]] = [h.get("score") for h in group]
+            for local_idx, global_idx in enumerate(indices):
+                if n_peers < _DEEP_VALUE_MIN_PEERS:
+                    enriched[global_idx]["deep_value"] = None
+                    continue
+                score_pct = _percentile_rank_higher_is_better(
+                    score_values, local_idx
+                )
+                if score_pct is None:
+                    enriched[global_idx]["deep_value"] = None
+                else:
+                    enriched[global_idx]["deep_value"] = (
+                        score_pct >= _DEEP_VALUE_THRESHOLD
+                    )
+
+        return enriched
+
+
+# ---------------------------------------------------------------------------
+# Output: CSV and console table
+# ---------------------------------------------------------------------------
+
+_DISPLAY_COLUMNS = [
+    "ticker", "sector", "pe", "pb", "ev_ebitda",
+    "pe_pct", "pb_pct", "ev_ebitda_pct",
+    "score", "deep_value", "dividend_yield", "forward_eps",
+]
+
+_DEEP_VALUE_MARKER = " ** DEEP VALUE **"
+
+
+class FundamentalsReport:
+    """Render a scored-and-ranked fundamentals DataFrame to CSV and console.
+
+    Usage::
+
+        reporter = FundamentalsReport()
+        csv_path = reporter.to_csv(df, output_dir)
+        print(reporter.console_table(df))
+    """
+
+    def to_csv(self, df: pd.DataFrame, output_dir: Path) -> Path:
+        """Write the fundamentals DataFrame to a dated CSV file.
+
+        Args:
+            df:         DataFrame returned by FundamentalsScorer.fetch_and_rank
+                        (optionally enriched by SectorPeerRanker).
+            output_dir: Directory to write into.  Created if absent.
+
+        Returns:
+            Path to the written CSV file.
+        """
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        date_str = datetime.today().strftime("%Y-%m-%d")
+        filename = f"fundamentals-{date_str}.csv"
+        path = output_dir / filename
+        df.to_csv(path, index=False)
+        return path
+
+    def console_table(self, df: pd.DataFrame) -> str:
+        """Render the fundamentals DataFrame as a fixed-width console table.
+
+        Deep-value holdings (where deep_value == True) are marked with
+        " ** DEEP VALUE **" at the end of their row.
+
+        Args:
+            df: Fundamentals DataFrame (scored and ranked).
+
+        Returns:
+            Multi-line string suitable for printing.
+        """
+        cols = [c for c in _DISPLAY_COLUMNS if c in df.columns]
+        present = df[cols].copy()
+
+        lines: list[str] = []
+        header = " | ".join(f"{c:<14}" for c in cols)
+        separator = "-" * len(header)
+        lines.append("Fundamentals Scoring Report")
+        lines.append(separator)
+        lines.append(header)
+        lines.append(separator)
+
+        for _, row in present.iterrows():
+            parts = []
+            for c in cols:
+                val = row[c]
+                if val is None or (isinstance(val, float) and pd.isna(val)):
+                    parts.append(f"{'N/A':<14}")
+                elif isinstance(val, bool):
+                    parts.append(f"{'True' if val else 'False':<14}")
+                elif isinstance(val, float):
+                    parts.append(f"{val:<14.2f}")
+                else:
+                    parts.append(f"{str(val):<14}")
+            row_str = " | ".join(parts)
+            deep = row.get("deep_value", False)
+            if deep is True:
+                row_str += _DEEP_VALUE_MARKER
+            lines.append(row_str)
+
+        lines.append(separator)
+        return "\n".join(lines)

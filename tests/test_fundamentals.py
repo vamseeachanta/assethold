@@ -223,3 +223,257 @@ class TestFetchFundamentals:
             mock_yf.return_value = mock_ticker
             fetch_fundamentals("aapl")
             mock_yf.assert_called_once_with("AAPL")
+
+    def test_fetch_fundamentals_includes_sector_and_dividend_yield(self):
+        from assethold.fundamentals import fetch_fundamentals
+        mock_ticker = MagicMock()
+        mock_ticker.info = {
+            "trailingPE": 15.0,
+            "priceToBook": 2.0,
+            "enterpriseToEbitda": 10.0,
+            "forwardEps": 5.0,
+            "sector": "Information Technology",
+            "dividendYield": 0.015,
+        }
+        with patch("yfinance.Ticker", return_value=mock_ticker):
+            result = fetch_fundamentals("MSFT")
+        assert result["sector"] == "Information Technology"
+        assert result["dividend_yield"] == 0.015
+
+    def test_fetch_fundamentals_sector_missing_returns_unknown(self):
+        from assethold.fundamentals import fetch_fundamentals
+        mock_ticker = MagicMock()
+        mock_ticker.info = {}
+        with patch("yfinance.Ticker", return_value=mock_ticker):
+            result = fetch_fundamentals("XYZ")
+        assert result["sector"] == "Unknown"
+        assert result["dividend_yield"] is None
+
+
+# ---------------------------------------------------------------------------
+# Sector peer ranking
+# ---------------------------------------------------------------------------
+
+class TestSectorPeerRanker:
+    def test_percentile_rank_cheapest_is_highest(self):
+        from assethold.fundamentals import SectorPeerRanker
+        ranker = SectorPeerRanker()
+        holdings = [
+            {"ticker": "A", "sector": "Energy", "pe": 5.0},
+            {"ticker": "B", "sector": "Energy", "pe": 15.0},
+            {"ticker": "C", "sector": "Energy", "pe": 25.0},
+        ]
+        result = ranker.add_sector_percentiles(holdings)
+        by_ticker = {r["ticker"]: r for r in result}
+        assert by_ticker["A"]["pe_pct"] > by_ticker["C"]["pe_pct"]
+
+    def test_percentile_rank_single_holding_returns_100(self):
+        from assethold.fundamentals import SectorPeerRanker
+        ranker = SectorPeerRanker()
+        holdings = [{"ticker": "A", "sector": "Financials", "pe": 12.0}]
+        result = ranker.add_sector_percentiles(holdings)
+        assert result[0]["pe_pct"] == 100.0
+
+    def test_percentile_missing_pe_stays_none(self):
+        from assethold.fundamentals import SectorPeerRanker
+        ranker = SectorPeerRanker()
+        holdings = [
+            {"ticker": "A", "sector": "Energy", "pe": None},
+            {"ticker": "B", "sector": "Energy", "pe": 10.0},
+        ]
+        result = ranker.add_sector_percentiles(holdings)
+        by_ticker = {r["ticker"]: r for r in result}
+        assert by_ticker["A"]["pe_pct"] is None
+
+    def test_percentile_cross_sector_not_compared(self):
+        from assethold.fundamentals import SectorPeerRanker
+        ranker = SectorPeerRanker()
+        holdings = [
+            {"ticker": "A", "sector": "Energy", "pe": 5.0},
+            {"ticker": "B", "sector": "Technology", "pe": 50.0},
+        ]
+        result = ranker.add_sector_percentiles(holdings)
+        by_ticker = {r["ticker"]: r for r in result}
+        assert by_ticker["A"]["pe_pct"] == 100.0
+        assert by_ticker["B"]["pe_pct"] == 100.0
+
+    def test_pb_and_ev_ebitda_percentiles_present(self):
+        from assethold.fundamentals import SectorPeerRanker
+        ranker = SectorPeerRanker()
+        holdings = [
+            {"ticker": "A", "sector": "Industrials", "pe": 10.0,
+             "pb": 1.0, "ev_ebitda": 6.0},
+            {"ticker": "B", "sector": "Industrials", "pe": 20.0,
+             "pb": 3.0, "ev_ebitda": 14.0},
+        ]
+        result = ranker.add_sector_percentiles(holdings)
+        by_ticker = {r["ticker"]: r for r in result}
+        for key in ("pe_pct", "pb_pct", "ev_ebitda_pct"):
+            assert key in by_ticker["A"]
+            assert key in by_ticker["B"]
+        assert by_ticker["A"]["pe_pct"] > by_ticker["B"]["pe_pct"]
+        assert by_ticker["A"]["pb_pct"] > by_ticker["B"]["pb_pct"]
+        assert by_ticker["A"]["ev_ebitda_pct"] > by_ticker["B"]["ev_ebitda_pct"]
+
+    def test_deep_value_flag_bottom_quintile(self):
+        from assethold.fundamentals import SectorPeerRanker
+        ranker = SectorPeerRanker()
+        holdings = [
+            {"ticker": "A", "sector": "Energy", "pe": 5.0,
+             "pb": 0.5, "ev_ebitda": 4.0, "score": 9.0},
+            {"ticker": "B", "sector": "Energy", "pe": 10.0,
+             "pb": 1.0, "ev_ebitda": 8.0, "score": 7.5},
+            {"ticker": "C", "sector": "Energy", "pe": 15.0,
+             "pb": 2.0, "ev_ebitda": 12.0, "score": 6.0},
+            {"ticker": "D", "sector": "Energy", "pe": 20.0,
+             "pb": 3.0, "ev_ebitda": 16.0, "score": 4.5},
+            {"ticker": "E", "sector": "Energy", "pe": 30.0,
+             "pb": 6.0, "ev_ebitda": 22.0, "score": 2.0},
+        ]
+        result = ranker.add_sector_percentiles(holdings)
+        by_ticker = {r["ticker"]: r for r in result}
+        assert by_ticker["A"]["deep_value"] is True
+        assert by_ticker["E"]["deep_value"] is False
+
+    def test_deep_value_flag_absent_when_less_than_5_peers(self):
+        from assethold.fundamentals import SectorPeerRanker
+        ranker = SectorPeerRanker()
+        holdings = [
+            {"ticker": "A", "sector": "Utilities", "pe": 5.0,
+             "pb": 0.5, "ev_ebitda": 4.0, "score": 9.0},
+            {"ticker": "B", "sector": "Utilities", "pe": 20.0,
+             "pb": 3.0, "ev_ebitda": 16.0, "score": 3.0},
+        ]
+        result = ranker.add_sector_percentiles(holdings)
+        for r in result:
+            assert r.get("deep_value") is None
+
+
+# ---------------------------------------------------------------------------
+# FundamentalsReport — CSV and console output
+# ---------------------------------------------------------------------------
+
+class TestFundamentalsReport:
+    def _sample_df(self):
+        import pandas as pd
+        from assethold.fundamentals import SectorPeerRanker
+        holdings = [
+            {"ticker": "A", "sector": "Energy", "pe": 5.0,
+             "pb": 0.8, "ev_ebitda": 6.0, "forward_eps": 3.0,
+             "dividend_yield": 0.02, "score": 9.0},
+            {"ticker": "B", "sector": "Energy", "pe": 25.0,
+             "pb": 4.0, "ev_ebitda": 20.0, "forward_eps": 1.5,
+             "dividend_yield": 0.01, "score": 3.0},
+        ]
+        ranker = SectorPeerRanker()
+        enriched = ranker.add_sector_percentiles(holdings)
+        return pd.DataFrame(enriched)
+
+    def test_to_csv_creates_file(self, tmp_path):
+        from assethold.fundamentals import FundamentalsReport
+        df = self._sample_df()
+        reporter = FundamentalsReport()
+        path = reporter.to_csv(df, tmp_path)
+        assert path.exists()
+        import pandas as pd
+        reloaded = pd.read_csv(path)
+        assert "ticker" in reloaded.columns
+        assert len(reloaded) == 2
+
+    def test_to_csv_filename_contains_date(self, tmp_path):
+        from assethold.fundamentals import FundamentalsReport
+        df = self._sample_df()
+        reporter = FundamentalsReport()
+        path = reporter.to_csv(df, tmp_path)
+        assert "fundamentals" in path.name
+
+    def test_console_table_returns_string(self):
+        from assethold.fundamentals import FundamentalsReport
+        df = self._sample_df()
+        reporter = FundamentalsReport()
+        text = reporter.console_table(df)
+        assert isinstance(text, str)
+        assert "ticker" in text.lower() or "Ticker" in text
+        assert "A" in text
+        assert "B" in text
+
+    def test_console_table_marks_deep_value(self):
+        from assethold.fundamentals import FundamentalsReport, SectorPeerRanker
+        import pandas as pd
+        holdings = [
+            {"ticker": "A", "sector": "Energy", "pe": 5.0,
+             "pb": 0.5, "ev_ebitda": 4.0, "score": 9.0,
+             "dividend_yield": 0.02, "forward_eps": 3.0},
+            {"ticker": "B", "sector": "Energy", "pe": 10.0,
+             "pb": 1.0, "ev_ebitda": 8.0, "score": 7.5,
+             "dividend_yield": 0.01, "forward_eps": 2.5},
+            {"ticker": "C", "sector": "Energy", "pe": 15.0,
+             "pb": 2.0, "ev_ebitda": 12.0, "score": 6.0,
+             "dividend_yield": 0.015, "forward_eps": 2.0},
+            {"ticker": "D", "sector": "Energy", "pe": 20.0,
+             "pb": 3.0, "ev_ebitda": 16.0, "score": 4.5,
+             "dividend_yield": 0.005, "forward_eps": 1.5},
+            {"ticker": "E", "sector": "Energy", "pe": 30.0,
+             "pb": 6.0, "ev_ebitda": 22.0, "score": 2.0,
+             "dividend_yield": 0.0, "forward_eps": 0.5},
+        ]
+        ranker = SectorPeerRanker()
+        enriched = ranker.add_sector_percentiles(holdings)
+        df = pd.DataFrame(enriched)
+        reporter = FundamentalsReport()
+        text = reporter.console_table(df)
+        assert "DEEP VALUE" in text or "deep_value" in text.lower() or "*" in text
+
+
+# ---------------------------------------------------------------------------
+# DailyStrategyReport fundamentals integration
+# ---------------------------------------------------------------------------
+
+class TestDailyStrategyReportFundamentalsSection:
+    def _make_signals(self):
+        """Create minimal PositionSignal stubs for report rendering."""
+        from unittest.mock import MagicMock
+        sig = MagicMock()
+        sig.position.ticker = "AAPL"
+        sig.position.account = "Test"
+        sig.position.shares = 10.0
+        sig.position.tradeable = True
+        sig.position.avg_cost_basis = None
+        sig.snapshot.current_price = 150.0
+        sig.snapshot.week52_low = 120.0
+        sig.snapshot.week52_high = 180.0
+        sig.snapshot.pct_from_52w_low = 50.0
+        sig.snapshot.rsi_14 = 50.0
+        sig.snapshot.sma_50 = 148.0
+        sig.snapshot.sma_200 = 145.0
+        sig.snapshot.insider_trend = None
+        sig.score = 0.1
+        sig.signal = "HOLD"
+        sig.rationale = ["Test rationale"]
+        return [sig]
+
+    def test_render_includes_fundamentals_section_when_provided(self):
+        import pandas as pd
+        from assethold.analysis.daily_strategy.report import DailyStrategyReport
+        from assethold.fundamentals import SectorPeerRanker
+
+        holdings = [
+            {"ticker": "AAPL", "sector": "Information Technology",
+             "pe": 28.0, "pb": 40.0, "ev_ebitda": 20.0,
+             "forward_eps": 6.5, "dividend_yield": 0.006, "score": 3.5},
+        ]
+        ranker = SectorPeerRanker()
+        enriched = ranker.add_sector_percentiles(holdings)
+        fundamentals_df = pd.DataFrame(enriched)
+
+        report = DailyStrategyReport(output_dir=None)
+        signals = self._make_signals()
+        md = report.render(signals, fundamentals_df=fundamentals_df)
+        assert "Fundamentals" in md or "fundamentals" in md.lower()
+
+    def test_render_without_fundamentals_df_still_works(self):
+        from assethold.analysis.daily_strategy.report import DailyStrategyReport
+        report = DailyStrategyReport(output_dir=None)
+        signals = self._make_signals()
+        md = report.render(signals)
+        assert "Daily Portfolio Strategy" in md

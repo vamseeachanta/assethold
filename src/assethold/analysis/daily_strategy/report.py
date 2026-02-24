@@ -5,11 +5,12 @@ Produces a Markdown report with two sections:
   1. Per-account — each Fidelity account on its own table
   2. Combined portfolio — all accounts merged, with final signals
 
-Signal ordering: STRONG BUILD → BUILD → HOLD → TRIM → STRONG TRIM
+Signal ordering: STRONG BUILD -> BUILD -> HOLD -> TRIM -> STRONG TRIM
 """
 
 from __future__ import annotations
 
+import math
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -46,8 +47,8 @@ class DailyStrategyReport:
                         Defaults to <repo-root>/reports/daily-strategy/.
         """
         if output_dir is None:
-            # report.py → daily_strategy/ → analysis/ → assethold-pkg/
-            # → src/ → repo-root/
+            # report.py -> daily_strategy/ -> analysis/ -> assethold-pkg/
+            # -> src/ -> repo-root/
             output_dir = Path(__file__).parents[4] / "reports" / "daily-strategy"
         self.output_dir = Path(output_dir)
 
@@ -58,6 +59,7 @@ class DailyStrategyReport:
         changes: Optional[list[SignalChange]] = None,
         sector_breakdown: Optional[SectorBreakdown] = None,
         sector_suggestions: Optional[list[RebalancingSuggestion]] = None,
+        risk_metrics: Optional[dict] = None,
     ) -> str:
         """
         Render the full report as a Markdown string.
@@ -69,6 +71,8 @@ class DailyStrategyReport:
                                 When provided, a "Changes Today" section is prepended.
             sector_breakdown:   Optional sector exposure breakdown to append.
             sector_suggestions: Optional rebalancing suggestions to append.
+            risk_metrics:       Optional dict mapping ticker -> position_risk() output.
+                                When provided, a "Risk Metrics" section is appended.
 
         Returns:
             Markdown string.
@@ -91,7 +95,7 @@ class DailyStrategyReport:
         lines.append("---")
         lines.append("")
 
-        # ── Signal changes vs prior day ───────────────────────────────────
+        # -- Signal changes vs prior day ------------------------------------
         if changes is not None:
             lines.append("## Changes Today")
             lines.append("")
@@ -104,7 +108,7 @@ class DailyStrategyReport:
             lines.append("---")
             lines.append("")
 
-        # ── Per-account sections ──────────────────────────────────────────
+        # -- Per-account sections -------------------------------------------
         by_account: dict[str, list[PositionSignal]] = defaultdict(list)
         for sig in signals:
             by_account[sig.position.account].append(sig)
@@ -118,7 +122,7 @@ class DailyStrategyReport:
             lines.extend(self._account_table(acct_signals))
             lines.append("")
 
-        # ── Combined portfolio section ────────────────────────────────────
+        # -- Combined portfolio section -------------------------------------
         lines.append("---")
         lines.append("")
         lines.append("## Combined Portfolio")
@@ -126,7 +130,7 @@ class DailyStrategyReport:
         lines.extend(self._combined_table(tradeable, total_value))
         lines.append("")
 
-        # ── Detailed rationale ───────────────────────────────────────────
+        # -- Detailed rationale ---------------------------------------------
         lines.append("---")
         lines.append("")
         lines.append("## Signal Details")
@@ -140,7 +144,7 @@ class DailyStrategyReport:
             lines.extend(self._signal_detail(sig, total_value))
             lines.append("")
 
-        # ── Sector exposure ───────────────────────────────────────────────
+        # -- Sector exposure ------------------------------------------------
         if sector_breakdown is not None:
             from assethold.portfolio.sector_tracker import SectorTracker
             lines.append("---")
@@ -150,7 +154,13 @@ class DailyStrategyReport:
                 st.render_sector_section(sector_breakdown, sector_suggestions)
             )
 
-        # ── Methodology footer ───────────────────────────────────────────
+        # -- Risk metrics section -------------------------------------------
+        if risk_metrics:
+            lines.append("---")
+            lines.append("")
+            lines.extend(self._risk_metrics_section(risk_metrics))
+
+        # -- Methodology footer ---------------------------------------------
         lines.append("---")
         lines.append("")
         lines.append("## Methodology")
@@ -178,6 +188,7 @@ class DailyStrategyReport:
         changes: Optional[list[SignalChange]] = None,
         sector_breakdown: Optional[SectorBreakdown] = None,
         sector_suggestions: Optional[list[RebalancingSuggestion]] = None,
+        risk_metrics: Optional[dict] = None,
     ) -> Path:
         """
         Render and write the report to disk.
@@ -196,6 +207,7 @@ class DailyStrategyReport:
                 changes=changes,
                 sector_breakdown=sector_breakdown,
                 sector_suggestions=sector_suggestions,
+                risk_metrics=risk_metrics,
             )
         )
         return path
@@ -304,7 +316,7 @@ class DailyStrategyReport:
             f"(currently {snap.pct_from_52w_low:.0f}% of range)",
         ]
         if snap.rsi_14 is not None:
-            lines.append(f"RSI-14: {snap.rsi_14:.1f} | ", )
+            lines.append(f"RSI-14: {snap.rsi_14:.1f} | ")
         if snap.sma_50:
             lines[-1] = lines[-1].rstrip(" | ")
             lines[-1] += f"SMA-50: ${snap.sma_50:,.2f} | SMA-200: ${snap.sma_200 or 0:,.2f}"
@@ -337,4 +349,48 @@ class DailyStrategyReport:
                     f"Net shares: {insider.net_shares_90d:+,.0f}"
                 )
 
+        return lines
+
+    def _risk_metrics_section(self, risk_metrics: dict) -> list[str]:
+        """Render a Markdown risk metrics table for all tickers in risk_metrics.
+
+        Args:
+            risk_metrics: Dict mapping ticker -> position_risk() output dict.
+
+        Returns:
+            List of Markdown lines for the Risk Metrics section.
+        """
+        lines = [
+            "## Risk Metrics",
+            "",
+            "| Ticker | VaR 95% | VaR 99% | CVaR 95% | CVaR 99% | "
+            "Sharpe | Sortino | Max DD | Calmar |",
+            "|--------|--------:|--------:|---------:|---------:|"
+            "-------:|--------:|-------:|-------:|",
+        ]
+        for ticker, m in sorted(risk_metrics.items()):
+            calmar_val = m.get("calmar", float("nan"))
+            calmar_str = (
+                "N/A" if math.isnan(calmar_val)
+                else f"{calmar_val:>7.2f}"
+            )
+            dd = m.get("max_drawdown", 0.0)
+            lines.append(
+                f"| {ticker} "
+                f"| {m['var_95']:>7.4f} "
+                f"| {m['var_99']:>7.4f} "
+                f"| {m['cvar_95']:>8.4f} "
+                f"| {m['cvar_99']:>8.4f} "
+                f"| {m['sharpe']:>6.2f} "
+                f"| {m['sortino']:>7.2f} "
+                f"| {dd:>6.4f} "
+                f"| {calmar_str} |"
+            )
+        lines.append("")
+        lines.append(
+            "*VaR and CVaR are historical simulation at stated confidence. "
+            "Sharpe and Sortino annualised at 252 periods. "
+            "Max DD is peak-to-trough drawdown.*"
+        )
+        lines.append("")
         return lines

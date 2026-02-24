@@ -1,8 +1,10 @@
 """Tests for portfolio risk metrics (WRK-324).
 
 Covers: historical VaR, CVaR, parametric VaR, Sharpe ratio,
-Sortino ratio, max drawdown, Calmar ratio, and PortfolioRisk class.
+Sortino ratio, max drawdown, Calmar ratio, PortfolioRisk class,
+DrawdownResult (with dates), and position_risk convenience function.
 """
+import math
 import pytest
 import numpy as np
 import pandas as pd
@@ -13,8 +15,11 @@ from assethold.risk_metrics import (
     sharpe_ratio,
     sortino_ratio,
     max_drawdown,
+    max_drawdown_with_dates,
     calmar_ratio,
+    position_risk,
     PortfolioRisk,
+    DrawdownResult,
 )
 
 
@@ -190,6 +195,54 @@ class TestMaxDrawdown:
 
 
 # ---------------------------------------------------------------------------
+# DrawdownResult and max_drawdown_with_dates
+# ---------------------------------------------------------------------------
+
+class TestMaxDrawdownWithDates:
+    def test_returns_drawdown_result_type(self, daily_returns):
+        result = max_drawdown_with_dates(daily_returns)
+        assert isinstance(result, DrawdownResult)
+
+    def test_drawdown_value_matches_max_drawdown(self, daily_returns):
+        result = max_drawdown_with_dates(daily_returns)
+        assert result.drawdown == pytest.approx(max_drawdown(daily_returns), abs=1e-10)
+
+    def test_peak_date_before_trough_date(self, daily_returns):
+        result = max_drawdown_with_dates(daily_returns)
+        assert result.peak_date <= result.trough_date
+
+    def test_dates_are_valid_pandas_timestamps_for_datetime_index(self):
+        idx = pd.date_range("2024-01-01", periods=20, freq="B")
+        returns = pd.Series(
+            [0.01, 0.01, -0.05, -0.03, 0.01, 0.01, -0.02, 0.01] * 2
+            + [0.01, 0.01, 0.01, 0.01],
+            index=idx,
+        )
+        result = max_drawdown_with_dates(returns)
+        assert result.peak_date is not None
+        assert result.trough_date is not None
+
+    def test_known_drawdown_with_integer_index(self):
+        # Series with clear peak early, then decline
+        returns = pd.Series([0.01, 0.01, -0.1176, -0.0556, 0.0588])
+        result = max_drawdown_with_dates(returns)
+        assert result.drawdown < 0
+        assert result.peak_date <= result.trough_date
+
+    def test_zero_drawdown_both_dates_none(self):
+        increasing = pd.Series([0.01] * 10)
+        result = max_drawdown_with_dates(increasing)
+        # drawdown is 0; peak/trough dates are None
+        assert result.drawdown == pytest.approx(0.0, abs=1e-9)
+        assert result.peak_date is None
+        assert result.trough_date is None
+
+    def test_raises_on_empty_series(self):
+        with pytest.raises(ValueError):
+            max_drawdown_with_dates(pd.Series(dtype=float))
+
+
+# ---------------------------------------------------------------------------
 # calmar_ratio
 # ---------------------------------------------------------------------------
 
@@ -205,6 +258,97 @@ class TestCalmarRatio:
         increasing = pd.Series([0.001] * 252)
         with pytest.raises(ValueError):
             calmar_ratio(increasing)
+
+
+# ---------------------------------------------------------------------------
+# position_risk convenience function
+# ---------------------------------------------------------------------------
+
+class TestPositionRisk:
+    def test_returns_dict_with_all_keys(self, daily_returns):
+        metrics = position_risk(daily_returns)
+        for key in (
+            "var_95", "var_99", "cvar_95", "cvar_99",
+            "parametric_var_95", "parametric_var_99",
+            "sharpe", "sortino", "max_drawdown", "calmar",
+        ):
+            assert key in metrics, f"Missing key: {key}"
+
+    def test_var_values_are_negative(self, daily_returns):
+        metrics = position_risk(daily_returns)
+        assert metrics["var_95"] < 0
+        assert metrics["var_99"] < 0
+        assert metrics["cvar_95"] < 0
+        assert metrics["cvar_99"] < 0
+
+    def test_custom_risk_free_rate_passed_through(self, positive_returns):
+        m_low = position_risk(positive_returns, risk_free_rate=0.0)
+        m_high = position_risk(positive_returns, risk_free_rate=0.10)
+        # Higher risk-free rate reduces Sharpe
+        assert m_low["sharpe"] > m_high["sharpe"]
+
+    def test_returns_drawdown_result_with_dates(self, daily_returns):
+        metrics = position_risk(daily_returns)
+        assert isinstance(metrics["drawdown_detail"], DrawdownResult)
+
+    def test_positive_returns_give_positive_sharpe(self, positive_returns):
+        metrics = position_risk(positive_returns)
+        assert metrics["sharpe"] > 0
+
+    def test_calmar_nan_when_no_drawdown(self):
+        # Use slightly varying returns (all positive) so Sharpe is defined,
+        # but with no peak-to-trough decline so max_drawdown is 0.
+        np.random.seed(99)
+        always_up = pd.Series(np.abs(np.random.normal(0.002, 0.0001, 252)))
+        metrics = position_risk(always_up)
+        assert math.isnan(metrics["calmar"])
+
+    def test_raises_on_empty_series(self):
+        with pytest.raises(ValueError):
+            position_risk(pd.Series(dtype=float))
+
+
+# ---------------------------------------------------------------------------
+# Sortino ratio edge cases (coverage for fallback paths)
+# ---------------------------------------------------------------------------
+
+class TestSortinoEdgeCases:
+    def test_no_negative_excess_returns_falls_back_to_sharpe(self):
+        # All excess returns positive (varying so Sharpe is defined) ->
+        # no downside deviation -> Sortino falls back to Sharpe.
+        np.random.seed(55)
+        # returns all well above daily rf (0.04/252 approx 0.000159)
+        always_positive_excess = pd.Series(
+            np.abs(np.random.normal(0.005, 0.001, 252))
+        )
+        sr = sharpe_ratio(always_positive_excess, risk_free_rate=0.04)
+        so = sortino_ratio(always_positive_excess, risk_free_rate=0.04)
+        assert so == pytest.approx(sr, rel=1e-6)
+
+    def test_downside_deviation_is_not_zero_for_varying_negatives(self):
+        # Returns with some negative excess returns: sortino is well defined
+        np.random.seed(11)
+        mixed = pd.Series(np.random.normal(0.0, 0.01, 252))
+        result = sortino_ratio(mixed, risk_free_rate=0.04)
+        assert isinstance(result, float)
+
+
+# ---------------------------------------------------------------------------
+# PortfolioRisk calmar NaN coverage
+# ---------------------------------------------------------------------------
+
+class TestPortfolioRiskCalmarNan:
+    def test_calmar_is_nan_when_no_drawdown(self):
+        # Always-positive varying returns -> max drawdown is 0 -> calmar is nan
+        np.random.seed(88)
+        always_up = np.abs(np.random.normal(0.002, 0.0001, 252))
+        df = pd.DataFrame({
+            "A": pd.Series(always_up),
+            "B": pd.Series(always_up * 0.99),
+        })
+        pr = PortfolioRisk(df, {"A": 0.5, "B": 0.5})
+        metrics = pr.compute()
+        assert math.isnan(metrics["calmar"])
 
 
 # ---------------------------------------------------------------------------

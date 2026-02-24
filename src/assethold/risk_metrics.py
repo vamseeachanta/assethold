@@ -8,24 +8,53 @@ individual return series and multi-asset portfolios.
 
 Public API
 ----------
-historical_var      -- Historical Value at Risk
-historical_cvar     -- Historical Conditional VaR (Expected Shortfall)
-parametric_var      -- Parametric (normal) VaR
-sharpe_ratio        -- Annualised Sharpe ratio
-sortino_ratio       -- Annualised Sortino ratio
-max_drawdown        -- Peak-to-trough maximum drawdown
-calmar_ratio        -- Annualised return / |max drawdown|
-PortfolioRisk       -- Aggregated portfolio metrics class
+historical_var          -- Historical Value at Risk
+historical_cvar         -- Historical Conditional VaR (Expected Shortfall)
+parametric_var          -- Parametric (normal) VaR
+sharpe_ratio            -- Annualised Sharpe ratio
+sortino_ratio           -- Annualised Sortino ratio
+max_drawdown            -- Peak-to-trough maximum drawdown (float)
+max_drawdown_with_dates -- Peak-to-trough drawdown with peak/trough dates
+calmar_ratio            -- Annualised return / |max drawdown|
+position_risk           -- All metrics for a single return series
+DrawdownResult          -- Dataclass: drawdown float + peak/trough dates
+PortfolioRisk           -- Aggregated portfolio metrics class
 """
 
 from __future__ import annotations
 
 import math
-from typing import Optional
+from dataclasses import dataclass
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
 from scipy import stats as scipy_stats
+
+
+# ---------------------------------------------------------------------------
+# Data structures
+# ---------------------------------------------------------------------------
+
+@dataclass
+class DrawdownResult:
+    """Peak-to-trough drawdown with optional date information.
+
+    Attributes
+    ----------
+    drawdown:
+        Non-positive float in [-1, 0].  0 means no drawdown observed.
+    peak_date:
+        Index label of the cumulative-value peak before the trough.
+        None when drawdown is zero or index has no date information.
+    trough_date:
+        Index label of the cumulative-value trough.
+        None when drawdown is zero or index has no date information.
+    """
+
+    drawdown: float
+    peak_date: Optional[Any] = None
+    trough_date: Optional[Any] = None
 
 
 # ---------------------------------------------------------------------------
@@ -236,6 +265,49 @@ def max_drawdown(returns: pd.Series) -> float:
     return float(drawdown.min())
 
 
+def max_drawdown_with_dates(returns: pd.Series) -> DrawdownResult:
+    """Return the maximum drawdown together with peak and trough dates.
+
+    Parameters
+    ----------
+    returns:
+        Daily return series.  When the series has a DatetimeIndex (or
+        any labelled index), peak_date and trough_date are set to the
+        corresponding index labels; otherwise they remain None.
+
+    Returns
+    -------
+    DrawdownResult
+        .drawdown    -- non-positive float in [-1, 0]
+        .peak_date   -- index label of the equity peak (None if drawdown=0)
+        .trough_date -- index label of the trough after the peak (None if 0)
+    """
+    _validate_returns(returns, "returns")
+    cumulative = (1.0 + returns).cumprod()
+    running_max = cumulative.cummax()
+    safe_max = running_max.replace(0.0, np.nan)
+    drawdown_series = (cumulative - running_max) / safe_max
+    drawdown_series = drawdown_series.fillna(-1.0)
+
+    mdd = float(drawdown_series.min())
+
+    if math.isclose(mdd, 0.0, abs_tol=1e-12):
+        return DrawdownResult(drawdown=0.0, peak_date=None, trough_date=None)
+
+    trough_loc = int(drawdown_series.argmin())
+    trough_idx = returns.index[trough_loc]
+
+    # Peak is the running-max location up to (and including) the trough
+    peak_loc = int(cumulative.iloc[: trough_loc + 1].argmax())
+    peak_idx = returns.index[peak_loc]
+
+    return DrawdownResult(
+        drawdown=mdd,
+        peak_date=peak_idx,
+        trough_date=trough_idx,
+    )
+
+
 def calmar_ratio(
     returns: pd.Series,
     risk_free_rate: float = 0.04,
@@ -270,6 +342,56 @@ def calmar_ratio(
         )
     ann_return = float((1.0 + returns.mean()) ** periods - 1.0)
     return float(ann_return / abs(mdd))
+
+
+# ---------------------------------------------------------------------------
+# Per-position convenience wrapper
+# ---------------------------------------------------------------------------
+
+def position_risk(
+    returns: pd.Series,
+    risk_free_rate: float = 0.04,
+    periods: int = 252,
+) -> dict:
+    """Compute all risk metrics for a single return series.
+
+    Parameters
+    ----------
+    returns:
+        Daily return series for one ticker or instrument.
+    risk_free_rate:
+        Annual risk-free rate passed to ratio metrics.
+    periods:
+        Periods per year for annualisation.
+
+    Returns
+    -------
+    dict
+        Keys: var_95, var_99, cvar_95, cvar_99,
+              parametric_var_95, parametric_var_99,
+              sharpe, sortino, max_drawdown, calmar,
+              drawdown_detail (DrawdownResult).
+    """
+    _validate_returns(returns, "returns")
+    mdd = max_drawdown(returns)
+    try:
+        calmar = calmar_ratio(returns, risk_free_rate, periods)
+    except ValueError:
+        calmar = float("nan")
+
+    return {
+        "var_95": historical_var(returns, 0.95),
+        "var_99": historical_var(returns, 0.99),
+        "cvar_95": historical_cvar(returns, 0.95),
+        "cvar_99": historical_cvar(returns, 0.99),
+        "parametric_var_95": parametric_var(returns, 0.95),
+        "parametric_var_99": parametric_var(returns, 0.99),
+        "sharpe": sharpe_ratio(returns, risk_free_rate, periods),
+        "sortino": sortino_ratio(returns, risk_free_rate, periods),
+        "max_drawdown": mdd,
+        "calmar": calmar,
+        "drawdown_detail": max_drawdown_with_dates(returns),
+    }
 
 
 # ---------------------------------------------------------------------------
