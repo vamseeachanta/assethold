@@ -182,3 +182,7 @@ hive-mind-prompt-*.txt
 # Legacy directories (removed from repo structure)
 /agents/
 /modules/
+
+# Windows-path directory artifacts (cross-platform path bug — WRK-366)
+# Matches dirs like: D:\workspace-hub\... created on Windows and synced to Linux
+[A-Z]:\*
