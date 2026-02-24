@@ -182,6 +182,19 @@ def main(argv: list[str] | None = None) -> int:
     )
     signals = engine.score_batch(positions, snapshots, portfolio_value=total_value)
 
+    # Sector exposure tracker
+    from assethold.portfolio.sector_tracker import SectorTracker
+
+    sector_tracker = SectorTracker()
+    holdings_by_value: dict[str, float] = {}
+    for p in tradeable:
+        snap = snapshots.get(p.ticker)
+        if snap is not None and p.shares > 0:
+            holdings_by_value[p.ticker] = p.shares * snap.current_price
+
+    sector_breakdown = sector_tracker.build_breakdown(holdings_by_value)
+    print(sector_tracker.format_table(sector_breakdown))
+
     # Signal history: detect changes vs prior day
     from assethold.analysis.daily_strategy.history import HistoryStore
 
@@ -204,7 +217,12 @@ def main(argv: list[str] | None = None) -> int:
     reporter.print_summary(signals, total_value)
 
     if not args.no_write:
-        md_path = reporter.write(signals, report_date=report_date, changes=changes)
+        md_path = reporter.write(
+            signals,
+            report_date=report_date,
+            changes=changes,
+            sector_breakdown=sector_breakdown,
+        )
         print(f"\nMarkdown report: {md_path}")
 
         # Render HTML report (primary output)

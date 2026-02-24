@@ -17,6 +17,7 @@ from typing import Optional
 
 from assethold.analysis.daily_strategy.history import SignalChange
 from assethold.analysis.daily_strategy.signals import PositionSignal
+from assethold.portfolio.sector_tracker import SectorBreakdown, RebalancingSuggestion
 
 _SIGNAL_ORDER = {
     "STRONG BUILD": 0,
@@ -55,15 +56,19 @@ class DailyStrategyReport:
         signals: list[PositionSignal],
         report_date: Optional[datetime] = None,
         changes: Optional[list[SignalChange]] = None,
+        sector_breakdown: Optional[SectorBreakdown] = None,
+        sector_suggestions: Optional[list[RebalancingSuggestion]] = None,
     ) -> str:
         """
         Render the full report as a Markdown string.
 
         Args:
-            signals:     Scored positions (all accounts).
-            report_date: Date to stamp on the report (default: today).
-            changes:     Signal changes vs prior day from HistoryStore.changes().
-                         When provided, a "Changes Today" section is prepended.
+            signals:            Scored positions (all accounts).
+            report_date:        Date to stamp on the report (default: today).
+            changes:            Signal changes vs prior day from HistoryStore.changes().
+                                When provided, a "Changes Today" section is prepended.
+            sector_breakdown:   Optional sector exposure breakdown to append.
+            sector_suggestions: Optional rebalancing suggestions to append.
 
         Returns:
             Markdown string.
@@ -135,6 +140,16 @@ class DailyStrategyReport:
             lines.extend(self._signal_detail(sig, total_value))
             lines.append("")
 
+        # ── Sector exposure ───────────────────────────────────────────────
+        if sector_breakdown is not None:
+            from assethold.portfolio.sector_tracker import SectorTracker
+            lines.append("---")
+            lines.append("")
+            st = SectorTracker()
+            lines.append(
+                st.render_sector_section(sector_breakdown, sector_suggestions)
+            )
+
         # ── Methodology footer ───────────────────────────────────────────
         lines.append("---")
         lines.append("")
@@ -161,6 +176,8 @@ class DailyStrategyReport:
         signals: list[PositionSignal],
         report_date: Optional[datetime] = None,
         changes: Optional[list[SignalChange]] = None,
+        sector_breakdown: Optional[SectorBreakdown] = None,
+        sector_suggestions: Optional[list[RebalancingSuggestion]] = None,
     ) -> Path:
         """
         Render and write the report to disk.
@@ -172,7 +189,15 @@ class DailyStrategyReport:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         filename = date.strftime("%Y-%m-%d") + ".md"
         path = self.output_dir / filename
-        path.write_text(self.render(signals, report_date=date, changes=changes))
+        path.write_text(
+            self.render(
+                signals,
+                report_date=date,
+                changes=changes,
+                sector_breakdown=sector_breakdown,
+                sector_suggestions=sector_suggestions,
+            )
+        )
         return path
 
     def print_summary(
