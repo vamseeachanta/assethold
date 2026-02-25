@@ -347,9 +347,9 @@ class StockAnalysis():
         import datetime
         description = 'Price 30% Above 52 wk low [% Above]'
        
-        fiftyTwoWeekLow = daily_data[daily_data['Date'] > datetime.datetime.now(
-            pytz.timezone('America/New_York')) +
-                            datetime.timedelta(days=-365)].Close.min()
+        cutoff = (datetime.datetime.now(pytz.timezone('America/New_York')) +
+                  datetime.timedelta(days=-365)).replace(tzinfo=None)
+        fiftyTwoWeekLow = daily_data[daily_data['Date'] > cutoff].Close.min()
         percent_above_52wklow = ((daily_data.iloc[-1][close] / fiftyTwoWeekLow - 1) *
                                 100).__round__(0)
         
@@ -363,9 +363,9 @@ class StockAnalysis():
         import datetime
         description = 'Price within 25% of 52 wk high range [% value]'
         
-        fiftyTwoWeekHigh = daily_data[daily_data['Date'] > datetime.datetime.now(
-            pytz.timezone('America/New_York')) +
-                            datetime.timedelta(days=-365)].Close.max()
+        cutoff = (datetime.datetime.now(pytz.timezone('America/New_York')) +
+                  datetime.timedelta(days=-365)).replace(tzinfo=None)
+        fiftyTwoWeekHigh = daily_data[daily_data['Date'] > cutoff].Close.max()
         percent_above_52wkhigh = ((daily_data.iloc[-1][close] / fiftyTwoWeekHigh - 1) *
                                 100).__round__(0)
         
