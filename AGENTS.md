@@ -1,9 +1,11 @@
-# Assethold Agent Contract Pointer
+---
+purpose: Asset portfolio financial analysis — fundamentals, options, modules, analysis pipelines
+entry_points: [src/assethold/engine.py, src/assethold/fundamentals.py, src/assethold/analysis/]
+test_command: uv run python -m pytest tests/ --noconftest
+depends_on: [assetutilities]
+maturity: beta
+---
+# assethold
 
-This repository inherits the canonical contract from:
-../AGENTS.md
-
-- Contract-Version: 1.0.0
-- Generated-At: 2026-02-17T16:39:59Z
-
-Do not hand-edit policy here. Update workspace-hub/AGENTS.md and regenerate adapters.
+Contract: ../AGENTS.md | Source: src/assethold/
+Key modules: engine.py, fundamentals.py, fundamentals_report.py, analysis/, modules/, options/
