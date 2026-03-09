@@ -149,6 +149,7 @@ class TestDataProcessingCore:
 class TestFileOperations:
     """Test file I/O operations for data import/export."""
 
+    @pytest.mark.live_data
     def test_csv_file_operations(self, temp_dir):
         """Test CSV file reading and writing capabilities."""
         # Create test data
@@ -169,6 +170,7 @@ class TestFileOperations:
         assert len(loaded_data) == 5, "Loaded data should have 5 rows"
         assert 'Symbol' in loaded_data.columns, "Symbol column should exist"
 
+    @pytest.mark.live_data
     def test_excel_file_operations(self, temp_dir):
         """Test Excel file reading and writing capabilities."""
         # Create test data
@@ -193,6 +195,7 @@ class TestFileOperations:
 class TestExternalConnectivity:
     """Test external service connectivity (mocked)."""
 
+    @pytest.mark.live_data
     def test_mock_api_request(self, mock_web_scraping):
         """Test that API requests can be made (using mocked response)."""
         import requests
@@ -203,6 +206,7 @@ class TestExternalConnectivity:
         assert response.status_code == 200, "Mock API request should succeed"
         assert 'data' in response.json(), "Response should contain data field"
 
+    @pytest.mark.live_data
     def test_mock_financial_data_fetch(self, mock_yfinance):
         """Test financial data fetching (using mocked yfinance)."""
         import yfinance as yf
@@ -222,6 +226,7 @@ class TestExternalConnectivity:
 class TestApplicationConfiguration:
     """Test application configuration and settings."""
 
+    @pytest.mark.live_data
     def test_testing_environment_setup(self, test_env_vars):
         """Test that testing environment is properly configured."""
         assert os.environ.get('TESTING') == 'true', "TESTING environment variable should be set"

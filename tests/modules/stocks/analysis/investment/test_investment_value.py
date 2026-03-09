@@ -17,6 +17,7 @@ def run_process(input_file, expected_result={}):
     cfg = engine(input_file)
     #assert(cfg[cfg['basename']] == expected_result[expected_result['basename']])
 
+@pytest.mark.live_data
 @pytest.mark.integration
 def test_run_process():
     input_file = 'investment_value.yml'
