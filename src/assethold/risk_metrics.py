@@ -16,7 +16,9 @@ sortino_ratio           -- Annualised Sortino ratio
 max_drawdown            -- Peak-to-trough maximum drawdown (float)
 max_drawdown_with_dates -- Peak-to-trough drawdown with peak/trough dates
 calmar_ratio            -- Annualised return / |max drawdown|
+calculate_beta          -- Portfolio beta vs a benchmark (OLS regression)
 position_risk           -- All metrics for a single return series
+BetaResult              -- Dataclass: beta, alpha, r_squared, benchmark_name
 DrawdownResult          -- Dataclass: drawdown float + peak/trough dates
 PortfolioRisk           -- Aggregated portfolio metrics class
 """
@@ -55,6 +57,28 @@ class DrawdownResult:
     drawdown: float
     peak_date: Optional[Any] = None
     trough_date: Optional[Any] = None
+
+
+@dataclass
+class BetaResult:
+    """Portfolio beta regression result.
+
+    Attributes
+    ----------
+    beta:
+        Slope of the OLS regression of asset returns on benchmark.
+    alpha:
+        Jensen's alpha (intercept of the regression).
+    r_squared:
+        Coefficient of determination in [0, 1].
+    benchmark_name:
+        Optional label for the benchmark (e.g. "XLE", "XOP").
+    """
+
+    beta: float
+    alpha: float
+    r_squared: float
+    benchmark_name: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -344,6 +368,64 @@ def calmar_ratio(
         )
     ann_return = float((1.0 + returns.mean()) ** periods - 1.0)
     return float(ann_return / abs(mdd))
+
+
+# ---------------------------------------------------------------------------
+# Beta (benchmark regression)
+# ---------------------------------------------------------------------------
+
+def calculate_beta(
+    returns: np.ndarray,
+    benchmark_returns: np.ndarray,
+    benchmark_name: str = "",
+) -> BetaResult:
+    """Calculate portfolio beta vs a benchmark using OLS regression.
+
+    Beta = Cov(r, r_b) / Var(r_b).  Also returns Jensen's alpha
+    (intercept) and R-squared.
+
+    Parameters
+    ----------
+    returns:
+        Asset or portfolio return array.
+    benchmark_returns:
+        Benchmark return array (e.g. XLE, XOP).
+    benchmark_name:
+        Optional label for reporting.
+
+    Returns
+    -------
+    BetaResult
+
+    Raises
+    ------
+    ValueError
+        When arrays differ in length or contain fewer than 2 points.
+    """
+    if len(returns) != len(benchmark_returns):
+        raise ValueError(
+            "returns and benchmark_returns must have the same length"
+        )
+    if len(returns) < 2:
+        raise ValueError("Need at least 2 data points to compute beta")
+
+    cov_matrix = np.cov(returns, benchmark_returns)
+    beta = float(cov_matrix[0, 1] / cov_matrix[1, 1])
+    alpha = float(np.mean(returns) - beta * np.mean(benchmark_returns))
+
+    # R-squared
+    ss_res = float(
+        np.sum((returns - alpha - beta * benchmark_returns) ** 2)
+    )
+    ss_tot = float(np.sum((returns - np.mean(returns)) ** 2))
+    r_squared = 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
+
+    return BetaResult(
+        beta=beta,
+        alpha=alpha,
+        r_squared=r_squared,
+        benchmark_name=benchmark_name,
+    )
 
 
 # ---------------------------------------------------------------------------
