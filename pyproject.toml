@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -240,3 +241,247 @@ dev = [
 [tool.bandit]
 exclude_dirs = ["tests", "docs"]
 skips = []
+=======
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "assethold"
+version = "0.1.0"
+description = "Standardized project configuration for assethold"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Development Team", email = "dev@example.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    "assetutilities",
+    "beautifulsoup4==4.13.4",
+    "bs4",
+    "build",
+    "bumpver==2024.1130",
+    "chardet",
+    "crochet",
+    "dash==3.0.4",
+    "dash_bootstrap_components==2.0.2",
+    "deepdiff",
+    "excel2img",
+    "excel2img; sys_platform=='win32'",
+    "fake_headers",
+    "finvizfinance==1.1.0",
+    "flask",
+    "flask_httpauth==4.8.0",
+    "flask_restful==0.3.10",
+    "flask_wtf==1.2.2",
+    "gitpython==3.1.31",
+    "jinja2",
+    "loguru",
+    "matplotlib",
+    "numpy",
+    "numpy_financial==1.0.0",
+    "openpyxl",
+    "pandas==2.2.3",
+    "pandoc",
+    "parsel",
+    "plantuml",
+    "playwright",
+    "plotly==6.0.1",
+    "PyPDF2",
+    "pytest",
+    "python-certifi-win32",
+    "python-docx",
+    "pyyaml==6.0.2",
+    "ruamel.yaml",
+    "ruff",
+    "scrapy==2.12",
+    "sec_edgar_downloader==5.0.3",
+    "selenium",
+    "sqlalchemy==2.0.40",
+    "sympy>=1.13.3",
+    "ta==0.11.0",
+    "tabula",
+    "twine",
+    "undetected-chromedriver",
+    "urllib3==2.4.0",
+    "utm",
+    "webcolors",
+    "wkhtmltopdf",
+    "xlsxwriter",
+    "xmltodict==0.14.2",
+    "yahoo_fin==0.8.9.1",
+    "yfinance==0.2.57"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "flake8>=6.0",
+    "mypy>=1.0",
+    "pre-commit>=3.0",
+]
+test = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-mock>=3.0",
+]
+docs = [
+    "sphinx>=6.0",
+    "sphinx-rtd-theme>=1.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/username/assethold"
+"Bug Tracker" = "https://github.com/username/assethold/issues"
+"Documentation" = "https://github.com/username/assethold#readme"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["assethold*"]
+exclude = ["tests*", "docs*", "scripts*", "business*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=src",
+    "--cov=.",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml:coverage.xml",
+    "--cov-fail-under=80",
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "-ra",
+    "--junitxml=pytest.xml"
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "slow: Slow running tests",
+    "api: API tests",
+    "database: Database tests",
+    "external: Tests requiring external services",
+    "financial: Financial calculation tests",
+    "scraping: Web scraping tests",
+    "dashboard: Dashboard/UI tests"
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning"
+]
+
+[tool.coverage.run]
+source = ["src", "."]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "*/build/*",
+    "*/dist/*",
+    "setup.py",
+    "conftest.py"
+]
+branch = true
+data_file = ".coverage"
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "if self.debug:",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod"
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+title = "Assethold Coverage Report"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.uv]
+# UV environment configuration
+python = "3.11"
+system = false
+seed = true
+compile = true
+
+[tool.uv.pip]
+index-url = "https://pypi.org/simple"
+extra-index-url = []
+no-cache = false
+pre = false
+
+# MANDATORY: Parallel Processing Configuration
+[tool.parallel]
+enabled = true
+max_workers = 5
+use_threading = false  # Use multiprocessing for CPU-bound tasks
+use_asyncio = true     # Use asyncio for I/O-bound tasks
+batch_size = 10
+
+[tool.parallel.rules]
+# Define when to use parallel processing
+file_operations = "always"      # File reading/writing
+http_requests = "always"        # API calls
+data_processing = "threshold"   # Based on data size
+threshold_size = 1000           # Items before parallel kicks in
+
+[tool.scripts]
+# Common scripts that use parallel processing
+test = "pytest -n auto"
+format = "black . && isort ."
+lint = "flake8 . & mypy . & pylint ."
+install = "uv pip install -e ."
+dev-install = "uv pip install -e .[dev]"
+
+[project.scripts]
+# Updated script paths after reorganization
+assethold = "assethold.main:main"
+agent-os-create-spec = "scripts.agent-os.create-spec:main"
+agent-os-execute = "scripts.agent-os.execute-tasks:main"
+>>>>>>> Stashed changes

@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 basename: stock
 
 data:
@@ -12,3 +13,18 @@ default:
   config:
     overwrite:
       output: True
+=======
+basename: stock
+
+data:
+  flag: True
+
+input:
+  ticker: RIG
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+>>>>>>> Stashed changes

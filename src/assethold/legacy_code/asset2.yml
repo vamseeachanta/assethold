@@ -1,0 +1,40 @@
+basename: stock
+
+type:
+  data:
+    eod: True
+    intraday: False
+    fundamental: False
+    technical: False
+    news: False
+    sentiment: False
+    options: False
+    futures: False
+    forex: False
+    crypto: False
+    economic: False
+    other: False
+  analysis:
+    technical: False
+    fundamental: False
+    sentiment: False
+    news: False
+    options: False
+    futures: False
+    forex: False
+    crypto: False
+    economic: False
+    other: False
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+input:
+  - output_filename: 06a_501_section2_def
+    output_dir: NULL
+    filename:
+    add_blank_file_in_between: False
+    input_files: []
