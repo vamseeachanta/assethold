@@ -377,3 +377,12 @@ hive-mind-prompt-*.txt
 /agents/
 /modules/
 >>>>>>> Stashed changes
+
+# OS-generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+desktop.ini
+.DS_Store
+._*
+__MACOSX/
