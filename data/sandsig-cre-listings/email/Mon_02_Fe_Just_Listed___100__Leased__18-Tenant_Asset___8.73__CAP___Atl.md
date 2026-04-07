@@ -106,4 +106,4 @@ Unsubscribe https://email.sandsig.com/proc.php?nl=37&c=18213&m=70035&s=10b0b9b46
 SIG - Sands Investment Group - TX, 301 Camp Craft Road, Suite 200, Westlake Hills, TX 78746, United States
 
 ---
-*Archived: 2026-04-07T05:54:18.078476*
+*Archived: 2026-04-07T06:00:16.030552*

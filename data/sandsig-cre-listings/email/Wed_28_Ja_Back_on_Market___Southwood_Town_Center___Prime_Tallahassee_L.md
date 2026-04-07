@@ -114,4 +114,4 @@ Unsubscribe https://email.sandsig.com/proc.php?nl=37&c=18166&m=69896&s=10b0b9b46
 SIG - Sands Investment Group - FL , 101 NE 3rd Ave, Suite 320, Ft Lauderdale, FL 33301, United States
 
 ---
-*Archived: 2026-04-07T05:48:22.380046*
+*Archived: 2026-04-07T06:00:35.124531*
