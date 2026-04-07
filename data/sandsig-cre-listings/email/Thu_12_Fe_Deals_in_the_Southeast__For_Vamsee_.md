@@ -190,4 +190,4 @@ SIG - Sands Investment Group - SC, 238 Mathis Ferry Road, Suite 102, Mount Pleas
 Update preferences https://email.sandsig.com/lt.php?x=4lZy~GDEIaKZDHWrz_DLheVv26Ali_DxjhhkX5TEIFCf5s_9yky.1OFz1nQimNXukekxbHPKMnag5H77z0y7xeFu3H-hjUA0_uc | Unsubscribe from this list https://email.sandsig.com/proc.php?nl=37&c=18282&m=70442&s=10b0b9b466f547d50230ce0413060c42&act=unsub | Unsubscribe all https://email.sandsig.com/proc.php?nl=37&c=18282&m=70442&s=10b0b9b466f547d50230ce0413060c42&act=unsub&ALL
 
 ---
-*Archived: 2026-04-07T05:47:19.499580*
+*Archived: 2026-04-07T05:53:34.235435*

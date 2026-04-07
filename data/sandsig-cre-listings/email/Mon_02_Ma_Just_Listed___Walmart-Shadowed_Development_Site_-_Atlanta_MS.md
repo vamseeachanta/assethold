@@ -135,4 +135,4 @@ Unsubscribe https://email.sandsig.com/proc.php?nl=37&c=18424&m=73948&s=10b0b9b46
 SIG - Sands Investment Group - GA, 6000 Lake Forrest Drive, Suite 260, Atlanta, GA 30328, United States
 
 ---
-*Archived: 2026-04-07T05:46:18.348820*
+*Archived: 2026-04-07T05:52:34.148866*
