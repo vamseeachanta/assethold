@@ -82,4 +82,4 @@ https://email.sandsig.com/proc.php?nl=37&c=18515&m=76621&s=10b0b9b466f547d50230c
 SIG - Sands Investment Group - SC, 238 Mathis Ferry Road, Suite 102, Mount Pleasant, South Carolina 29464, United States
 
 ---
-*Archived: 2026-04-07T06:03:16.708018*
+*Archived: 2026-04-07T06:06:30.423000*
