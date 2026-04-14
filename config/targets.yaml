@@ -1,0 +1,42 @@
+# ABOUTME: Portfolio target allocation, trim rules, DCA cadence, and legacy position config.
+# ABOUTME: Used by the portfolio allocation monitor and daily report generator.
+
+target_allocation:
+  VOO: 0.45
+  BRKB: 0.35
+  XOM: 0.12
+  RIG: 0.05
+  COR: 0.015
+  CASH: 0.02
+
+new_money_split:
+  VOO: 0.55
+  BRKB: 0.45
+
+trim_rules:
+  threshold_pct: 5.0
+  require_profitable: true
+  prefer_long_term_gains: true
+
+dca_cadence:
+  VOO:
+    interval_days: 6
+    lot_size_usd: 4500
+  BRKB:
+    interval_days: 12
+    lot_size_usd: 4500
+
+cash_reserve_pct: 0.02
+
+money_market_symbols:
+  - SPAXX
+  - QPIGQ
+  - FDRXX
+  - FCASH
+
+legacy_positions:
+  RIG:
+    action: reduce
+    exit_above: 4.58
+  POLA:
+    action: tax_loss_harvest
