@@ -87,7 +87,7 @@ jobs:
 
     - name: Type checking with mypy
       run: mypy src/ --ignore-missing-imports
-      continue-on-error: true
+      continue-on-error: false
 
     - name: Security check with bandit
       run: bandit -r src/ -f json -o bandit-report.json

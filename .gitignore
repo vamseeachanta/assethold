@@ -387,3 +387,6 @@ desktop.ini
 ._*
 __MACOSX/
 specs/
+
+# Logging
+logs/
