@@ -121,7 +121,7 @@ def ohlcv_ttl(market_hours_aware: bool = False) -> int:
 
 **`signals/data_sources.py`** — `StockDataSource.__init__` gains two kwargs with backwards-compatible defaults. `_is_cache_valid` recomputes the effective TTL on each call (live evaluation, not init-time snapshot) so a cache that was valid pre-9:30am becomes invalid at 9:31am once the intraday window kicks in.
 
-**`daily_strategy/fetcher.py`** — `MarketDataFetcher.__init__` mirrors the same two kwargs. The `MarketDataFetcher` class already accepts `price_cache_ttl_hours` and `info_cache_ttl_hours`; the new kwargs are additive.
+**`daily_strategy/fetcher.py`** — `MarketDataFetcher.__init__` mirrors the same two kwargs. The class already accepts `price_cache_ttl_hours` and `info_cache_ttl_hours`; the new kwargs are additive. **Discovery during plan-writing:** `_fetch_ohlcv` (lines 175–223) does NOT route through `StockDataSource`'s TTL cache — it has its own 4-day-buffer check (`if last_date >= today - timedelta(days=4): return existing`) and calls `self._source.fetch(use_cache=False)`. This buffer must also honor intraday mode: when `market_hours_aware=True` and `is_market_open()` is True, the freshness check switches to `(now - mtime) < intraday_ttl_minutes`. Otherwise the legacy 4-day buffer applies. Without this change, `--intraday` is cosmetic for the daily-strategy CLI's OHLCV path. ~10 additional LOC.
 
 **`daily_strategy/__main__.py`** — the `--intraday` flag is opt-in. Without it, current behavior is preserved exactly (no TZ awareness, no `pandas_market_calendars` import).
 
@@ -216,7 +216,7 @@ When the writing-plans skill picks this up, the natural task decomposition is:
 2. **Create `utils/market_hours.py`** with the three functions + docstrings. **TDD:** write `tests/unit/test_market_hours.py` first (red), then implement (green).
 3. **Extend `cache.py`** with `TTL_OHLCV_INTRADAY` and `ohlcv_ttl()`. **TDD:** write `tests/unit/test_cache_ohlcv_ttl.py` first.
 4. **Extend `signals/data_sources.py`** constructor + `_is_cache_valid`. **TDD:** write the data-sources test first.
-5. **Extend `daily_strategy/fetcher.py`** constructor (mirror of step 4). Tests for the existing `MarketDataFetcher` should not regress; add focused new tests for the kwargs.
+5. **Extend `daily_strategy/fetcher.py`** constructor (mirror of step 4) AND `_fetch_ohlcv` freshness check (the 4-day-buffer block at lines 191–198 must consult `market_hours.is_market_open()` and switch to mtime-vs-intraday-TTL when aware+open). Tests for the existing `MarketDataFetcher` should not regress; add focused new tests for both the constructor kwargs and the buffer-switching behavior.
 6. **Extend `daily_strategy/__main__.py`** — `--intraday` flag, pre-flight, threading to fetcher. Update CLI help docstring.
 7. **Update `config/daily_strategy.yaml`** — add `intraday_ttl_minutes: 15`. Add a YAML comment cross-referencing the spec.
 8. **Add the integration test** for the `--intraday`-on-Sunday fail-loud behavior.
