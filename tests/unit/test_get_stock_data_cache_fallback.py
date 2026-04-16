@@ -108,16 +108,18 @@ class TestGetDailyDataCaching:
     @patch("assethold.modules.stocks.get_stock_data.finnhub_provider")
     @patch("assethold.modules.stocks.get_stock_data.fetch_with_fallback")
     def test_rate_limit_triggers_fallback_chain(self, mock_fwf, mock_finnhub):
-        """When yfinance raises YFRateLimitError, the fallback chain handles it."""
-        import yfinance as yf
+        """When fetch_with_fallback raises an error, it propagates up."""
+
+        class YFRateLimitError(Exception):
+            """Stand-in for yfinance rate-limit error (yfinance is mocked in conftest)."""
 
         mock_finnhub.is_available.return_value = True
-        mock_fwf.side_effect = yf.exceptions.YFRateLimitError()
+        mock_fwf.side_effect = YFRateLimitError("rate limited")
 
         instance = _make_stock_data_instance()
         cfg = {"data": {"period": "2y"}}
 
-        with pytest.raises(yf.exceptions.YFRateLimitError):
+        with pytest.raises(YFRateLimitError):
             instance.get_daily_data_by_ticker(cfg, "AAPL")
 
         # Verify fetch_with_fallback was called (it just propagated the error)

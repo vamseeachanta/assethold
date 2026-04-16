@@ -107,14 +107,6 @@ class GetStockData():
 
         return cfg, data
 
-    def get_EOD_data_from_yfinance(self, cfg, ticker):
-        period = cfg['input']['data_settings']['eod']['period']
-        yf_ticker = yf.Ticker(str(ticker))
-        company_info = yf_ticker.info
-        df = yf_ticker.history(period=period)
-
-        return df
-
     def add_rolling_averages(self, daily):
         df = daily['data']
         for days_rolling in self.days_rolling_array:
@@ -187,15 +179,6 @@ class GetStockData():
 
 
 
-    def get_stock_price_data(self, cfg):
-        try:
-            self.status.update({'price': True})
-            ticker = cfg['stocks'][0]['ticker']
-            self.get_data_from_yfinance(ticker)
-        except:
-            self.status.update({'price': False})
-            raise ("No valid data source found")
-
     def get_insider_information_from_finviz(self, cfg, stock_ticker):
         self.status['insider']['finviz'] = {}
         try:
@@ -267,30 +250,6 @@ class GetStockData():
         }
         return option_chain_dict
 
-    def get_data_from_tiingo(self):
-        # Third party imports
-        import pandas_datareader as pdr
-        api_key = '512e3063ad18b5116a83cf7ce7d852af4181917c'
-        self.stock_data_array = []
-        for stock_info in self.cfg.stocks:
-            stock_ticker = stock_info['ticker']
-            self.company_info['stock_ticker'] = stock_ticker
-            df = pdr.get_data_tiingo(stock_ticker, api_key=api_key)
-            df['date'] = [index_value[1] for index_value in df.index]
-            for days_rolling in self.days_rolling_array:
-                df[str(days_rolling) + '_day_rolling'] = df.close.rolling(
-                    window=days_rolling).mean()
-            self.stock_data_array.append(df)
-
-    def get_screened_stocks(self):
-        # Third party imports
-        from finvizfinance.screener.overview import Overview
-        finviz_overview = Overview()
-        filters_dict = {'Exchange': 'AMEX', 'Sector': 'Basic Materials'}
-        finviz_overview.set_filter(filters_dict=filters_dict)
-        df = finviz_overview.ScreenerView()
-        df.head()
-
     def get_daily_data_by_ticker(self, cfg, ticker, max_retries=5):
         period = cfg['data']['period']
         cache_key = make_cache_key("ohlcv", ticker, period=period)
@@ -320,69 +279,6 @@ class GetStockData():
         df = fetch_with_fallback(cache_key, TTL_OHLCV, _yfinance_fetch, fallback_fn)
         daily = {'data': df, 'status': True}
         return daily
-
-    def add_rolling_averages_to_df(self, df):
-        days_rolling_array = self.days_rolling_array
-        for days_rolling in days_rolling_array:
-            df[str(days_rolling) + '_day_rolling'] = df.Close.rolling(
-                window=days_rolling).mean()
-
-        return df
-
-    def get_data_from_yfinance(self, ticker=None):
-        period = self.cfg.get('period', '5y')
-        self.stock_data_array = []
-        for stock_info in self.cfg['input']['data']['eod']['stocks']:
-            stock_ticker = stock_info['ticker']
-            self.yf_ticker = yf.Ticker(str(stock_ticker))
-            self.company_info['stock_ticker'] = stock_ticker
-            self.company_info['info'] = self.yf_ticker.info
-            df = self.yf_ticker.history(period=period)
-            df.reset_index(inplace=True)
-            for days_rolling in self.days_rolling_array:
-                df[str(days_rolling) + '_day_rolling'] = df.Close.rolling(
-                    window=days_rolling).mean()
-            self.stock_data_array.append(df)
-
-    def get_data_from_morningstar(self):
-        data_source = 'morningstar'
-
-        # Standard library imports
-        import datetime
-
-        # Third party imports
-        import pandas_datareader.data as web
-
-        start = datetime.datetime(2010, 1, 1)
-        end = datetime.datetime(2013, 1, 27)
-        f = web.DataReader('OXY', data_source, start, end)
-
-        print(web.DataReader('OXY', data_source, start, end))
-
-    def get_data_from_iex(self):
-        days_rolling_array = self.days_rolling_array
-        # Standard library imports
-        import os
-        os.environ["IEX_API_KEY"] = self.cfg.default['data_sources']['iex'][
-            'api_key']
-        # {'tiingo': {'flag': None}}
-        # Standard library imports
-        from datetime import datetime, timedelta
-
-        # Third party imports
-        import pandas_datareader.data as web
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=5479)
-
-        self.stock_data_array = []
-        for stock_info in self.cfg.stocks:
-            stock_ticker = stock_info['ticker']
-            df = web.DataReader(stock_ticker, 'iex', start_date, end_date)
-            df['date'] = [index_value for index_value in df.index]
-            for days_rolling in days_rolling_array:
-                df[str(days_rolling) + '_day_rolling'] = df.close.rolling(
-                    window=days_rolling).mean()
-            self.stock_data_array.append(df)
 
     def get_sec_data(self, ticker):
         try:
@@ -494,21 +390,6 @@ class GetStockData():
         except Exception:
             self.institutional_holders = None
             self.major_holders = None
-
-    def get_institutional_holders(self, proxy=None, as_dict=False):
-        self._holders.proxy = proxy or self.proxy
-        data = self._holders.institutional
-        if data is not None:
-            if as_dict:
-                return data.to_dict()
-            return data
-
-    def get_major_holders(self, proxy=None, as_dict=False):
-        self._holders.proxy = proxy or self.proxy
-        data = self._holders.major
-        if as_dict:
-            return data.to_dict()
-        return data
 
     def save_daily_data_plot(self, cfg, csv_groups):
 
