@@ -46,16 +46,34 @@ graph TD
         CoveredCall["options/covered_call.py"]
     end
 
-    subgraph "Newer Stock Analysis (standalone)"
-        AlertEngine["stocks/alert_engine.py"]
-        TrendDetector["stocks/trend_detector.py"]
-        InsiderTracker["stocks/insider_tracker.py"]
-        Watchlist["stocks/watchlist.py"]
-        DataSources["stocks/data_sources.py"]
-        Indicators["stocks/indicators.py"]
-        Dashboard["stocks/dashboard.py"]
+    subgraph "Realtime Signals (standalone)"
+        AlertEngine["signals/alert_engine.py"]
+        TrendDetector["signals/trend_detector.py"]
+        InsiderTracker["signals/insider_tracker.py"]
+        Watchlist["signals/watchlist.py"]
+        DataSources["signals/data_sources.py"]
+        Indicators["signals/indicators.py"]
+        Dashboard["signals/dashboard.py"]
     end
 ```
+
+## Stock Analysis Split: `signals/` vs `modules/stocks/`
+
+The codebase has two stock-analysis trees with **complementary responsibilities, not duplication** (zero class or function name overlap):
+
+| Dimension | `src/assethold/signals/` | `src/assethold/modules/stocks/` |
+|---|---|---|
+| Intent | Realtime signal generation (alerts, trends, watchlist monitoring) | Cached batch analysis (SEC filings, portfolio valuation, chart generation) |
+| Style | Pure functions + small classes | Class-based engine (`Stocks`) with child analyzers |
+| Data layer | Light — `data_sources.py` (188 LOC, no cache) | Heavy — `get_stock_data.py` + `cache.py` + `providers/` |
+| Consumer | `analysis/daily_strategy/fetcher.py` (production pipeline) | `engine.py` router |
+| Features | `AlertEngine`, `TrendDetector`, `Watchlist`, `InsiderTracker` (Form 4 XML), `indicators` (SMA/EMA/RSI/MACD/Bollinger/OBV), `dashboard` | `StockAnalysis`, `InvestmentValue(Ffn)`, `Portfolio`, `InsiderAnalysis` (cost-basis), `OptionsAnalysis`, `SECDataTicker`/`SECDataForm`, `charts/` package |
+
+**When to extend each:**
+- Need an alert/trend/watchlist concern? → `signals/`
+- Need cached batch analysis, chart classes, or SEC filings? → `modules/stocks/`
+- Need both? → cross-import is fine; they are sibling packages, not a layer hierarchy.
+
 
 ## Data Flow
 
@@ -103,8 +121,8 @@ config/daily_strategy.yaml     ← Portfolio targets, ticker modes, thresholds
 | dividend_forecast.py | 179 | Complete | Yes |
 | portfolio/sector_tracker.py | ~400 | Complete | Yes |
 | portfolio/ingest.py | ~200 | Complete | Yes |
-| stocks/ (newer) | ~550 | Complete | 8 unit test files |
-| modules/stocks/ (engine) | ~1,200 | Working (needs consolidation with stocks/) | Partial |
+| signals/ (realtime) | ~1,900 | Complete | 7 unit test files |
+| modules/stocks/ (batch engine) | ~2,150 | Working; complements signals/ (see split table above) | Partial |
 | modules/appliances/ | 965 | Partial | No |
 | modules/gis/ | ~800 | Partial (imagery deferred) | 5 tests |
 | modules/multifamily/ | 901 | Working | No |

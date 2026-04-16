@@ -42,7 +42,7 @@ nav:
       - daily_strategy: api/daily_strategy.md
       - fundamentals: api/fundamentals.md
       - risk_metrics: api/risk_metrics.md
-      - stocks: api/stocks.md
+      - signals: api/signals.md
       - portfolio: api/portfolio.md
       - net_lease: api/net_lease.md
   - Modules:

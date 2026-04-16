@@ -24,8 +24,8 @@ try:
 except ImportError:
     yf = None  # type: ignore[assignment]
 
-from assethold.stocks.data_sources import StockDataSource
-from assethold.stocks.indicators import calculate_rsi, calculate_sma
+from assethold.signals.data_sources import StockDataSource
+from assethold.signals.indicators import calculate_rsi, calculate_sma
 from assethold.analysis.daily_strategy.insider import InsiderFetcher, InsiderTrend
 
 

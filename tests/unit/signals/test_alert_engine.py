@@ -11,7 +11,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from assethold.stocks.alert_engine import (
+from assethold.signals.alert_engine import (
     AlertEngine,
     AlertEvent,
     Severity,

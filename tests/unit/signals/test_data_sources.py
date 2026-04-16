@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pandas as pd
 import pytest
 
-from assethold.stocks.data_sources import StockDataSource
+from assethold.signals.data_sources import StockDataSource
 
 
 @pytest.fixture

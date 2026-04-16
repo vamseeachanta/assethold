@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from assethold.stocks.watchlist import Watchlist
+from assethold.signals.watchlist import Watchlist
 
 
 @pytest.fixture

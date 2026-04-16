@@ -5,7 +5,7 @@ Unit tests for the TrendDetector orchestration class.
 import pandas as pd
 import pytest
 
-from assethold.stocks.trend_detector import TrendDetector
+from assethold.signals.trend_detector import TrendDetector
 
 
 @pytest.fixture

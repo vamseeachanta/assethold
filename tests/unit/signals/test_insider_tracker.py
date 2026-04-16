@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-from assethold.stocks.insider_tracker import (
+from assethold.signals.insider_tracker import (
     InsiderTracker,
     parse_form4_xml,
     compute_insider_benchmarks,

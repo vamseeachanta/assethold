@@ -11,7 +11,7 @@ Tests use synthetic price series to verify detection of:
 import pandas as pd
 import pytest
 
-from assethold.stocks.trend_detector import (
+from assethold.signals.trend_detector import (
     detect_ma_crossover,
     detect_rsi_transition,
     detect_support_resistance_break,

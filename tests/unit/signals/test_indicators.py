@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from assethold.stocks.indicators import (
+from assethold.signals.indicators import (
     calculate_bollinger_bands,
     calculate_ema,
     calculate_macd,

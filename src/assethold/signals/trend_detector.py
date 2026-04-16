@@ -12,7 +12,7 @@ from typing import Any
 
 import pandas as pd
 
-from assethold.stocks.indicators import calculate_sma, calculate_rsi
+from assethold.signals.indicators import calculate_sma, calculate_rsi
 
 
 def detect_ma_crossover(
