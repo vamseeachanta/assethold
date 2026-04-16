@@ -3,9 +3,8 @@ import sys
 import json
 import pathlib
 import pprint
-from lmfa.multifamily_analysis import MultiFamily
-from lmfa.multifamily_analysis import MultiFamilyCharts
-from lmfa.utilities import add_and_get_output_folder
+from assethold.modules.multifamily.multifamily_analysis import MultiFamily, MultiFamilyCharts
+from assethold.modules.multifamily.utilities import add_and_get_output_folder
 
 
 def run_analysis(config_filenames=[]):
