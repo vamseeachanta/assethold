@@ -1,5 +1,18 @@
-"""net_lease — Single-tenant net lease (NN/NNN) property models."""
+"""net_lease — Single-tenant net lease (NN/NNN) property models and analysis."""
 
+from assethold.modules.net_lease.analysis import (
+    CapRateScenario,
+    ExpenseEstimates,
+    ExpirationEvent,
+    LeaseExpirationTimeline,
+    LeaseInput,
+    LeaseStructureResult,
+    NNNvsModifiedGrossComparison,
+    YearlyRentAtRisk,
+    cap_rate_sensitivity,
+    compare_nnn_vs_modified_gross,
+    lease_expiration_timeline,
+)
 from assethold.modules.net_lease.net_lease_model import (
     LeaseType,
     NNLeaseDemographics,
@@ -12,6 +25,7 @@ from assethold.modules.net_lease.net_lease_model import (
 )
 
 __all__ = [
+    # Model classes
     "LeaseType",
     "NNLeaseDemographics",
     "NNLeaseFinancials",
@@ -20,4 +34,17 @@ __all__ = [
     "NNLeaseRenewalOption",
     "NNLeaseSalesHistory",
     "NNLeaseTenant",
+    # Analysis dataclasses
+    "CapRateScenario",
+    "ExpenseEstimates",
+    "ExpirationEvent",
+    "LeaseExpirationTimeline",
+    "LeaseInput",
+    "LeaseStructureResult",
+    "NNNvsModifiedGrossComparison",
+    "YearlyRentAtRisk",
+    # Analysis functions
+    "cap_rate_sensitivity",
+    "compare_nnn_vs_modified_gross",
+    "lease_expiration_timeline",
 ]
