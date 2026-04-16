@@ -1,10 +1,24 @@
-site_name: assethold API Reference
-site_description: Auto-generated API documentation for assethold
-docs_dir: docs/api
+site_name: assethold
+site_description: Asset analysis toolkit — equities, real estate, and portfolio management
+site_url: https://vamseeachanta.github.io/assethold/
+repo_url: https://github.com/vamseeachanta/assethold
+repo_name: vamseeachanta/assethold
+
+docs_dir: docs
 site_dir: site
 
-nav:
-  - API Reference: index.md
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
 
 plugins:
   - search
@@ -14,13 +28,41 @@ plugins:
       handlers:
         python:
           paths: [src]
-          inventories: []
           options:
             docstring_style: google
             show_source: true
             show_root_heading: true
+            members_order: source
 
-theme:
-  name: material
-  features:
-    - navigation.sections
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - API Reference:
+      - Overview: api/index.md
+      - daily_strategy: api/daily_strategy.md
+      - fundamentals: api/fundamentals.md
+      - risk_metrics: api/risk_metrics.md
+      - stocks: api/stocks.md
+      - portfolio: api/portfolio.md
+      - net_lease: api/net_lease.md
+  - Modules:
+      - daily_strategy: modules/stocks/data.md
+      - fundamentals: modules/portfolio/portfolio_ffn_vs_assethold_calc.md
+      - risk_metrics: api/risk_metrics.md
+      - stocks: modules/stocks/literature.md
+      - portfolio: modules/portfolio/portfolio_ffn_vs_assethold_calc.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true

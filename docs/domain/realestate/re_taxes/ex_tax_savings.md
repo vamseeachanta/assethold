@@ -35,5 +35,5 @@ This Airbnb will produce $50k in free cash flow. So while $50k goes into the ban
 
 This is how real estate owners, investors, operators, and developers make millions a year and pay $0 in taxes?.
 
-Wes Mabry - Cost Segregation & Mitchell Baldridge, CPA, CFP® are the best in the business for Cost Segregation studies and can help you save on taxes! Reach out to them if you own Real Estate
+Wes Mabry - Cost Segregation & Mitchell Baldridge, CPA, CFPÂ® are the best in the business for Cost Segregation studies and can help you save on taxes! Reach out to them if you own Real Estate
 
