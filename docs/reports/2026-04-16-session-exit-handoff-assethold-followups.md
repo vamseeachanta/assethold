@@ -7,7 +7,7 @@
 
 ## Resume prompt (paste at the start of the next session)
 
-> Read `docs/reports/2026-04-16-session-exit-handoff-assethold-followups.md` in the assethold repo (at `/mnt/local-analysis/workspace-hub/assethold/`). Check GitHub issues #32, #33 for status. Session has just closed two architectural issues (#29, #30) and shipped multifamily test coverage (#31 partial) + realtime-feeds assessment (#34). Pick the next logical step — recommend starting with #33 bounded docs if you want bounded execution, or #32 if you want to brainstorm feature work.
+> Read `docs/reports/2026-04-16-session-exit-handoff-assethold-followups.md` in the assethold repo (at `/mnt/local-analysis/workspace-hub/assethold/`). Session closed #29 (merge conflicts), #30 (stocks/→signals/ rename), shipped #31 multifamily tests (789→819), posted #34 realtime-feeds assessment, and filed three follow-up issues: **#35** (Realtime Phase 1 — market-hours + intraday TTL, dependency-free, 1-2 sessions), **#36** (Multifamily sensitivity TODOs a-e), **#37** (origin URL chore). Pick **#35** for bounded executable work, **#36(e)** for stress-test modeling, or **#33** for sub-module READMEs.
 
 ---
 
@@ -66,37 +66,35 @@ Multifamily coverage was retroactive — the code already works. Tests assert ob
 
 ### Medium priority
 
-#### #32 — Multifamily sensitivity analysis TODOs
-**Location:** `src/assethold/modules/multifamily/multifamily.py:40-46`
-**Scope (items a-e):**
-- LP incentive brackets
-- Expense breakdown beyond the 10-category sum
-- Market research automation
-- Class A / Class B shares in the partnership waterfall
-- Financial stress tests (interest rate shock, vacancy spike, cap-rate expansion)
+#### #35 — Realtime Phase 1: market-hours awareness + intraday TTL *(newly filed this session)*
+**Why this is the top pick:** spun off from #34 as the bounded, executable first phase. Dependency-free, no provider commitment, ~1-2 focused sessions. Delivers 6× freshness improvement during market hours.
 
-**Why not done this session:** requires brainstorming/design — these are five distinct new features, and the assethold CLAUDE.md requires "Plan + explicit approval before implementation." Not executable without a scoping pass.
+**Files to create/modify (from issue body):**
+- New: `src/assethold/utils/market_hours.py` — wraps `pandas_market_calendars`
+- Modify: `src/assethold/signals/data_sources.py` — constructor flag `market_hours_aware: bool`
+- Modify: `src/assethold/modules/stocks/cache.py` — add `TTL_OHLCV_INTRADAY = 15 * 60`
+- Modify: `src/assethold/analysis/daily_strategy/__main__.py` — `--intraday` CLI flag (fail loud if market is closed)
 
-**How to start:** spawn a brainstorm for item (e) first (stress tests) — it's the one with the clearest template (sensitivity arrays already exist in the YAML at `multifamily_2.yaml:149-154`). Items a-d need the user's call on whether they're still in scope.
+**New dependency:** `pandas_market_calendars` via `uv add`.
 
-#### #34 — Realtime feeds implementation, starting with Phase 1
-**Pointer:** `docs/reports/2026-04-16-realtime-feeds-assessment.md` §4 Phase 1
-**Estimate:** 1-2 focused sessions, standalone (no external dependencies).
-**Files to create/modify:**
-- New: `src/assethold/utils/market_hours.py` — wraps `pandas_market_calendars`.
-- Modify: `src/assethold/signals/data_sources.py` — constructor flag `market_hours_aware: bool`.
-- Modify: `src/assethold/modules/stocks/cache.py` — add `TTL_OHLCV_INTRADAY = 15 * 60`.
-- Modify: `src/assethold/analysis/daily_strategy/__main__.py` — `--intraday` CLI flag.
-
-**New dependency:** `pandas_market_calendars` (MIT, well-maintained). Needs `uv add` and `pyproject.toml` update.
-
-**Open questions before Phase 3** (streaming) is scoped — see assessment §7. These are unanswered:
+#### #34 — Realtime feeds umbrella (Phase 2-4 scoping)
+Stays open to track the larger initiative. Phase 1 is now #35. Phase 2-4 blocked on the open questions in `docs/reports/2026-04-16-realtime-feeds-assessment.md` §7:
 1. Single-user or small team?
 2. Is ~$50/mo for a data feed acceptable if Alpaca IEX is insufficient?
 3. Realtime in `options/covered_call`, or batch-on-demand?
 4. Linux-only daemon, or cross-platform?
 
+#### #32 — Complete skeletal modules (fixed_interest, multifamily, net_lease)
+Scope narrowed — sensitivity work moved to #36. Remaining: any genuinely skeletal code in these three modules that still needs body.
+
 ### Low priority
+
+#### #36 — Multifamily sensitivity TODOs a-e *(newly filed this session)*
+**Source:** `src/assethold/modules/multifamily/multifamily.py:40-46`
+**Recommended execution order:** start with **(e) financial stress tests** — sensitivity config already exists in `multifamily_2.yaml:149-154`, just needs a pipeline that re-runs with perturbed inputs and tabulates IRR/EM/DSCR. Immediate user value, no external decisions.
+- **(b) expense breakdown** is the second-easiest (data model extension, no external deps).
+- **(a) LP incentive brackets** and **(d) Class A/B shares** need waterfall design passes.
+- **(c) market research automation** needs a data-source decision first.
 
 #### #33 — Remaining documentation
 **Scope from prior handoff:**
@@ -108,7 +106,8 @@ Multifamily coverage was retroactive — the code already works. Tests assert ob
 2. Write `src/assethold/analysis/daily_strategy/README.md` with the 7-file pipeline (loader → fetcher → insider → signals → report → html_report → history).
 3. Write `src/assethold/modules/stocks/README.md` with the `Stocks` engine entrypoint and child analyzer classes.
 
-**Why not done this session:** low priority; safe to defer until after #32 or #34 Phase 1 progress.
+#### #37 — chore: update git origin to vamseeachanta/assethold *(newly filed this session)*
+2-minute task. `origin` points at `samdansk2/assethold`; GitHub redirects, but this is fragile. Also audit `pyproject.toml`, `README.md`, `mkdocs.yml` for hard-coded old URLs.
 
 ### Pre-existing (not touched this session or prior)
 - #5, #7, #8, #11, #12 — older, needs triage
@@ -130,17 +129,23 @@ Multifamily coverage was retroactive — the code already works. Tests assert ob
 
 Issue count by priority after this session:
 - **High:** 0 open (was 1; #30 closed)
-- **Medium:** 3 open — #31, #32, #34
-- **Low:** 1 open — #33
+- **Medium:** 4 open — #31, #32, #34, **#35 (new)**
+- **Low:** 3 open — #33, **#36 (new)**, **#37 (new)**
 - **Legacy (unlabeled):** #5, #7, #8, #11, #12, #17, #18, #21, #22-28
+
+### Newly filed this session
+- **#35** — Realtime Phase 1 (market-hours + intraday TTL, spun off from #34)
+- **#36** — Multifamily sensitivity TODOs a-e (spun off from #32)
+- **#37** — chore: origin URL update
 
 ---
 
 ## Session metrics
 
-- 3 commits, all pushed to main
+- 5 commits, all pushed to main (rename, tests, assessment, handoff, handoff-update)
 - 2 issues closed (#29, #30)
 - 2 issues commented with substantive progress (#31, #34)
+- 3 issues filed (#35, #36, #37) with actionable scope bodies
 - 30 net new tests (suite 789 → 819)
-- 622 net lines added (428 test + 164 doc + 30 architecture + updated imports)
+- 622+ net lines added (428 test + 164 doc + 30 architecture + updated imports + handoff)
 - 0 test failures introduced, 0 rollbacks, 0 destructive operations
