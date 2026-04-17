@@ -4,7 +4,6 @@ ABOUTME: Verifies constructor kwargs and per-call TTL switching in _is_cache_val
 import os
 import time
 from datetime import timedelta
-from pathlib import Path
 
 import pytest
 

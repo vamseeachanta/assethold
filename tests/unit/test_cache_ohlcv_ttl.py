@@ -1,9 +1,9 @@
 """ABOUTME: Unit tests for cache.ohlcv_ttl() and TTL_OHLCV_INTRADAY constant.
 ABOUTME: Verifies TTL switching when market_hours_aware is True."""
 
-import pytest
+import subprocess
+import sys
 
-import assethold.modules.stocks.cache as cache_mod
 from assethold.modules.stocks.cache import (
     TTL_OHLCV,
     TTL_OHLCV_INTRADAY,
@@ -37,3 +37,28 @@ def test_aware_returns_legacy_when_closed(monkeypatch):
         lambda ts=None: False,
     )
     assert ohlcv_ttl(market_hours_aware=True) == TTL_OHLCV
+
+
+def test_ohlcv_ttl_default_does_not_import_market_hours():
+    """Default path (market_hours_aware=False) must not pull market_hours.
+
+    Uses subprocess isolation (the proven pattern from #39) because
+    shared-process sys.modules state can be contaminated by other tests that
+    already imported assethold.utils.market_hours.
+    """
+    probe = (
+        "import sys; "
+        "from assethold.modules.stocks.cache import ohlcv_ttl, TTL_OHLCV; "
+        "assert ohlcv_ttl() == TTL_OHLCV; "
+        "print('assethold.utils.market_hours' in sys.modules)"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", probe],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, f"probe stderr: {result.stderr}"
+    assert result.stdout.strip() == "False", (
+        f"lazy-import invariant violated: stdout={result.stdout!r}, stderr={result.stderr!r}"
+    )
