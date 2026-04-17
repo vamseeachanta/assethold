@@ -351,13 +351,23 @@ def test_cli_render_charts_without_dir_exits_2(
 def test_cli_no_flag_falls_back_to_config(
     watchlist_yaml, tmp_path, monkeypatch
 ):
-    """With no CLI flag, market_hours_aware comes from settings."""
+    """With no CLI flag, market_hours_aware comes from settings.
+
+    Stubs is_market_open → True so the pre-flight passes regardless of
+    wall-clock time (fixing a #39 test flake where this test silently
+    passed when market was open and failed after hours).
+    """
     # Patch watchlist to use our fixture YAML
     def fake_watchlist_init(self, config_path=None):
         self.config_path = watchlist_yaml
         self._data = None
 
     monkeypatch.setattr(Watchlist, "__init__", fake_watchlist_init)
+
+    # Stub is_market_open so pre-flight passes regardless of wall-clock
+    import assethold.utils.market_hours as mh
+
+    monkeypatch.setattr(mh, "is_market_open", lambda ts=None: True)
 
     captured = {}
 
