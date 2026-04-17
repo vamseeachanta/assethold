@@ -42,6 +42,7 @@ dependencies = [
     "numpy_financial==1.0.0",
     "openpyxl",
     "pandas==2.2.3",
+    "pandas-market-calendars>=5.2.4",
     "plotly>=5.17.0,<6.0.0",
     "PyPDF2",
     "python-certifi-win32; sys_platform=='win32'",
