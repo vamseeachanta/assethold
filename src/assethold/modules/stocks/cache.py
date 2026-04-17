@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 # TTL Constants (seconds)
 # ---------------------------------------------------------------------------
 TTL_OHLCV = 6 * 3600  # 6 hours
+TTL_OHLCV_INTRADAY = 15 * 60  # 15 min, used during NYSE regular session
 TTL_COMPANY_INFO = 24 * 3600  # 24 hours
 TTL_INSIDER = 7 * 86400  # 7 days
 TTL_OPTIONS = 4 * 3600  # 4 hours
@@ -157,3 +158,18 @@ def fetch_with_fallback(
         if cache is not None:
             cache.set(cache_key, result, expire=ttl)
         return result
+
+
+def ohlcv_ttl(market_hours_aware: bool = False) -> int:
+    """Return the OHLCV cache TTL in seconds.
+
+    When market_hours_aware is True AND market_hours.is_market_open() is True,
+    returns TTL_OHLCV_INTRADAY (15 min). Otherwise returns TTL_OHLCV (6 h).
+
+    The static TTL_OHLCV path does NOT import market_hours, so the
+    pandas_market_calendars dep is only required when the caller opts in.
+    """
+    if not market_hours_aware:
+        return TTL_OHLCV
+    from assethold.utils.market_hours import is_market_open
+    return TTL_OHLCV_INTRADAY if is_market_open() else TTL_OHLCV
