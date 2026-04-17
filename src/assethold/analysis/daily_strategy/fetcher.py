@@ -189,9 +189,19 @@ class MarketDataFetcher:
 
         The persistent cache is a single per-ticker CSV at
         ``{cache_dir}/{ticker}_ohlcv.csv`` that grows by appending new trading
-        days.  A 4-day freshness buffer covers weekends and market holidays —
-        if the newest stored date is within 4 calendar days of today the file
-        is returned as-is without any network call.
+        days.
+
+        Freshness semantics depend on the fetcher's ``market_hours_aware`` flag:
+
+        - When ``market_hours_aware=True`` and the NYSE regular session is
+          open, the cache is considered fresh within
+          ``intraday_ttl_minutes`` (file mtime-based).
+        - When ``market_hours_aware=True`` and the session is closed, the
+          legacy 4-day calendar buffer applies (weekend/holiday coverage).
+        - When ``market_hours_aware=False`` (default), the legacy 4-day
+          buffer always applies — if the newest stored date is within 4
+          calendar days of today the file is returned as-is without any
+          network call.
         """
         import datetime as _dt
 
