@@ -86,3 +86,10 @@ settings:
   default_monitoring_frequency: daily
   cache_ttl_hours: 24
   rate_limit_seconds: 2.0
+  # Phase 1.5 (#39): market-hours-aware intraday freshness for WatchlistRunner.
+  # Defaults preserve the Phase 1 opt-in contract (off unless explicitly enabled).
+  market_hours_aware: false
+  intraday_ttl_minutes: 15
+  # lookback_days controls the OHLCV history window per ticker (end = today).
+  # Default 90 is enough for MA-50, RSI-14, and volume-spike baselines.
+  lookback_days: 90

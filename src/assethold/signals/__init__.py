@@ -37,6 +37,7 @@ from assethold.signals.trend_detector import (
     detect_volume_spike,
 )
 from assethold.signals.watchlist import Watchlist
+from assethold.signals.watchlist_runner import WatchlistRunner
 
 __all__ = [
     "AlertEngine",
@@ -44,6 +45,7 @@ __all__ = [
     "Severity",
     "StockDataSource",
     "Watchlist",
+    "WatchlistRunner",
     "TrendDetector",
     "InsiderTracker",
     "calculate_bollinger_bands",
