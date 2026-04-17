@@ -61,22 +61,32 @@ class MarketDataFetcher:
         price_cache_ttl_hours: int = 4,
         info_cache_ttl_hours: int = 24,
         history_days: int = 252,
+        market_hours_aware: bool = False,
+        intraday_ttl_minutes: int = 15,
     ):
         """
         Args:
-            cache_dir:              Directory for all cache files.  Defaults to
-                                    StockDataSource's default (data/stocks/cache).
-            price_cache_ttl_hours:  OHLCV cache validity (4 h for intraday freshness).
-            info_cache_ttl_hours:   Fundamental info cache validity (24 h).
-            history_days:           Trading days of price history to fetch for
-                                    indicator calculations.
+            cache_dir:               Directory for all cache files. Defaults to
+                                     StockDataSource's default (data/stocks/cache).
+            price_cache_ttl_hours:   OHLCV cache validity (4h, used outside market hours).
+            info_cache_ttl_hours:    Fundamental info cache validity (24h).
+            history_days:            Trading days of price history to fetch.
+            market_hours_aware:      When True, the OHLCV freshness buffer
+                                     switches to intraday_ttl_minutes during
+                                     the NYSE regular session.
+            intraday_ttl_minutes:    Buffer (minutes) used during the regular
+                                     session when market_hours_aware is True.
         """
         self._source = StockDataSource(
             cache_dir=cache_dir,
             cache_ttl_hours=price_cache_ttl_hours,
+            market_hours_aware=market_hours_aware,
+            intraday_ttl_minutes=intraday_ttl_minutes,
         )
         self._info_ttl = timedelta(hours=info_cache_ttl_hours)
         self._history_days = history_days
+        self._market_hours_aware = market_hours_aware
+        self._intraday_ttl = timedelta(minutes=intraday_ttl_minutes)
         self._insider = InsiderFetcher(
             cache_dir=self._source.cache_dir,
             cache_ttl_hours=info_cache_ttl_hours,
@@ -193,9 +203,23 @@ class MarketDataFetcher:
             existing = pd.read_csv(cache_path, parse_dates=["date"])
             existing["date"] = pd.to_datetime(existing["date"]).dt.date
             last_date = existing["date"].max()
-            # 4-day buffer: Mon sees last Fri (3 days); post-holiday Mon sees Thu (4 days)
-            if last_date >= today - _dt.timedelta(days=4):
-                return existing
+
+            # Intraday-mode freshness: switch to mtime-vs-intraday-TTL
+            # when aware AND market is open.
+            if self._market_hours_aware:
+                from assethold.utils.market_hours import is_market_open
+                if is_market_open():
+                    mtime = datetime.fromtimestamp(cache_path.stat().st_mtime)
+                    if datetime.now() - mtime < self._intraday_ttl:
+                        return existing
+                    # else fall through to fetch
+                elif last_date >= today - _dt.timedelta(days=4):
+                    return existing
+            else:
+                # Legacy 4-day buffer: covers weekends and market holidays
+                if last_date >= today - _dt.timedelta(days=4):
+                    return existing
+
             fetch_start = (last_date + _dt.timedelta(days=1)).strftime("%Y-%m-%d")
         else:
             start_dt = _dt.date.today() - _dt.timedelta(days=self._history_days + 30)
