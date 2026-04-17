@@ -60,12 +60,22 @@ def is_market_open(ts: Optional[datetime] = None) -> bool:
     return bool(open_ts <= et < close_ts)
 
 
-def next_open(ts: Optional[datetime] = None) -> datetime:
-    """Return the next NYSE regular-session opening strictly after `ts`.
+def _next_event(
+    ts: Optional[datetime],
+    column: str,
+    label: str,
+) -> datetime:
+    """Return the next `column` ('market_open' or 'market_close') strictly after ts.
 
-    Returns a TZ-aware datetime in America/New_York. Searches up to 14 days
-    forward; raises ValueError if no opening is found in that window.
+    Shared body of next_open and next_close. 14-day forward search; raises
+    ValueError (with the human-readable `label`) if no matching event is found.
+    The `label` argument preserves original error text byte-identical across
+    the two public wrappers.
     """
+    if column not in ("market_open", "market_close"):
+        raise ValueError(
+            f"Invalid column {column!r}; expected 'market_open' or 'market_close'"
+        )
     et = _normalize(ts)
     cal = _get_calendar()
     schedule = cal.schedule(
@@ -73,9 +83,18 @@ def next_open(ts: Optional[datetime] = None) -> datetime:
         end_date=(et + pd.Timedelta(days=14)).date(),
     )
     for _, row in schedule.iterrows():
-        if row["market_open"] > et:
-            return row["market_open"].tz_convert("America/New_York").to_pydatetime()
-    raise ValueError(f"No NYSE market open found within 14 days of {ts}")
+        if row[column] > et:
+            return row[column].tz_convert("America/New_York").to_pydatetime()
+    raise ValueError(f"No NYSE {label} found within 14 days of {ts}")
+
+
+def next_open(ts: Optional[datetime] = None) -> datetime:
+    """Return the next NYSE regular-session opening strictly after `ts`.
+
+    Returns a TZ-aware datetime in America/New_York. Searches up to 14 days
+    forward; raises ValueError if no opening is found in that window.
+    """
+    return _next_event(ts, "market_open", "market open")
 
 
 def next_close(ts: Optional[datetime] = None) -> datetime:
@@ -84,13 +103,4 @@ def next_close(ts: Optional[datetime] = None) -> datetime:
     Returns a TZ-aware datetime in America/New_York. Searches up to 14 days
     forward; raises ValueError if no close is found in that window.
     """
-    et = _normalize(ts)
-    cal = _get_calendar()
-    schedule = cal.schedule(
-        start_date=et.date(),
-        end_date=(et + pd.Timedelta(days=14)).date(),
-    )
-    for _, row in schedule.iterrows():
-        if row["market_close"] > et:
-            return row["market_close"].tz_convert("America/New_York").to_pydatetime()
-    raise ValueError(f"No NYSE market close found within 14 days of {ts}")
+    return _next_event(ts, "market_close", "market close")
