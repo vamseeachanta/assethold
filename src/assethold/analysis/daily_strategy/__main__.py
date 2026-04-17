@@ -99,7 +99,9 @@ def main(argv: list[str] | None = None) -> int:
             except ValueError:
                 next_open_str = "unknown"
             print(
-                f"ERROR: market is closed. Next open: {next_open_str}",
+                f"ERROR: --intraday requires the NYSE regular session to be open NOW "
+                f"(--date does not affect this check).\n"
+                f"       Market is currently closed. Next open: {next_open_str}.",
                 file=sys.stderr,
             )
             return 1
