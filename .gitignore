@@ -390,3 +390,6 @@ specs/
 
 # Logging
 logs/
+
+# Agent worktrees (local-only, must not be tracked as gitlinks)
+.claude/worktrees/
