@@ -14,6 +14,11 @@ Options:
                                       Tickers are comma-separated (e.g. AAPL,MSFT,NVDA).
                                       When omitted, the watchlist: section in config is used
                                       automatically if non-empty.
+    --intraday                        Enable market-hours-aware caching: OHLCV TTL drops to
+                                      `intraday_ttl_minutes` (config knob, default 15) during
+                                      the NYSE regular session. Fails loud if the market is
+                                      closed at invocation time. The --date flag overrides the
+                                      report date but NOT the pre-flight check.
 """
 
 from __future__ import annotations
@@ -68,11 +73,36 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
             "and the HTML report switches to Comparison Matrix layout."
         ),
     )
+    parser.add_argument(
+        "--intraday",
+        action="store_true",
+        help=(
+            "Enable market-hours-aware caching. OHLCV TTL drops to the configured "
+            "intraday_ttl_minutes during the NYSE regular session. Fails loud if "
+            "the market is closed at invocation time."
+        ),
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv or sys.argv[1:])
+
+    # --intraday pre-flight: fail loud if NYSE regular session is not open NOW
+    # (independent of --date, which only controls the report date).
+    if args.intraday:
+        from assethold.utils.market_hours import is_market_open, next_open
+        if not is_market_open():
+            try:
+                next_open_ts = next_open()
+                next_open_str = next_open_ts.strftime("%Y-%m-%d %H:%M %Z")
+            except ValueError:
+                next_open_str = "unknown"
+            print(
+                f"ERROR: market is closed. Next open: {next_open_str}",
+                file=sys.stderr,
+            )
+            return 1
 
     # Parse the report date
     report_date: datetime | None = None
@@ -158,6 +188,10 @@ def main(argv: list[str] | None = None) -> int:
             config.get("scoring", {}).get("info_cache_ttl_hours", 24)
         ),
         history_days=int(config.get("scoring", {}).get("sma_history_days", 252)),
+        market_hours_aware=args.intraday,
+        intraday_ttl_minutes=int(
+            config.get("scoring", {}).get("intraday_ttl_minutes", 15)
+        ),
     )
 
     fetch_tickers = [alias_map.get(t, t) for t in tickers]
