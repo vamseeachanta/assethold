@@ -63,6 +63,9 @@ scoring:
   sma_history_days: 252     # Trading days of price history to fetch
   info_cache_ttl_hours: 24  # How long to cache yfinance .info (fundamentals)
   price_cache_ttl_hours: 4  # How long to cache intraday OHLCV
+  # Intraday TTL (minutes) used by --intraday flag during the NYSE regular session.
+  # See docs/reports/2026-04-16-realtime-phase1-design.md.
+  intraday_ttl_minutes: 15
 
 # ---------------------------------------------------------------------------
 # Per-ticker targets and position modes
