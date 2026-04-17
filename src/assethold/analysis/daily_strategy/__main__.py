@@ -29,6 +29,25 @@ from datetime import datetime
 from pathlib import Path
 
 
+def _build_fetcher_kwargs(args: argparse.Namespace, config: dict) -> dict:
+    """Construct MarketDataFetcher kwargs from CLI args + daily_strategy config.
+
+    Module-private helper; not intended for cross-module reuse.
+    """
+    scoring = config.get("scoring", {})
+    return {
+        "price_cache_ttl_hours": 0 if args.no_cache else int(
+            scoring.get("price_cache_ttl_hours", 4)
+        ),
+        "info_cache_ttl_hours": 0 if args.no_cache else int(
+            scoring.get("info_cache_ttl_hours", 24)
+        ),
+        "history_days": int(scoring.get("sma_history_days", 252)),
+        "market_hours_aware": args.intraday,
+        "intraday_ttl_minutes": int(scoring.get("intraday_ttl_minutes", 15)),
+    }
+
+
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="python -m assethold.analysis.daily_strategy",
@@ -182,19 +201,7 @@ def main(argv: list[str] | None = None) -> int:
     # Fetch market data
     from assethold.analysis.daily_strategy.fetcher import MarketDataFetcher
 
-    fetcher = MarketDataFetcher(
-        price_cache_ttl_hours=0 if args.no_cache else int(
-            config.get("scoring", {}).get("price_cache_ttl_hours", 4)
-        ),
-        info_cache_ttl_hours=0 if args.no_cache else int(
-            config.get("scoring", {}).get("info_cache_ttl_hours", 24)
-        ),
-        history_days=int(config.get("scoring", {}).get("sma_history_days", 252)),
-        market_hours_aware=args.intraday,
-        intraday_ttl_minutes=int(
-            config.get("scoring", {}).get("intraday_ttl_minutes", 15)
-        ),
-    )
+    fetcher = MarketDataFetcher(**_build_fetcher_kwargs(args, config))
 
     fetch_tickers = [alias_map.get(t, t) for t in tickers]
     print(f"Fetching market data for: {', '.join(fetch_tickers)} ...")
