@@ -45,6 +45,7 @@ def test_intraday_fails_loud_when_market_closed():
     assert "next open" in result.stderr.lower(), f"stderr missing 'next open': {result.stderr}"
 
 
+@pytest.mark.slow
 def test_no_intraday_flag_does_not_check_market_hours():
     """Without --intraday, a Sunday invocation does NOT trigger the market-hours pre-flight."""
     result = subprocess.run(

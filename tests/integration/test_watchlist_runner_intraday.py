@@ -48,6 +48,7 @@ def test_intraday_fails_loud_when_market_closed():
     )
 
 
+@pytest.mark.slow
 def test_no_intraday_flag_does_not_check_market_hours():
     """Without --intraday or --no-intraday, and with config.settings.market_hours_aware
     not overriding to true, the market-hours pre-flight does NOT fire.
