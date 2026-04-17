@@ -258,7 +258,7 @@ def next_open(ts: Optional[datetime] = None) -> datetime:
     )
     for _, row in schedule.iterrows():
         if row["market_open"] > et:
-            return row["market_open"].to_pydatetime()
+            return row["market_open"].tz_convert("America/New_York").to_pydatetime()
     raise ValueError(f"No NYSE market open found within 14 days of {ts}")
 
 
@@ -276,7 +276,7 @@ def next_close(ts: Optional[datetime] = None) -> datetime:
     )
     for _, row in schedule.iterrows():
         if row["market_close"] > et:
-            return row["market_close"].to_pydatetime()
+            return row["market_close"].tz_convert("America/New_York").to_pydatetime()
     raise ValueError(f"No NYSE market close found within 14 days of {ts}")
 ```
 
