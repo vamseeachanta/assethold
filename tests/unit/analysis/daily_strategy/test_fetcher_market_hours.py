@@ -119,3 +119,34 @@ def test_fetch_ohlcv_uses_legacy_buffer_when_not_aware(tmp_path, monkeypatch):
 
     result = f._fetch_ohlcv("AAPL")
     assert len(result) == 1
+
+
+def test_fetch_ohlcv_uses_legacy_buffer_when_aware_but_closed(tmp_path, monkeypatch):
+    """When aware=True but market is closed, falls back to legacy 4-day buffer."""
+    f = MarketDataFetcher(
+        cache_dir=tmp_path,
+        market_hours_aware=True,
+        intraday_ttl_minutes=15,
+    )
+    cache_path = tmp_path / "AAPL_ohlcv.csv"
+    df = pd.DataFrame({
+        "date": [date.today() - timedelta(days=2)],  # within 4-day buffer
+        "open": [100.0], "high": [101.0], "low": [99.0],
+        "close": [100.5], "volume": [1000],
+    })
+    df.to_csv(cache_path, index=False)
+    # mtime is irrelevant for the legacy branch; set it old
+    one_hour_ago = time.time() - 60 * 60
+    os.utime(cache_path, (one_hour_ago, one_hour_ago))
+
+    monkeypatch.setattr(
+        "assethold.utils.market_hours.is_market_open",
+        lambda ts=None: False,  # market closed
+    )
+
+    def _no_network(*args, **kwargs):
+        raise AssertionError("Network call should not happen — legacy 4-day buffer applies")
+    monkeypatch.setattr(f._source, "fetch", _no_network)
+
+    result = f._fetch_ohlcv("AAPL")
+    assert len(result) == 1
