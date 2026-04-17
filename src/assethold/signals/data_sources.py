@@ -19,14 +19,21 @@ class StockDataSource:
         cache_dir: Optional[Path] = None,
         cache_ttl_hours: int = 24,
         rate_limit_seconds: float = 2.0,
+        market_hours_aware: bool = False,
+        intraday_ttl_minutes: int = 15,
     ):
         """
         Initialize stock data source.
 
         Args:
             cache_dir: Directory for cache files (default: data/stocks/cache)
-            cache_ttl_hours: Cache validity in hours
+            cache_ttl_hours: Cache validity in hours (used outside market hours
+                or when market_hours_aware is False)
             rate_limit_seconds: Minimum delay between requests
+            market_hours_aware: When True, _is_cache_valid switches to a
+                shorter TTL during the NYSE regular session
+            intraday_ttl_minutes: TTL (minutes) used during the NYSE regular
+                session when market_hours_aware is True
         """
         if cache_dir is None:
             cache_dir = Path(__file__).parents[3] / "data" / "stocks" / "cache"
@@ -35,6 +42,8 @@ class StockDataSource:
         self.cache_ttl = timedelta(hours=cache_ttl_hours)
         self.rate_limit = rate_limit_seconds
         self._last_request_time = 0.0
+        self.market_hours_aware = market_hours_aware
+        self.intraday_ttl = timedelta(minutes=intraday_ttl_minutes)
 
     def _get_cache_path(self, ticker: str, start_date: str, end_date: str) -> Path:
         """Generate cache file path for given ticker and date range."""
@@ -43,11 +52,21 @@ class StockDataSource:
         return self.cache_dir / f"{ticker}_{cache_hash}.csv"
 
     def _is_cache_valid(self, cache_path: Path) -> bool:
-        """Check if cache file exists and is not expired."""
+        """Check if cache file exists and is not expired.
+
+        When market_hours_aware is True AND the NYSE regular session is open,
+        uses self.intraday_ttl (e.g. 15 min). Otherwise uses self.cache_ttl
+        (legacy behavior, e.g. 24h).
+        """
         if not cache_path.exists():
             return False
         mtime = datetime.fromtimestamp(cache_path.stat().st_mtime)
-        return datetime.now() - mtime < self.cache_ttl
+        age = datetime.now() - mtime
+        if self.market_hours_aware:
+            from assethold.utils.market_hours import is_market_open
+            if is_market_open():
+                return age < self.intraday_ttl
+        return age < self.cache_ttl
 
     def _apply_rate_limit(self) -> None:
         """Enforce rate limiting between requests."""
