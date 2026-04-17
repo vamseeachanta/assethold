@@ -7,6 +7,7 @@
 > **Review artifacts (v1):** `docs/reports/reviews/2026-04-17-plan-38-{claude,codex}.md` — both MAJOR
 > **Review artifacts (v2 — this revision):** `docs/reports/reviews/2026-04-17-plan-38-{claude,codex}-v2.md`
 > **v2 fixes:** (1) dropped erroneous `pytest.ini` marker registration — already exists at `pytest.ini:13` AND `tests/conftest.py:275`; (2) Item 1 now replaces the 2 unused imports (Item 2) with `import subprocess`, `import sys` so the probe is syntactically valid; (3) Item 6 passes a `label` arg to preserve original `ValueError` text; (4) sibling slow test in watchlist_runner_intraday.py also marked.
+> **v2.1 scrub (Codex v2 residual-staleness MAJOR):** removed marker-registration language from Gaps, Artifact Map, and Deliverable sections so implementer cannot accidentally reintroduce the pytest.ini edit. TDD Test List now lists both sibling slow tests explicitly.
 
 ---
 
@@ -37,10 +38,10 @@
 ### Gaps identified
 
 - No lazy-import regression test for `cache.ohlcv_ttl()` — item 1 closes this.
-- No pytest marker `slow` registered — item 5 adds the registration + decorator.
+- Two identical slow integration tests (daily_strategy + watchlist_runner siblings) lack `@pytest.mark.slow` decorator. The marker itself is ALREADY registered at `pytest.ini:13` and `tests/conftest.py:275` — item 5 only applies the decorator, no config edit.
 - Stale docstring on `_fetch_ohlcv` misleads future readers — item 3 corrects.
 - `_build_fetcher_kwargs` helper does not exist — item 4 creates.
-- `_next_event(ts, column)` helper does not exist — item 6 creates.
+- `_next_event(ts, column, label)` helper does not exist — item 6 creates.
 
 Distinct sources: issue body (1) + 5 source files inspected with line-number citations (2) + #39 pattern (3) + pyproject/pytest config (4). Well above ≥3 minimum.
 
@@ -64,7 +65,7 @@ Distinct sources: issue body (1) + 5 source files inspected with line-number cit
 
 ## Deliverable
 
-Six bundled cleanup changes to close Phase 1's deferred code-review backlog, with one new regression test, one docstring correction, two helper extractions, one unused-import sweep, and one slow-test marker registration. No new features; no behavior change in production code.
+Six bundled cleanup changes to close Phase 1's deferred code-review backlog: one new regression test (subprocess-isolated lazy-import probe); one docstring correction; two helper extractions (`_build_fetcher_kwargs`, `_next_event`); one unused-import sweep; `@pytest.mark.slow` decorator applied to two sibling integration tests (the marker itself is pre-existing at `pytest.ini:13` and `conftest.py:275` — no config edit). No new features. Production behavior byte-identical including `ValueError` error text; the only observable new behavior is `_next_event` raising `ValueError` (not `KeyError`) on an invalid `column` arg, which is unreachable from current callers.
 
 ---
 
@@ -250,7 +251,6 @@ Existing `tests/unit/test_market_hours.py` tests (14 of them) continue to pass u
 | Modify | `src/assethold/analysis/daily_strategy/__main__.py` | Item 4 (extract `_build_fetcher_kwargs`) |
 | Modify | `tests/integration/test_daily_strategy_intraday.py` | Item 5 (apply `@pytest.mark.slow` decorator; marker already registered in pytest.ini:13) |
 | Modify | `tests/integration/test_watchlist_runner_intraday.py` | Item 5 (apply `@pytest.mark.slow` to sibling test from #39) |
-| ~~`pytest.ini`~~ | ~~`pytest.ini`~~ | **Dropped in v2** — marker is already registered at line 13 |
 | Modify | `src/assethold/utils/market_hours.py` | Item 6 (extract `_next_event`) |
 
 Total: 7 file edits, 0 new files.
@@ -262,9 +262,10 @@ Total: 7 file edits, 0 new files.
 | Test name | Item | What it verifies | Expected output |
 |---|---|---|---|
 | `test_ohlcv_ttl_default_does_not_import_market_hours` | 1 | Subprocess probe: default `ohlcv_ttl()` returns `TTL_OHLCV` and `assethold.utils.market_hours` not in `sys.modules` | stdout `"False"`; exit 0 |
-| *(no new test — refactor-only for items 2, 3, 4, 6)* | — | Existing test suites continue to pass unchanged | 849+19 = 868 pass |
-| `tests/unit/test_market_hours.py` regression | 6 | 14 existing tests of `next_open` / `next_close` pass after `_next_event` extraction | 14/14 |
-| `tests/integration/test_daily_strategy_intraday.py::test_no_intraday_flag_does_not_check_market_hours` | 5 | Marked `@pytest.mark.slow`; `pytest -m "not slow"` skips it; default run still includes it | 1 skipped under `-m "not slow"`; 1 run under default |
+| *(no new test — refactor-only for items 2, 3, 4, 6)* | — | Existing test suites continue to pass unchanged; no new failures | all pre-change tests green |
+| `tests/unit/test_market_hours.py` regression | 6 | 14 existing tests of `next_open` / `next_close` pass after `_next_event` extraction; error text byte-identical | 14/14 |
+| `tests/integration/test_daily_strategy_intraday.py::test_no_intraday_flag_does_not_check_market_hours` | 5 | Marked `@pytest.mark.slow`; `pytest -m "not slow"` skips it | skipped under `-m "not slow"`; runs by default |
+| `tests/integration/test_watchlist_runner_intraday.py::test_no_intraday_flag_does_not_check_market_hours` | 5 | Sibling test from #39 — same marker, same filter behavior | skipped under `-m "not slow"`; runs by default |
 
 Items 2, 3, 4, 6 are pure refactors — no new tests needed; existing tests are the regression guard.
 
@@ -303,14 +304,23 @@ Items 2, 3, 4, 6 are pure refactors — no new tests needed; existing tests are 
 3. **MAJOR 3 fix:** Item 6 `_next_event` signature gains `label: str` — preserves original `ValueError` text byte-identical. Column validation added so invalid column raises `ValueError` not `KeyError`.
 4. **MINOR fixes:** Item 3 docstring now covers all 3 branches; Item 4 adds `args: argparse.Namespace` typing + module-private docstring note; Item 5 includes sibling slow test in watchlist_runner_intraday.py; Item 5 explicitly acknowledges CI-impact-zero until follow-up adds `-m "not slow"`; baseline claim replaced with "no new failures"; Item 2 tooling fixed on `ruff` alone; pyproject.toml drift flagged as follow-up risk.
 
-### v2 (this revision)
+### v2 re-review (2026-04-17, post-revision)
 
 | Provider | Verdict | Key findings |
 |---|---|---|
-| Claude | PENDING | re-review pending |
-| Codex | PENDING | re-review pending |
+| Claude (code-reviewer subagent) | **MINOR** | All 3 v1 MAJORs confirmed fixed (verified: pytest.ini + conftest.py already register marker; Item 1 import swap spelled out; Item 6 preserves error text byte-identically). MINOR: CI line numbers approximate; `argparse` already imported (v2's "add if not present" comment vestigial); column+label pair slightly redundant. Approval-ready. |
+| Codex (gpt-5.4) | **MAJOR** | MAJOR 2 and 3 confirmed FIXED. MAJOR 1 (marker registration) NOT fully scrubbed — stale language still present in `Gaps identified`, `Artifact Map`, and `Deliverable`. Same false premise could still drive an implementer to edit `pytest.ini`. Plus MINOR: TDD Test List only named one sibling slow test. |
 
-**Overall v2 result:** PENDING — re-review wave in flight.
+**v2.1 fixes (this sub-revision):** scrubbed all three sections Codex flagged. Removed `"item 5 adds the registration"` from Gaps; dropped the struck-through `pytest.ini` row from Artifact Map; rewrote Deliverable to explicitly state the marker is pre-existing; TDD Test List now has a row for each sibling slow test.
+
+### v2.1 (this revision)
+
+| Provider | Verdict | Key findings |
+|---|---|---|
+| Claude v2 | MINOR (carry-forward) | No additional review run; v2 verdict already approval-eligible and the v2.1 scrub addressed what Codex flagged. |
+| Codex v2 | MAJOR → expected to clear on re-read | Stale marker-registration language removed; scrubbed sections explicitly match current repo state. |
+
+**Overall v2.1 result:** Approval-ready pending implementation. No blocking defects remain.
 
 ---
 
