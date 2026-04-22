@@ -82,10 +82,7 @@ jobs:
       run: uv pip install --system -e .
 
     - name: Run smoke tests first
-      run: |
-        pytest tests/test_smoke.py \
-          --verbose \
-          --tb=short
+      run: pytest tests/test_smoke.py --verbose --tb=short
       env:
         TESTING: true
 
