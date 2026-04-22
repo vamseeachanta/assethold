@@ -81,6 +81,14 @@ jobs:
     - name: Install project in development mode
       run: uv pip install --system -e .
 
+    - name: Run smoke tests first
+      run: |
+        pytest tests/test_smoke.py \
+          --verbose \
+          --tb=short
+      env:
+        TESTING: true
+
     - name: Lint with flake8
       run: |
         # Stop the build if there are Python syntax errors or undefined names
@@ -99,14 +107,6 @@ jobs:
     - name: Safety check for vulnerabilities
       run: safety check --json --output safety-report.json
       continue-on-error: true
-
-    - name: Run smoke tests first
-      run: |
-        pytest tests/test_smoke.py \
-          --verbose \
-          --tb=short
-      env:
-        TESTING: true
 
     - name: Run unit tests with coverage
       run: |
