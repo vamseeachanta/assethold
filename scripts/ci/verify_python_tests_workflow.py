@@ -22,7 +22,7 @@ MYPY_TARGETS = (
 def _load_workflow() -> dict[str, Any]:
     if not WORKFLOW_PATH.exists():
         raise AssertionError(f"workflow file does not exist: {WORKFLOW_PATH}")
-    loaded = yaml.safe_load(WORKFLOW_PATH.read_text())
+    loaded = yaml.safe_load(WORKFLOW_PATH.read_text(encoding="utf-8"))
     if not isinstance(loaded, dict):
         raise AssertionError("workflow YAML did not parse to a mapping")
     return loaded
