@@ -2,12 +2,12 @@
 Unit tests for watchlist management.
 """
 
-from pathlib import Path
-
 import pytest
 import yaml
 
 from assethold.signals.watchlist import Watchlist
+
+pytestmark = pytest.mark.unit
 
 
 @pytest.fixture
@@ -88,6 +88,51 @@ class TestWatchlist:
 
         with pytest.raises(ValueError, match="Invalid YAML"):
             watchlist.load()
+
+    def test_load_empty_yaml_normalizes_to_mapping(self, tmp_path):
+        """Test empty YAML files are treated as an empty watchlist mapping."""
+        config_path = tmp_path / "empty.yml"
+        config_path.write_text("")
+
+        watchlist = Watchlist(config_path=config_path)
+
+        assert watchlist.load() == {}
+        assert watchlist.get_tickers() == []
+
+    def test_add_stock_persists_from_empty_yaml(self, tmp_path):
+        """Test add_stock handles an empty YAML file without None state errors."""
+        config_path = tmp_path / "empty.yml"
+        config_path.write_text("")
+        watchlist = Watchlist(config_path=config_path)
+
+        watchlist.add_stock(
+            "googl",
+            alert_thresholds={"rsi_oversold": 25, "rsi_overbought": 75},
+            monitoring_frequency="hourly",
+        )
+
+        saved_data = yaml.safe_load(config_path.read_text())
+        assert saved_data == {
+            "stocks": [
+                {
+                    "ticker": "GOOGL",
+                    "alert_thresholds": {
+                        "rsi_oversold": 25,
+                        "rsi_overbought": 75,
+                    },
+                    "monitoring_frequency": "hourly",
+                }
+            ]
+        }
+
+    def test_remove_stock_persists_from_empty_yaml(self, tmp_path):
+        """Test remove_stock handles an empty YAML file without None state errors."""
+        config_path = tmp_path / "empty.yml"
+        config_path.write_text("")
+        watchlist = Watchlist(config_path=config_path)
+
+        assert watchlist.remove_stock("MSFT") is False
+        assert yaml.safe_load(config_path.read_text()) is None
 
     def test_get_tickers(self, temp_watchlist_file):
         """Test getting list of tickers."""
