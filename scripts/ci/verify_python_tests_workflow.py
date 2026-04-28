@@ -110,10 +110,11 @@ def _assert_flake8_contract(steps: list[dict[str, Any]]) -> None:
     if len(flake8_lines) != 2:
         raise AssertionError("lint step must contain exactly two flake8 commands")
     for line in flake8_lines:
-        if "flake8 ." in line:
+        flake8_tokens = shlex.split(line)
+        if "." in flake8_tokens:
             raise AssertionError("flake8 must not target the repository root")
         for target in LINT_TARGETS:
-            if target not in line:
+            if target not in flake8_tokens:
                 raise AssertionError(
                     f"flake8 command missing target {target!r}: {line}"
                 )
