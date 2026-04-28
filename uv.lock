@@ -84,7 +84,7 @@ dependencies = [
     { name = "numpy-financial" },
     { name = "openpyxl" },
     { name = "pandas" },
-    { name = "pandas-market-calendars", version = "5.2.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "pandas-market-calendars", version = "4.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "pandas-market-calendars", version = "5.3.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "plotly" },
     { name = "pypdf2" },
@@ -211,7 +211,8 @@ requires-dist = [
     { name = "numpy-financial", specifier = "==1.0.0" },
     { name = "openpyxl" },
     { name = "pandas", specifier = "==2.2.3" },
-    { name = "pandas-market-calendars", specifier = ">=5.2.4" },
+    { name = "pandas-market-calendars", marker = "python_full_version < '3.10'", specifier = ">=4.6.1,<5" },
+    { name = "pandas-market-calendars", marker = "python_full_version >= '3.10'", specifier = ">=5.3.2" },
     { name = "parsel", marker = "extra == 'scraping'" },
     { name = "playwright", marker = "extra == 'scraping'" },
     { name = "plotly", specifier = ">=5.17.0,<6.0.0" },
@@ -4133,7 +4134,7 @@ wheels = [
 
 [[package]]
 name = "pandas-market-calendars"
-version = "5.2.4"
+version = "4.6.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version < '3.10'",
@@ -4141,10 +4142,12 @@ resolution-markers = [
 dependencies = [
     { name = "exchange-calendars", version = "4.5.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "pandas", marker = "python_full_version < '3.10'" },
+    { name = "python-dateutil", marker = "python_full_version < '3.10'" },
+    { name = "pytz", marker = "python_full_version < '3.10'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ad/86/3f6f1325dbbd948150e683aa9735c34493954b525c1efd453c47beb46f9c/pandas_market_calendars-5.2.4.tar.gz", hash = "sha256:7cbb7de0e1652f08db4d5185f9429486fd3a6e050c4fc8d1f51a5eaad2fabdb0", size = 162701, upload-time = "2026-01-07T12:50:33.48Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/2e/f8ed3be1df446e5ea76ed24359314ce53b664ca6388c9c57c5ba4cef0e20/pandas_market_calendars-4.6.1.tar.gz", hash = "sha256:cc17e3ccb07548603cf8dbd7050c83f8d6ee9ddf3987a05e1dceab53793a0da8", size = 158490, upload-time = "2025-01-25T14:11:29.059Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cc/de/f9940c57937720f07f5cd3acf4b4e1208520e1321ed5576d928121e2dae3/pandas_market_calendars-5.2.4-py3-none-any.whl", hash = "sha256:82998eeaed52a554d88ca98c2ff799c329d72c77630502ced74487a951bb2e86", size = 127819, upload-time = "2026-01-07T12:50:34.614Z" },
+    { url = "https://files.pythonhosted.org/packages/87/58/af27154d8b10b33e3353d263827419156a30fbd88625610ca8bb4ef59dd9/pandas_market_calendars-4.6.1-py3-none-any.whl", hash = "sha256:e3603bea8f1dce556fb21027a3ab73056296a145c5c440be1f5494e6fb34a4f1", size = 122723, upload-time = "2025-01-25T14:11:23.211Z" },
 ]
 
 [[package]]

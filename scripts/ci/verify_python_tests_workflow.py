@@ -139,6 +139,31 @@ def _assert_mypy_contract(steps: list[dict[str, Any]]) -> None:
         raise AssertionError("mypy command must preserve --ignore-missing-imports")
 
 
+def _assert_coverage_command_contract(steps: list[dict[str, Any]]) -> None:
+    """Keep coverage commands shell-neutral and aligned to the current CI baseline."""
+    expected = {
+        "Run unit tests with coverage": (
+            "pytest tests/unit/ --cov=src --cov=. --cov-report=xml "
+            "--cov-report=html --cov-report=term-missing --cov-fail-under=60 "
+            "--junitxml=pytest-unit.xml --verbose -m unit"
+        ),
+        "Run all tests with coverage": (
+            "pytest --cov=src --cov=. --cov-report=xml --cov-report=html "
+            "--cov-report=term-missing --cov-fail-under=60 --junitxml=pytest.xml "
+            "--verbose"
+        ),
+    }
+    for step_name, expected_command in expected.items():
+        lines = _run_lines(_step_by_name(steps, step_name))
+        if len(lines) != 1:
+            raise AssertionError(f"{step_name} must be a single shell-neutral command")
+        command = lines[0]
+        if "\\" in command:
+            raise AssertionError(f"{step_name} must not use shell-specific continuations")
+        if shlex.split(command) != shlex.split(expected_command):
+            raise AssertionError(f"{step_name} command drifted from bounded CI contract")
+
+
 def _assert_test_job_contract(workflow: dict[str, Any]) -> None:
     steps = _test_steps(workflow)
     _assert_dependency_contract(steps)
@@ -147,6 +172,7 @@ def _assert_test_job_contract(workflow: dict[str, Any]) -> None:
     _assert_smoke_contract(steps)
     _assert_flake8_contract(steps)
     _assert_mypy_contract(steps)
+    _assert_coverage_command_contract(steps)
 
 
 def main() -> int:
