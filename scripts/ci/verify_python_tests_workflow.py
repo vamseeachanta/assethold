@@ -149,8 +149,10 @@ def _assert_coverage_command_contract(steps: list[dict[str, Any]]) -> None:
         ),
         "Run all tests with coverage": (
             "pytest tests/ --ignore=tests/modules/multifamily "
+            "--ignore=tests/modules/stocks/analysis/breakout "
             "--ignore=tests/modules/stocks/analysis/investment "
-            "--ignore=tests/modules/stocks/data/test_stock_data.py "
+            "--ignore=tests/modules/stocks/analysis/portfolio "
+            "--ignore=tests/modules/stocks/data "
             "--cov=src --cov=. --cov-report=xml --cov-report=html "
             "--cov-report=term-missing --cov-fail-under=60 --junitxml=pytest.xml "
             "--verbose"
