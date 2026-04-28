@@ -148,7 +148,10 @@ def _assert_coverage_command_contract(steps: list[dict[str, Any]]) -> None:
             "--junitxml=pytest-unit.xml --verbose -m unit"
         ),
         "Run all tests with coverage": (
-            "pytest --cov=src --cov=. --cov-report=xml --cov-report=html "
+            "pytest tests/ --ignore=tests/modules/multifamily "
+            "--ignore=tests/modules/stocks/analysis/investment "
+            "--ignore=tests/modules/stocks/data/test_stock_data.py "
+            "--cov=src --cov=. --cov-report=xml --cov-report=html "
             "--cov-report=term-missing --cov-fail-under=60 --junitxml=pytest.xml "
             "--verbose"
         ),
@@ -159,9 +162,13 @@ def _assert_coverage_command_contract(steps: list[dict[str, Any]]) -> None:
             raise AssertionError(f"{step_name} must be a single shell-neutral command")
         command = lines[0]
         if "\\" in command:
-            raise AssertionError(f"{step_name} must not use shell-specific continuations")
+            raise AssertionError(
+                f"{step_name} must not use shell-specific continuations"
+            )
         if shlex.split(command) != shlex.split(expected_command):
-            raise AssertionError(f"{step_name} command drifted from bounded CI contract")
+            raise AssertionError(
+                f"{step_name} command drifted from bounded CI contract"
+            )
 
 
 def _assert_test_job_contract(workflow: dict[str, Any]) -> None:

@@ -55,9 +55,11 @@ class AlertEvent:
             "event_type": self.event_type,
             "severity": self.severity.name,
             "message": self.message,
-            "timestamp": self.timestamp.isoformat()
-            if isinstance(self.timestamp, datetime)
-            else str(self.timestamp),
+            "timestamp": (
+                self.timestamp.isoformat()
+                if isinstance(self.timestamp, datetime)
+                else str(self.timestamp)
+            ),
             "metadata": self.metadata,
         }
 
@@ -79,7 +81,7 @@ def _coerce_timestamp(value: Any) -> datetime:
         if isinstance(value, date):
             return datetime(value.year, value.month, value.day)
     except Exception:
-        pass
+        return datetime.now()
     return datetime.now()
 
 
@@ -115,9 +117,7 @@ def _build_message(event_type: str, metadata: dict[str, Any]) -> str:
         return f"Event: {event_type}"
 
 
-def _severity_for_event(
-    event_type: str, metadata: dict[str, Any]
-) -> Severity:
+def _severity_for_event(event_type: str, metadata: dict[str, Any]) -> Severity:
     """Determine severity for an event, with override for large volume spikes."""
     base = _DEFAULT_SEVERITY.get(event_type, Severity.INFO)
     if event_type == "volume_spike":
@@ -171,9 +171,7 @@ class AlertEngine:
             for evt in events:
                 event_type = evt.get("type", category)
                 timestamp = _coerce_timestamp(evt.get("date", datetime.now()))
-                metadata = {
-                    k: v for k, v in evt.items() if k not in ("type", "date")
-                }
+                metadata = {k: v for k, v in evt.items() if k not in ("type", "date")}
                 severity = _severity_for_event(event_type, metadata)
                 message = _build_message(event_type, metadata)
 
@@ -191,13 +189,9 @@ class AlertEngine:
         # Insider flags
         for flag in insider_flags:
             event_type = flag.get("type", "unusual_insider_activity")
-            timestamp = _coerce_timestamp(
-                flag.get("transaction_date", datetime.now())
-            )
+            timestamp = _coerce_timestamp(flag.get("transaction_date", datetime.now()))
             metadata = {
-                k: v
-                for k, v in flag.items()
-                if k not in ("type", "transaction_date")
+                k: v for k, v in flag.items() if k not in ("type", "transaction_date")
             }
             metadata["transaction_date"] = str(flag.get("transaction_date", ""))
             severity = _severity_for_event(event_type, metadata)
@@ -253,9 +247,7 @@ class AlertEngine:
             default=str,
         )
 
-    def write_json_report(
-        self, alerts: list[AlertEvent], output_path: Path
-    ) -> None:
+    def write_json_report(self, alerts: list[AlertEvent], output_path: Path) -> None:
         """
         Write alerts as a JSON file.
 
@@ -265,7 +257,7 @@ class AlertEngine:
         """
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, "w") as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(self.to_json(alerts))
 
     def write_markdown_report(
@@ -300,5 +292,5 @@ class AlertEngine:
                     )
                 lines.append("")
 
-        with open(output_path, "w") as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
