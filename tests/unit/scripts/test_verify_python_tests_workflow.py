@@ -38,3 +38,20 @@ def test_flake8_contract_rejects_root_target_after_scoped_targets():
 
     with pytest.raises(AssertionError, match="repository root"):
         verifier._assert_flake8_contract(steps)
+
+
+def test_mypy_contract_rejects_src_target_after_scoped_targets():
+    """Repo-wide src typing is rejected even when appended after scoped targets."""
+    steps = [
+        {
+            "name": "Type checking with mypy",
+            "run": (
+                "mypy src/assethold/signals/watchlist.py "
+                "src/assethold/modules/reporting/utils/path_utils.py "
+                "src/ --ignore-missing-imports --follow-imports=silent"
+            ),
+        }
+    ]
+
+    with pytest.raises(AssertionError, match="entire src/ tree"):
+        verifier._assert_mypy_contract(steps)

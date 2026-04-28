@@ -126,7 +126,7 @@ def _assert_mypy_contract(steps: list[dict[str, Any]]) -> None:
         raise AssertionError("mypy step must be a single shell-neutral command")
     mypy_line = mypy_lines[0]
     mypy_tokens = shlex.split(mypy_line)
-    if len(mypy_tokens) > 1 and mypy_tokens[1] == "src/":
+    if "src/" in mypy_tokens:
         raise AssertionError(
             "mypy must not target the entire src/ tree in this tranche"
         )
