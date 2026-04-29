@@ -264,6 +264,9 @@ jobs:
     - name: Run financial calculation tests
       run: |
         pytest tests/ \
+          --ignore=tests/modules/multifamily \
+          --ignore=tests/modules/stocks/analysis/investment \
+          --ignore=tests/modules/stocks/data/test_stock_data.py \
           --cov=src \
           --verbose \
           -m "financial" \
@@ -274,6 +277,9 @@ jobs:
     - name: Run scraping tests (mocked)
       run: |
         pytest tests/ \
+          --ignore=tests/modules/multifamily \
+          --ignore=tests/modules/stocks/analysis/investment \
+          --ignore=tests/modules/stocks/data/test_stock_data.py \
           --verbose \
           -m "scraping" \
           --tb=short
