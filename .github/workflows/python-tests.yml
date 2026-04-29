@@ -212,13 +212,6 @@ jobs:
         uv pip install --system pytest pytest-cov pytest-mock pytest-xdist
         uv pip install --system -e .
 
-    - name: Wait for services
-      run: |
-        # Wait for PostgreSQL
-        until pg_isready -h localhost -p 5432; do sleep 1; done
-        # Wait for Redis
-        until redis-cli -h localhost -p 6379 ping; do sleep 1; done
-
     - name: Run integration tests
       run: |
         pytest tests/integration/ \
