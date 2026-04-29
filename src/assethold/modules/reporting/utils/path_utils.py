@@ -125,7 +125,7 @@ def relative_path_from_report(
     except ValueError:
         # Files are on different drives or paths don't share common base
         # Calculate using common parent
-        common = Path(*os.path.commonprefix([data_path.parts, report_path.parts]))
+        common = Path(os.path.commonpath([str(data_path), str(report_path.parent)]))
         data_rel = data_path.relative_to(common)
         report_rel = report_path.parent.relative_to(common)
 
