@@ -6,6 +6,7 @@ the project root, ensuring portable and consistent data access across all
 repositories.
 """
 
+import os
 from pathlib import Path
 from typing import Union
 
@@ -84,8 +85,10 @@ def ensure_report_dir(subfolder: str = '') -> Path:
     return report_dir
 
 
-def relative_path_from_report(data_file: Union[str, Path],
-                               report_file: Union[str, Path]) -> str:
+def relative_path_from_report(
+    data_file: Union[str, Path],
+    report_file: Union[str, Path],
+) -> str:
     """
     Calculate relative path from report to data file.
 
@@ -122,7 +125,7 @@ def relative_path_from_report(data_file: Union[str, Path],
     except ValueError:
         # Files are on different drives or paths don't share common base
         # Calculate using common parent
-        common = Path(*os.path.commonprefix([data_path.parts, report_path.parts]))
+        common = Path(os.path.commonpath([str(data_path), str(report_path.parent)]))
         data_rel = data_path.relative_to(common)
         report_rel = report_path.parent.relative_to(common)
 

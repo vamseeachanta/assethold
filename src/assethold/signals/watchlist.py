@@ -3,7 +3,7 @@ YAML-based stock watchlist management.
 """
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import yaml
 
@@ -24,7 +24,13 @@ class Watchlist:
                 Path(__file__).parents[3] / "config" / "stocks" / "watchlist.yml"
             )
         self.config_path = Path(config_path)
-        self._data = None
+        self._data: Optional[dict[str, Any]] = None
+
+    def _ensure_data(self) -> dict[str, Any]:
+        """Load and return watchlist data if it is not already cached."""
+        if self._data is None:
+            return self.load()
+        return self._data
 
     def load(self) -> dict[str, Any]:
         """
@@ -42,7 +48,12 @@ class Watchlist:
 
         try:
             with open(self.config_path) as f:
-                self._data = yaml.safe_load(f)
+                loaded = yaml.safe_load(f)
+            if loaded is None:
+                loaded = {}
+            if not isinstance(loaded, dict):
+                raise ValueError("Watchlist config must contain a YAML mapping")
+            self._data = cast(dict[str, Any], loaded)
             return self._data
         except yaml.YAMLError as e:
             raise ValueError(f"Invalid YAML in watchlist config: {e}")
@@ -54,10 +65,16 @@ class Watchlist:
         Returns:
             List of ticker symbols
         """
-        if self._data is None:
-            self.load()
-        stocks = self._data.get("stocks", [])
-        return [stock["ticker"] for stock in stocks]
+        data = self._ensure_data()
+        stocks = data.get("stocks", [])
+        if not isinstance(stocks, list):
+            return []
+        return [
+            ticker
+            for stock in stocks
+            if isinstance(stock, dict)
+            if isinstance(ticker := stock.get("ticker"), str)
+        ]
 
     def get_stock_config(self, ticker: str) -> Optional[dict[str, Any]]:
         """
@@ -69,12 +86,17 @@ class Watchlist:
         Returns:
             Stock configuration dict or None if not found
         """
-        if self._data is None:
-            self.load()
-        stocks = self._data.get("stocks", [])
+        data = self._ensure_data()
+        stocks = data.get("stocks", [])
+        if not isinstance(stocks, list):
+            return None
         for stock in stocks:
-            if stock["ticker"].upper() == ticker.upper():
-                return stock
+            if not isinstance(stock, dict):
+                continue
+            stock_config = cast(dict[str, Any], stock)
+            stock_ticker = stock_config.get("ticker")
+            if isinstance(stock_ticker, str) and stock_ticker.upper() == ticker.upper():
+                return stock_config
         return None
 
     def get_alert_thresholds(self, ticker: str) -> Optional[dict[str, float]]:
@@ -90,7 +112,10 @@ class Watchlist:
         config = self.get_stock_config(ticker)
         if config is None:
             return None
-        return config.get("alert_thresholds")
+        thresholds = config.get("alert_thresholds")
+        if not isinstance(thresholds, dict):
+            return None
+        return cast(dict[str, float], thresholds)
 
     def get_monitoring_frequency(self, ticker: str) -> str:
         """
@@ -105,7 +130,10 @@ class Watchlist:
         config = self.get_stock_config(ticker)
         if config is None:
             return "daily"
-        return config.get("monitoring_frequency", "daily")
+        frequency = config.get("monitoring_frequency", "daily")
+        if not isinstance(frequency, str):
+            return "daily"
+        return frequency
 
     def save(self, data: dict[str, Any]) -> None:
         """
@@ -132,18 +160,21 @@ class Watchlist:
             alert_thresholds: Alert threshold configuration
             monitoring_frequency: How often to monitor
         """
-        if self._data is None:
-            self.load()
+        data = self._ensure_data()
 
-        stocks = self._data.get("stocks", [])
+        stocks_value = data.get("stocks", [])
+        stocks = stocks_value if isinstance(stocks_value, list) else []
 
         # Check if already exists
         for stock in stocks:
-            if stock["ticker"].upper() == ticker.upper():
+            if not isinstance(stock, dict):
+                continue
+            stock_ticker = stock.get("ticker")
+            if isinstance(stock_ticker, str) and stock_ticker.upper() == ticker.upper():
                 # Update existing
                 stock["alert_thresholds"] = alert_thresholds or {}
                 stock["monitoring_frequency"] = monitoring_frequency
-                self.save(self._data)
+                self.save(data)
                 return
 
         # Add new stock
@@ -153,8 +184,8 @@ class Watchlist:
             "monitoring_frequency": monitoring_frequency,
         }
         stocks.append(new_stock)
-        self._data["stocks"] = stocks
-        self.save(self._data)
+        data["stocks"] = stocks
+        self.save(data)
 
     def remove_stock(self, ticker: str) -> bool:
         """
@@ -166,16 +197,24 @@ class Watchlist:
         Returns:
             True if removed, False if not found
         """
-        if self._data is None:
-            self.load()
+        data = self._ensure_data()
 
-        stocks = self._data.get("stocks", [])
+        stocks_value = data.get("stocks", [])
+        stocks = stocks_value if isinstance(stocks_value, list) else []
         initial_len = len(stocks)
 
-        stocks = [s for s in stocks if s["ticker"].upper() != ticker.upper()]
+        stocks = [
+            stock
+            for stock in stocks
+            if not (
+                isinstance(stock, dict)
+                and isinstance(stock_ticker := stock.get("ticker"), str)
+                and stock_ticker.upper() == ticker.upper()
+            )
+        ]
 
         if len(stocks) < initial_len:
-            self._data["stocks"] = stocks
-            self.save(self._data)
+            data["stocks"] = stocks
+            self.save(data)
             return True
         return False
