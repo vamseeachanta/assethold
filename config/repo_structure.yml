@@ -1,0 +1,104 @@
+# assethold repository structure contract
+# Issue: https://github.com/vamseeachanta/assethold/issues/49
+# Scope: Phase 1 contract/checker only; no broad moves or deletion authorized.
+
+allowed_roots:
+  # Standard project roots
+  - src
+  - tests
+  - docs
+  - config
+  - scripts
+  - data
+  - examples
+  - modules
+  - business
+  - dev_tools
+  - bin
+
+  # Agent/tooling and repo metadata roots intentionally tracked today
+  - .agent-os
+  - .claude
+  - .codex
+  - .common
+  - .drcode
+  - .gemini
+  - .git-commands
+  - .github
+  - .planning
+  - .slash-commands
+  - .vscode
+  - _coding_agents
+  - agents
+
+  # Approved root files
+  - AGENTS.md
+  - AGENT_OS_COMMANDS.md
+  - CLAUDE.md
+  - CLAUDE.md.backup-20251023-081047
+  - CLAUDE.md.backup.20250805-204115
+  - CHANGELOG.md
+  - COMMANDS.md
+  - LICENSE
+  - MANDATORY_SLASH_COMMAND_ECOSYSTEM.md
+  - MANIFEST.in
+  - Makefile
+  - README.md
+  - REQUIREMENTS_MIGRATION.md
+  - .command-link
+  - .command-registry.json
+  - coverage.json
+  - .gitignore
+  - mkdocs.yml
+  - poetry.lock
+  - poetry_latest_versions.txt
+  - .pre-commit-config.yaml
+  - pyproject.toml
+  - pyproject.toml.backup
+  - pytest.ini
+  - .radon.cfg
+  - requirements-consolidated.txt
+  - setup.py
+  - uv.lock
+  - uv.toml
+  - vulture_whitelist.py
+
+ignored_roots:
+  - .git
+  - .venv
+  - __pycache__
+  - .mypy_cache
+  - .pytest_cache
+  - .ruff_cache
+  - .hypothesis
+  - .benchmarks
+  - .tox
+  - .nox
+  - htmlcov
+  - site
+  - build
+  - dist
+  - .eggs
+  - test-results
+  - test-reports
+
+generated_artifact_roots:
+  - logs
+  - reports
+  - output
+  - results
+  - site
+  - htmlcov
+  - test_output
+
+temporary_exceptions:
+  reports:
+    category: durable-evidence
+    owner: assethold maintainers
+    review_date: "2026-06-30"
+    follow_up: https://github.com/vamseeachanta/assethold/issues/49
+    justification: Tracked daily strategy report artifacts are preserved as existing durable evidence until a dedicated generated-evidence migration classifies retention, relocation, or deletion.
+    allowed_paths:
+      - reports/.gitkeep
+      - reports/daily-strategy/2026-02-18.md
+      - reports/daily-strategy/history/signals.csv

@@ -14,6 +14,8 @@ on:
       - 'uv.toml'
       - 'setup.py'
       - 'setup.cfg'
+      - 'config/repo_structure.yml'
+      - 'docs/standards/repo-structure.md'
       - '.github/workflows/python-tests.yml'
   pull_request:
     branches: [ main, develop ]
@@ -24,6 +26,9 @@ on:
       - 'uv.toml'
       - 'setup.py'
       - 'setup.cfg'
+      - 'config/repo_structure.yml'
+      - 'docs/standards/repo-structure.md'
+      - '.github/workflows/python-tests.yml'
   workflow_dispatch:
   schedule:
     # Run tests every Sunday at 2 AM UTC
@@ -82,6 +87,9 @@ jobs:
 
     - name: Verify Python Tests workflow contract
       run: python scripts/ci/verify_python_tests_workflow.py
+
+    - name: Verify repository structure contract
+      run: python scripts/maintenance/verify_repo_structure.py
 
     - name: Run smoke tests first
       run: pytest tests/test_smoke.py --verbose --tb=short

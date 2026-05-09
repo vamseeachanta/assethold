@@ -12,9 +12,15 @@ repos:
       - id: ruff-format
         types_or: [python, pyi]
 
-  # bandit security scan on staged Python files (WRK-1081)
+  # Local policy checks
   - repo: local
     hooks:
+      - id: repo-structure-contract
+        name: repo structure contract
+        language: system
+        entry: uv run python scripts/maintenance/verify_repo_structure.py
+        pass_filenames: false
+
       - id: bandit-staged
         name: bandit security scan (staged Python files)
         language: system
