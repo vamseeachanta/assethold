@@ -305,3 +305,40 @@ def test_repo_structure_files_have_normal_git_index_modes() -> None:
         assert output, f"{relative_path} must be staged or tracked for mode verification"
         actual_mode = output.split()[0]
         assert actual_mode == expected_mode, relative_path
+
+
+def test_gitignore_has_no_merge_conflict_markers() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    gitignore = (repo_root / ".gitignore").read_text(encoding="utf-8")
+
+    assert "<<<<<<<" not in gitignore
+    assert "=======" not in gitignore
+    assert ">>>>>>>" not in gitignore
+
+
+def test_stock_cache_runtime_csv_files_are_ignored() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    result = subprocess.run(
+        ["git", "check-ignore", "data/stocks/cache/AAPL_dc7eaedd.csv"],
+        cwd=repo_root,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert result.returncode == 0
+
+
+def test_stock_cache_runtime_json_sidecars_are_ignored() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    result = subprocess.run(
+        ["git", "check-ignore", "data/stocks/cache/UNTRACKED_RUNTIME_info.json"],
+        cwd=repo_root,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert result.returncode == 0
