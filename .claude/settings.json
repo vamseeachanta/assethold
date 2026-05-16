@@ -1,31 +1,3 @@
-<<<<<<< Updated upstream
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cat | \"${WORKSPACE_HUB:-/mnt/github/workspace-hub}/.claude/hooks/capture-corrections.sh\""
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "statusMessage": "Post-task learning check",
-            "command": "bash -c 'SCRIPT=\"${WORKSPACE_HUB:-$(git rev-parse --show-superproject-working-tree 2>/dev/null | grep . || git rev-parse --show-toplevel)}/.claude/hooks/post-task-review.sh\"; [ -f \"$SCRIPT\" ] && bash \"$SCRIPT\" 2>/dev/null || true'"
-          }
-        ]
-      }
-    ]
-  }
-}
-=======
 {
   "env": {
     "CLAUDE_FLOW_AUTO_COMMIT": "false",
@@ -101,6 +73,15 @@
             "command": "cat | jq -r '.tool_input.file_path // .tool_input.path // empty' | tr '\\n' '\\0' | xargs -0 -I {} npx claude-flow@alpha hooks post-edit --file '{}' --format true --update-memory true"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | \"${WORKSPACE_HUB:-/mnt/github/workspace-hub}/.claude/hooks/capture-corrections.sh\""
+          }
+        ]
       }
     ],
     "PreCompact": [
@@ -131,6 +112,15 @@
             "command": "npx claude-flow@alpha hooks session-end --generate-summary true --persist-state true --export-metrics true"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "Post-task learning check",
+            "command": "bash -c 'SCRIPT=\"${WORKSPACE_HUB:-$(git rev-parse --show-superproject-working-tree 2>/dev/null | grep . || git rev-parse --show-toplevel)}/.claude/hooks/post-task-review.sh\"; [ -f \"$SCRIPT\" ] && bash \"$SCRIPT\" 2>/dev/null || true'"
+          }
+        ]
       }
     ]
   },
@@ -141,4 +131,3 @@
     "command": ".claude/statusline-command.sh"
   }
 }
->>>>>>> Stashed changes
