@@ -7,5 +7,5 @@ maturity: beta
 ---
 # assethold
 
-Contract: ../AGENTS.md | Source: src/assethold/
+Contract: ../workspace-hub/AGENTS.md | Source: src/assethold/
 Key modules: engine.py, fundamentals.py, fundamentals_report.py, analysis/, modules/, options/
