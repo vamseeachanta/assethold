@@ -1,23 +1,14 @@
-"""Stock Analysis
+"""Command-line entrypoint for ``python -m assethold``."""
 
-Usage:
-------
+import sys
 
-
-
-Contact:
---------
-
-More information is available at:
-
-- https://pypi.org/project/stockhold/
-- https://github.com/vamseeachanta/stockhold
+from assethold.engine import engine
 
 
-Version:
---------
+def main() -> None:
+    inputfile = sys.argv[1] if len(sys.argv) > 1 else None
+    engine(inputfile)
 
 
-=======
-- assethold v0.0.1
-"""
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,11 @@
+basename: fundamentals
+
+Analysis:
+  result_folder: examples/workflows/fundamentals/outputs
+  file_name: fundamentals-run
+
+fundamentals:
+  holdings_csv: examples/workflows/fundamentals/data/holdings.csv
+  outputs:
+    ranked_csv: examples/workflows/fundamentals/outputs/ranked.csv
+    report_txt: examples/workflows/fundamentals/outputs/report.txt

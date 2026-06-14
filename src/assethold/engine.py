@@ -10,6 +10,14 @@ from assetutilities.common.update_deep import AttributeDict
 from assetutilities.common.utilities import save_application_cfg
 from assetutilities.common.yml_utilities import ymlInput
 
+from assethold.modules.dividend_forecast.dividend_forecast import (
+    DividendForecastWorkflow,
+)
+from assethold.modules.fundamentals.fundamentals import FundamentalsWorkflow
+from assethold.modules.options.options import OptionsWorkflow
+from assethold.modules.portfolio.portfolio import PortfolioWorkflow
+from assethold.modules.property.property import PropertyWorkflow
+from assethold.modules.risk_metrics.risk_metrics import RiskMetricsWorkflow
 from assethold.modules.stocks.stocks import Stocks
 
 
@@ -33,9 +41,27 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
 
     logging.info(f"{basename}, application ... START")
 
-    if basename in "stocks":
+    if basename == "stocks":
         stks = Stocks()
         cfg_base = stks.router(cfg_base)
+    elif basename == "portfolio":
+        workflow = PortfolioWorkflow()
+        cfg_base = workflow.router(cfg_base)
+    elif basename == "options":
+        workflow = OptionsWorkflow()
+        cfg_base = workflow.router(cfg_base)
+    elif basename == "property":
+        workflow = PropertyWorkflow()
+        cfg_base = workflow.router(cfg_base)
+    elif basename == "risk_metrics":
+        workflow = RiskMetricsWorkflow()
+        cfg_base = workflow.router(cfg_base)
+    elif basename == "dividend_forecast":
+        workflow = DividendForecastWorkflow()
+        cfg_base = workflow.router(cfg_base)
+    elif basename == "fundamentals":
+        workflow = FundamentalsWorkflow()
+        cfg_base = workflow.router(cfg_base)
     else:
         raise Exception(f"Analysis for basename: {basename} not found. ... FAIL")
 
