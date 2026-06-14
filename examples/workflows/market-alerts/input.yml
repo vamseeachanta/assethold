@@ -1,0 +1,31 @@
+basename: market_alerts
+
+Analysis:
+  result_folder: examples/workflows/market-alerts/outputs
+  file_name: market-alerts-run
+
+# Offline example: deterministic fixture quotes (no network) so the registry test is
+# reproducible. Real runs set data.source: yfinance (see the achantas-data config that
+# consumes this engine with live data + real positions).
+market_alerts:
+  data:
+    source: fixture
+    quotes:
+      XOM:  { price: 110.0, prev_close: 100.0, pe: 12.0, dividend_yield: 0.035 }
+      RIG:  { price: 6.10,  prev_close: 6.00,  pe: 8.0 }
+      BRKB: { price: 400.0, prev_close: 399.0, pe: 9.0, dividend_yield: 0.0 }
+      VOO:  { price: 505.0, prev_close: 500.0, pe: 26.0, dividend_yield: 0.013 }
+  positions:
+    - { ticker: XOM,  usd: 1000 }
+    - { ticker: RIG,  usd: 800 }
+    - { ticker: BRKB, usd: 3000 }
+    - { ticker: VOO,  usd: 2000 }
+  signals:
+    price_move_pct: 1.0       # per-position move vs prev close
+    portfolio_move_pct: 0.5   # book-level (dollar-weighted) move
+    fundamentals:
+      pe_max: 30
+      div_yield_min: 3.0
+  outputs:
+    snapshot_csv: examples/workflows/market-alerts/outputs/snapshot.csv
+    alerts_json: examples/workflows/market-alerts/outputs/alerts.json

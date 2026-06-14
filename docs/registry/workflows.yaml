@@ -47,3 +47,11 @@ workflows:
       - examples/workflows/fundamentals/outputs/report.txt
     test: uv run python -m assethold examples/workflows/fundamentals/input.yml
     runtime: uv-python
+  - id: market-alerts-offline
+    basename: market_alerts
+    input: examples/workflows/market-alerts/input.yml
+    outputs:
+      - examples/workflows/market-alerts/outputs/snapshot.csv
+      - examples/workflows/market-alerts/outputs/alerts.json
+    test: uv run python -m assethold examples/workflows/market-alerts/input.yml
+    runtime: uv-python
