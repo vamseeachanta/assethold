@@ -1,0 +1,49 @@
+schema_version: 1
+workflows:
+  - id: portfolio-offline
+    basename: portfolio
+    input: examples/workflows/portfolio/input.yml
+    outputs:
+      - examples/workflows/portfolio/outputs/positions.csv
+      - examples/workflows/portfolio/outputs/allocation.csv
+    test: uv run python -m assethold examples/workflows/portfolio/input.yml
+    runtime: uv-python
+  - id: options-covered-call-offline
+    basename: options
+    input: examples/workflows/options/input.yml
+    outputs:
+      - examples/workflows/options/outputs/opportunities.csv
+    test: uv run python -m assethold examples/workflows/options/input.yml
+    runtime: uv-python
+  - id: property-valuation-offline
+    basename: property
+    input: examples/workflows/property/input.yml
+    outputs:
+      - examples/workflows/property/outputs/valuation.md
+      - examples/workflows/property/outputs/valuation.json
+    test: uv run python -m assethold examples/workflows/property/input.yml
+    runtime: uv-python
+  - id: risk-metrics-offline
+    basename: risk_metrics
+    input: examples/workflows/risk-metrics/input.yml
+    outputs:
+      - examples/workflows/risk-metrics/outputs/metrics.csv
+      - examples/workflows/risk-metrics/outputs/report.txt
+    test: uv run python -m assethold examples/workflows/risk-metrics/input.yml
+    runtime: uv-python
+  - id: dividend-forecast-offline
+    basename: dividend_forecast
+    input: examples/workflows/dividend-forecast/input.yml
+    outputs:
+      - examples/workflows/dividend-forecast/outputs/forecast.csv
+      - examples/workflows/dividend-forecast/outputs/summary.json
+    test: uv run python -m assethold examples/workflows/dividend-forecast/input.yml
+    runtime: uv-python
+  - id: fundamentals-offline
+    basename: fundamentals
+    input: examples/workflows/fundamentals/input.yml
+    outputs:
+      - examples/workflows/fundamentals/outputs/ranked.csv
+      - examples/workflows/fundamentals/outputs/report.txt
+    test: uv run python -m assethold examples/workflows/fundamentals/input.yml
+    runtime: uv-python

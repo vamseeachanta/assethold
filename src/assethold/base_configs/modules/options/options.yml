@@ -1,0 +1,24 @@
+basename: options
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+Analysis:
+  result_folder: examples/workflows/options/outputs
+  file_name: options-run
+
+options:
+  ticker: VOO
+  current_price: 500.0
+  today: '2026-01-02'
+  expiry: '2026-02-01'
+  chain_csv: examples/workflows/options/data/calls.csv
+  filters:
+    min_days_to_expiry: 20
+    min_premium: 1.0
+    max_delta: 0.45
+  outputs:
+    opportunities_csv: examples/workflows/options/outputs/opportunities.csv

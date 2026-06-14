@@ -1,0 +1,21 @@
+basename: portfolio
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+Analysis:
+  result_folder: examples/workflows/portfolio/outputs
+  file_name: portfolio-run
+
+portfolio:
+  data_dir: examples/workflows/portfolio/data
+  targets: examples/workflows/portfolio/targets.yml
+  prices:
+    VOO: 500.0
+    BRKB: 400.0
+  outputs:
+    positions_csv: examples/workflows/portfolio/outputs/positions.csv
+    allocation_csv: examples/workflows/portfolio/outputs/allocation.csv

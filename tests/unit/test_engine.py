@@ -188,6 +188,37 @@ class TestEngineBasic:
                         # Verify router was called
                         mock_stocks_instance.router.assert_called_once()
 
+    @pytest.mark.parametrize(
+        ("basename", "workflow_class"),
+        [
+            ("portfolio", "PortfolioWorkflow"),
+            ("options", "OptionsWorkflow"),
+            ("property", "PropertyWorkflow"),
+            ("risk_metrics", "RiskMetricsWorkflow"),
+            ("dividend_forecast", "DividendForecastWorkflow"),
+            ("fundamentals", "FundamentalsWorkflow"),
+        ],
+    )
+    def test_engine_calls_requested_workflow_router(
+        self, basename, workflow_class
+    ):
+        """Test that each supported workflow basename routes explicitly."""
+        cfg = {'basename': basename}
+
+        with patch('assethold.engine.FileManagement'):
+            with patch('assethold.engine.logging'):
+                with patch(f'assethold.engine.{workflow_class}') as mock_workflow:
+                    with patch('assethold.engine.save_application_cfg'):
+                        workflow_instance = MagicMock()
+                        workflow_instance.router.return_value = cfg
+                        mock_workflow.return_value = workflow_instance
+
+                        result = engine(cfg=cfg, config_flag=False)
+
+                        assert result == cfg
+                        mock_workflow.assert_called_once()
+                        workflow_instance.router.assert_called_once_with(cfg)
+
     def test_engine_calls_save_application_cfg(self):
         """Test that save_application_cfg is called with updated config."""
         cfg = {'basename': 'stocks'}
@@ -314,3 +345,21 @@ class TestEngineEdgeCases:
                         # Should succeed - 'stocks' in 'stocks'
                         result = engine(cfg=cfg, config_flag=False)
                         assert result is not None
+
+    def test_engine_does_not_route_stocks_substrings(self):
+        """Test that partial basename values do not route to stocks."""
+        cfg = {'basename': 'stock'}
+
+        with patch('assethold.engine.FileManagement'):
+            with patch('assethold.engine.logging'):
+                with patch('assethold.engine.Stocks') as mock_stocks:
+                    with patch('assethold.engine.save_application_cfg'):
+                        mock_stocks_instance = MagicMock()
+                        mock_stocks_instance.router.return_value = cfg
+                        mock_stocks.return_value = mock_stocks_instance
+
+                        with pytest.raises(Exception) as exc_info:
+                            engine(cfg=cfg, config_flag=False)
+
+                        assert 'not found' in str(exc_info.value).lower()
+                        mock_stocks.assert_not_called()
