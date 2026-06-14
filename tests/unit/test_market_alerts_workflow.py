@@ -48,6 +48,21 @@ def test_weighted_move_uses_dollar_weights(tmp_path):
     assert 2.6 < pm < 2.8  # XOM +10% @0.25 + BRKB ~+0.25% @0.75
 
 
+def test_portfolio_move_alert(tmp_path):
+    cfg = _cfg(tmp_path)
+    cfg["market_alerts"]["signals"]["portfolio_move_pct"] = 0.5  # book moves ~2.7%
+    out = MarketAlertsWorkflow().router(cfg, provider=_provider())
+    pmoves = [a for a in out["market_alerts_result"]["alerts"] if a["kind"] == "portfolio_move"]
+    assert len(pmoves) == 1 and pmoves[0]["ticker"] == "PORTFOLIO"
+
+
+def test_no_portfolio_alert_below_threshold(tmp_path):
+    cfg = _cfg(tmp_path)
+    cfg["market_alerts"]["signals"]["portfolio_move_pct"] = 5.0  # book ~2.7% < 5%
+    out = MarketAlertsWorkflow().router(cfg, provider=_provider())
+    assert [a for a in out["market_alerts_result"]["alerts"] if a["kind"] == "portfolio_move"] == []
+
+
 def test_fixture_quotes_from_cfg(tmp_path):
     cfg = _cfg(tmp_path)
     cfg["market_alerts"]["data"] = {

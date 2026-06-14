@@ -21,7 +21,8 @@ market_alerts:
     - { ticker: BRKB, usd: 3000 }
     - { ticker: VOO,  usd: 2000 }
   signals:
-    price_move_pct: 1.0
+    price_move_pct: 1.0       # per-position move vs prev close
+    portfolio_move_pct: 0.5   # book-level (dollar-weighted) move
     fundamentals:
       pe_max: 30
       div_yield_min: 3.0

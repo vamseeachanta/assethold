@@ -66,6 +66,17 @@ class MarketAlertsWorkflow:
             "holdings": holdings,
         }
 
+        # Book-level move alert: fires when the dollar-weighted portfolio move crosses a
+        # threshold even if no single position does. Useful for a concentrated book.
+        pm = portfolio["weighted_move_pct"]
+        pm_thr = signals_cfg.get("portfolio_move_pct")
+        if pm is not None and pm_thr is not None and abs(pm) >= pm_thr:
+            direction = "up" if pm >= 0 else "down"
+            alerts.append(Alert(
+                "PORTFOLIO", "portfolio_move", "warn",
+                f"book {pm:+.2f}% ({direction}, threshold {pm_thr:g}%)",
+            ))
+
         written = []
         if "snapshot_csv" in outputs:
             written.append(_write_snapshot_csv(outputs["snapshot_csv"], holdings))

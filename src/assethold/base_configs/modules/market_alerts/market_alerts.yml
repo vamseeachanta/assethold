@@ -16,6 +16,7 @@ market_alerts:
   positions: []
   signals:
     price_move_pct: 1.0
+    portfolio_move_pct: 0.5
     fundamentals:
       pe_max: 30
       div_yield_min: 3.0
