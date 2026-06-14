@@ -14,6 +14,7 @@ from assethold.modules.dividend_forecast.dividend_forecast import (
     DividendForecastWorkflow,
 )
 from assethold.modules.fundamentals.fundamentals import FundamentalsWorkflow
+from assethold.modules.market_alerts.market_alerts import MarketAlertsWorkflow
 from assethold.modules.options.options import OptionsWorkflow
 from assethold.modules.portfolio.portfolio import PortfolioWorkflow
 from assethold.modules.property.property import PropertyWorkflow
@@ -61,6 +62,9 @@ def engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) ->
         cfg_base = workflow.router(cfg_base)
     elif basename == "fundamentals":
         workflow = FundamentalsWorkflow()
+        cfg_base = workflow.router(cfg_base)
+    elif basename == "market_alerts":
+        workflow = MarketAlertsWorkflow()
         cfg_base = workflow.router(cfg_base)
     else:
         raise Exception(f"Analysis for basename: {basename} not found. ... FAIL")
