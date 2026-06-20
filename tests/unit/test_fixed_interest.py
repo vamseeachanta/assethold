@@ -119,3 +119,36 @@ class TestFixedDeposit:
         for rung in ladder:
             assert isinstance(rung, LadderRung)
             assert rung.maturity_value == pytest.approx(rung.principal + rung.interest_earned)
+
+
+class TestMaturityValue:
+    def setup_method(self):
+        self.fd = FixedDeposit()
+
+    def test_compound_textbook_value(self):
+        # Textbook: P=1000, r=0.05, t=2, n=1 -> A = 1000*(1.05)^2 = 1102.50
+        mv = self.fd.maturity_value(1000, 0.05, 2.0, method="compound", compounding_frequency=1)
+        assert mv == pytest.approx(1102.50)
+
+    def test_simple_textbook_value(self):
+        # Textbook simple: P=1000, r=0.10, t=1 -> I=100 -> A = 1100
+        mv = self.fd.maturity_value(1000, 0.10, 1.0, method="simple")
+        assert mv == pytest.approx(1100.0)
+
+    def test_simple_matches_helper(self):
+        mv = self.fd.maturity_value(5000, 0.04, 3.0, method="simple")
+        assert mv == pytest.approx(5000 + simple_interest(5000, 0.04, 3.0))
+
+    def test_compound_matches_calculate_interest(self):
+        mv = self.fd.maturity_value(10000, 0.05, 2.0, method="compound", compounding_frequency=4)
+        result = self.fd.calculate_interest(10000, 0.05, 2.0, compounding_frequency=4)
+        assert mv == pytest.approx(result.compound_total)
+
+    def test_compound_exceeds_simple_maturity(self):
+        compound = self.fd.maturity_value(1000, 0.10, 5.0, method="compound", compounding_frequency=4)
+        simple = self.fd.maturity_value(1000, 0.10, 5.0, method="simple")
+        assert compound > simple
+
+    def test_invalid_method_raises(self):
+        with pytest.raises(ValueError):
+            self.fd.maturity_value(1000, 0.05, 1.0, method="continuous")
