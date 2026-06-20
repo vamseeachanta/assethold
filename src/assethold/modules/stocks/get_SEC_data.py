@@ -408,13 +408,16 @@ class SECDataForm():
         noShares = 0
         for row_index in range(0, len(table_df)):
             if table_df['transactionAcquiredDisposedCode'].iloc[row_index] == 'A':
-                table_df['preTransactionAmounts'].iloc[row_index] = table_df['postTransactionAmounts'].iloc[
+                pre_amount = table_df['postTransactionAmounts'].iloc[
                     row_index] - table_df['noShares'].iloc[row_index]
                 noShares = noShares - table_df['noShares'].iloc[row_index]
             else:
-                table_df['preTransactionAmounts'].iloc[row_index] = table_df['postTransactionAmounts'].iloc[
+                pre_amount = table_df['postTransactionAmounts'].iloc[
                     row_index] + table_df['noShares'].iloc[row_index]
                 noShares = noShares + table_df['noShares'].iloc[row_index]
+            table_df.iloc[
+                row_index, table_df.columns.get_loc('preTransactionAmounts')
+            ] = pre_amount
         if table_df['preTransactionAmounts'].iloc[0] > 0:
             share_ratio = (table_df['postTransactionAmounts'].iloc[-1] /
                            table_df['preTransactionAmounts'].iloc[0]).__round__(2)

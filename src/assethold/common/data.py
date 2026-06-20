@@ -53,7 +53,7 @@ class ReadDataFromSystemFiles():
         import yaml
         if os.path.isfile(filename):
             with open(filename, 'r') as fp:
-                data = yaml.load(fp, Loader=yaml.Loader)
+                data = yaml.safe_load(fp)
         else:
             data = None
 
@@ -230,15 +230,22 @@ class ReadURLData():
 
     def __init__(self, cfg):
         headers = cfg.get('headers', headers_default)
-        self.http_connection = urllib3.PoolManager(1, headers=headers)
+        self.http_connection = urllib3.PoolManager(
+            1,
+            headers=headers,
+            timeout=urllib3.Timeout(connect=5.0, read=30.0),
+        )
 
     def get_response_data(self, cfg):
         try:
             response = self.http_connection.request('GET', cfg['url'])
             data = response.data
-        except:
+        except Exception:
             data = None
-            logging.info("Failed to parse xml from response (%s)" % traceback.format_exc())
+            logging.info(
+                "Failed to fetch response from %s (%s)"
+                % (cfg.get('url'), traceback.format_exc())
+            )
 
         return data
 
@@ -351,6 +358,6 @@ def transform_df_None_to_NULL(df):
     for column in df_columns:
         for row_num in range(0, len(df)):
             if df[column].iloc[row_num] is None:
-                df[column].iloc[row_num] = "NULL"
+                df.iloc[row_num, df.columns.get_loc(column)] = "NULL"
 
     return df
