@@ -14,7 +14,26 @@ References:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import date, timedelta
+
+# Nominal day-count length of each dividend cadence (period between ex-dates).
+# Used to classify an observed median gap and to step ex-dates forward.
+_CADENCE_DAYS: dict[str, int] = {
+    "monthly": 30,
+    "quarterly": 91,
+    "semiannual": 182,
+    "annual": 365,
+}
+
+# Inference bands (inclusive lower / exclusive upper) for the median gap, in
+# days. Wide bands absorb the +/- few-day jitter real ex-date calendars show.
+_CADENCE_BANDS: list[tuple[float, float, str]] = [
+    (20.0, 45.0, "monthly"),
+    (75.0, 135.0, "quarterly"),
+    (150.0, 225.0, "semiannual"),
+    (300.0, 430.0, "annual"),
+]
 
 
 @dataclass
@@ -327,3 +346,193 @@ def dividend_coverage(
     if annual_dividend == 0.0:
         raise ValueError("annual_dividend must be non-zero")
     return earnings_per_share / annual_dividend
+
+
+# ---------------------------------------------------------------------------
+# Ex-dividend date forecasting (issue #26)
+#
+# Projects future ex-dividend dates and per-share amounts from a holding's
+# historical (ex_date, amount) record. Pure calendar + cadence arithmetic:
+# no network, no yfinance import -- the caller supplies the history (e.g. from
+# yfinance ``ticker.dividends``). Amount projection reuses the growth math in
+# :func:`forecast_dividends`.
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class CadenceResult:
+    """Inferred payment cadence from a series of historical ex-dates."""
+
+    cadence: str  # one of: monthly, quarterly, semiannual, annual, irregular
+    periods_per_year: int  # 0 when irregular
+    median_gap_days: float  # median spacing between consecutive ex-dates
+    sample_size: int  # number of gaps observed
+
+
+@dataclass
+class ProjectedDividend:
+    """A single projected future ex-dividend event."""
+
+    ex_date: date
+    amount: float
+    period_index: int  # 1-based: 1 = next ex-date, 2 = the one after, ...
+
+
+@dataclass
+class ExDateSchedule:
+    """A forward schedule of projected ex-dividend dates and amounts."""
+
+    cadence: CadenceResult
+    events: list[ProjectedDividend] = field(default_factory=list)
+
+    @property
+    def total_amount(self) -> float:
+        """Sum of projected per-share amounts across the schedule."""
+        return sum(ev.amount for ev in self.events)
+
+
+def _median(values: list[float]) -> float:
+    """Median of a non-empty list (no numpy dependency)."""
+    ordered = sorted(values)
+    n = len(ordered)
+    mid = n // 2
+    if n % 2 == 1:
+        return ordered[mid]
+    return (ordered[mid - 1] + ordered[mid]) / 2.0
+
+
+def infer_cadence(ex_dates: list[date]) -> CadenceResult:
+    """Infer the dividend payment cadence from historical ex-dates.
+
+    The cadence is classified from the *median* gap (in days) between
+    consecutive, chronologically-sorted ex-dates. The median is robust to the
+    occasional missed or doubled payment (an irregular gap) that would skew a
+    mean. A gap that falls outside every known band yields ``"irregular"``.
+
+    Args:
+        ex_dates: Historical ex-dividend dates. Need not be pre-sorted;
+            duplicates are de-duplicated before gaps are measured.
+
+    Returns:
+        CadenceResult with the cadence label, payments per year, the observed
+        median gap, and the number of gaps used.
+
+    Raises:
+        ValueError: If fewer than two distinct ex-dates are supplied (a single
+            date gives no gap to measure).
+    """
+    unique = sorted(set(ex_dates))
+    if len(unique) < 2:
+        raise ValueError("need at least two distinct ex-dates to infer cadence")
+
+    gaps = [
+        (later - earlier).days
+        for earlier, later in zip(unique, unique[1:])
+    ]
+    median_gap = _median([float(g) for g in gaps])
+
+    cadence = "irregular"
+    for low, high, label in _CADENCE_BANDS:
+        if low <= median_gap < high:
+            cadence = label
+            break
+
+    periods_per_year = {
+        "monthly": 12,
+        "quarterly": 4,
+        "semiannual": 2,
+        "annual": 1,
+    }.get(cadence, 0)
+
+    return CadenceResult(
+        cadence=cadence,
+        periods_per_year=periods_per_year,
+        median_gap_days=median_gap,
+        sample_size=len(gaps),
+    )
+
+
+def forecast_ex_dates(
+    history: list[tuple[date, float]],
+    periods: int,
+    *,
+    growth_rate: float = 0.0,
+    cadence_override: str | None = None,
+) -> ExDateSchedule:
+    """Project the next ``periods`` ex-dividend dates and amounts.
+
+    Cadence is inferred from the history's ex-dates (or forced via
+    ``cadence_override``). Each future ex-date steps forward from the last
+    historical ex-date by the cadence's nominal day-count, so the projected
+    calendar stays anchored to the holding's typical day-of-period rather than
+    drifting. Amounts grow off the most-recent historical amount using the same
+    compound-growth convention as :func:`forecast_dividends`
+    (amount_k = last_amount * (1 + growth_rate) ** k).
+
+    For an irregular history (no recognisable cadence) the function falls back
+    to the observed *median* gap so a best-effort schedule is still returned.
+
+    Args:
+        history: List of ``(ex_date, amount_per_share)`` tuples. Need not be
+            sorted; the most recent ex-date and amount anchor the projection.
+        periods: Number of future ex-dates to project (must be >= 1).
+        growth_rate: Per-period dividend growth rate (decimal). 0.0 holds the
+            last amount flat. Compounds each period.
+        cadence_override: Force a cadence label ("monthly"/"quarterly"/
+            "semiannual"/"annual") instead of inferring it.
+
+    Returns:
+        ExDateSchedule with the inferred cadence and the projected events.
+
+    Raises:
+        ValueError: If ``periods`` < 1, history is empty, or
+            ``cadence_override`` is not a recognised label.
+    """
+    if periods < 1:
+        raise ValueError("periods must be >= 1")
+    if not history:
+        raise ValueError("history must contain at least one dividend record")
+
+    ordered = sorted(history, key=lambda rec: rec[0])
+    ex_dates = [rec[0] for rec in ordered]
+    last_date = ex_dates[-1]
+    last_amount = ordered[-1][1]
+
+    if cadence_override is not None:
+        if cadence_override not in _CADENCE_DAYS:
+            raise ValueError(f"unknown cadence: {cadence_override!r}")
+        cadence = CadenceResult(
+            cadence=cadence_override,
+            periods_per_year={
+                "monthly": 12,
+                "quarterly": 4,
+                "semiannual": 2,
+                "annual": 1,
+            }[cadence_override],
+            median_gap_days=float(_CADENCE_DAYS[cadence_override]),
+            sample_size=0,
+        )
+        step_days = _CADENCE_DAYS[cadence_override]
+    elif len(set(ex_dates)) >= 2:
+        cadence = infer_cadence(ex_dates)
+        # For a recognised cadence use its nominal step; for an irregular
+        # history fall back to the observed median gap (rounded to a day).
+        step_days = _CADENCE_DAYS.get(
+            cadence.cadence, max(1, round(cadence.median_gap_days))
+        )
+    else:
+        # Single distinct ex-date and no override: cannot infer cadence.
+        raise ValueError(
+            "cannot infer cadence from a single ex-date; pass cadence_override"
+        )
+
+    events: list[ProjectedDividend] = []
+    current = last_date
+    for k in range(1, periods + 1):
+        current = current + timedelta(days=step_days)
+        amount = last_amount * (1.0 + growth_rate) ** k
+        events.append(
+            ProjectedDividend(ex_date=current, amount=amount, period_index=k)
+        )
+
+    return ExDateSchedule(cadence=cadence, events=events)
