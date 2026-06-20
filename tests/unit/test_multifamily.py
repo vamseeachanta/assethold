@@ -175,6 +175,131 @@ class TestExpenses:
         assert project["expenses"][0] == pytest.approx(-3_000)
 
 
+class TestPerCategoryExpenseGrowth:
+    """Issue #36 item (b): per-expense-category annual growth rates."""
+
+    def _stub(self, hold_years=3):
+        project = _project_stub(hold_years=hold_years)
+        project["entry"]["total_units"] = 10
+        return project
+
+    def test_absent_per_category_rates_match_blended_baseline(self):
+        # No category declares a growth_rate -> identical to the historical path.
+        blended = self._stub()
+        blended["expense_growth_rate"] = 3
+        for cat in blended["entry"]["expenses_breakdown"].values():
+            cat["per_unit_per_year"] = 100
+        baseline_config = _config_with(blended)
+        MultiFamily().add_expenses(baseline_config)
+        baseline = list(blended["expenses"])
+
+        # base = -(10 categories * 100) * 10 units = -10,000, grown at 3%
+        expected = [round(-10_000 * 1.03 ** y, 0) for y in range(0, 4)]
+        assert baseline == pytest.approx(expected)
+
+    def test_per_category_rate_grows_independently(self):
+        project = self._stub()
+        project["expense_growth_rate"] = 3
+        breakdown = project["entry"]["expenses_breakdown"]
+        for cat in breakdown.values():
+            cat["per_unit_per_year"] = 0
+        # Only personnel and property_taxes carry cost; taxes grow much faster.
+        breakdown["personnel"] = {"per_unit_per_year": 100, "growth_rate": 2}
+        breakdown["property_taxes"] = {
+            "per_unit_per_year": 100,
+            "growth_rate": 10,
+        }
+        config = _config_with(project)
+        MultiFamily().add_expenses(config)
+
+        # year-0 = -(100 + 100) * 10 = -2000 split as -1000 / -1000 per category
+        base = -100 * 10  # per category
+        for year in range(0, 4):
+            expected = round(
+                base * 1.02 ** year + base * 1.10 ** year, 0
+            )
+            assert project["expenses"][year] == pytest.approx(expected)
+        # year-0 unaffected by growth
+        assert project["expenses"][0] == pytest.approx(-2_000)
+
+    def test_mixed_explicit_and_fallback_rates(self):
+        project = self._stub(hold_years=2)
+        project["expense_growth_rate"] = 4  # fallback for unspecified categories
+        breakdown = project["entry"]["expenses_breakdown"]
+        for cat in breakdown.values():
+            cat["per_unit_per_year"] = 0
+        breakdown["insurance"] = {"per_unit_per_year": 50, "growth_rate": 9}
+        breakdown["personnel"] = {"per_unit_per_year": 150}  # uses fallback 4%
+        config = _config_with(project)
+        MultiFamily().add_expenses(config)
+
+        ins = -50 * 10
+        per = -150 * 10
+        for year in range(0, 3):
+            expected = round(ins * 1.09 ** year + per * 1.04 ** year, 0)
+            assert project["expenses"][year] == pytest.approx(expected)
+
+    def test_higher_growth_compresses_noi_more(self):
+        # Two identical projects except one has a faster-growing tax line:
+        # the higher-growth project must have a more-negative terminal expense
+        # (and therefore lower terminal NOI proxy).
+        def build(tax_growth):
+            project = self._stub(hold_years=5)
+            project["expense_growth_rate"] = 3
+            breakdown = project["entry"]["expenses_breakdown"]
+            for cat in breakdown.values():
+                cat["per_unit_per_year"] = 0
+            breakdown["property_taxes"] = {
+                "per_unit_per_year": 200,
+                "growth_rate": tax_growth,
+            }
+            config = _config_with(project)
+            MultiFamily().add_expenses(config)
+            return project["expenses"]
+
+        slow = build(3)
+        fast = build(12)
+        assert fast[-1] < slow[-1]  # more negative = larger expense
+        assert fast[0] == pytest.approx(slow[0])  # same year-0 base
+
+    def test_growth_rate_field_does_not_leak_into_expense_sum(self):
+        # The growth_rate field must not be summed as if it were a dollar amount.
+        project = self._stub()
+        breakdown = project["entry"]["expenses_breakdown"]
+        for cat in breakdown.values():
+            cat["per_unit_per_year"] = 0
+        breakdown["personnel"] = {"per_unit_per_year": 100, "growth_rate": 0}
+        config = _config_with(project)
+        MultiFamily().add_expenses(config)
+
+        # Only personnel contributes: -(100) * 10 units = -1000, 0% growth.
+        assert project["expenses"][0] == pytest.approx(-1_000)
+        assert project["expenses"][-1] == pytest.approx(-1_000)
+
+    def test_bundled_per_category_config_compresses_noi_vs_blended(self):
+        # End-to-end against the two bundled YAMLs: the per-category config
+        # (taxes/insurance/utilities outpacing the blended 3%) must share the
+        # base config's year-0 expense yet compress terminal NOI and IRR.
+        mf = MultiFamily()
+
+        base = mf.get_metrics(
+            mf.add_missing_inputs(mf.get_config_data("multifamily_2.yaml"))
+        )["projects"][0]
+        perc = mf.get_metrics(
+            mf.add_missing_inputs(
+                mf.get_config_data("multifamily_2_per_category_growth.yaml")
+            )
+        )["projects"][0]
+
+        # Same starting opex base.
+        assert perc["expenses"][0] == pytest.approx(base["expenses"][0])
+        # Faster category growth -> more-negative terminal expense.
+        assert perc["expenses"][-1] < base["expenses"][-1]
+        # Which compresses terminal NOI and the IRR.
+        assert perc["NOI"]["amount"][-1] < base["NOI"]["amount"][-1]
+        assert perc["cash_flow"]["irr"] < base["cash_flow"]["irr"]
+
+
 class TestVacancy:
     def test_vacancy_is_negative_percentage_of_GPR_plus_other_income(self):
         project = _project_stub(hold_years=1)

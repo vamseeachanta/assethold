@@ -67,33 +67,86 @@ class MultiFamily:
 
         return config
 
+    # Per-unit-per-year expense categories summed by add_expenses(), in the
+    # historical evaluation order. Each name maps to the field(s) inside its
+    # `expenses_breakdown[category]` dict that contribute to per-unit opex.
+    EXPENSE_CATEGORIES = (
+        ('personnel', ('per_unit_per_year',)),
+        ('general_and_administration', ('per_unit_per_year',)),
+        ('marketing', ('per_unit_per_year',)),
+        ('turnover', ('per_unit_per_year',)),
+        ('repair_and_maintenance', ('per_unit_per_year',)),
+        ('contract_servies', ('per_unit_per_year',)),
+        ('utilities',
+         ('per_unit_per_year', 'reimbursments_per_unit_per_year')),
+        ('property_taxes', ('per_unit_per_year',)),
+        ('insurance', ('per_unit_per_year',)),
+        ('capital_expense_reserve', ('per_unit_per_year',)),
+    )
+
+    def _category_base_per_unit(self, category_dict, fields):
+        """Sum the per-unit-per-year contribution of a single expense category."""
+        return sum(category_dict[field] for field in fields)
+
+    def _category_growth_rate(self, category_dict, project):
+        """Per-category annual expense growth rate (percent).
+
+        Falls back to the project-level blended ``expense_growth_rate`` when a
+        category does not declare its own ``growth_rate`` (backward compatible).
+        """
+        rate = category_dict.get('growth_rate')
+        if rate is None:
+            return project['expense_growth_rate']
+        return rate
+
+    def _has_per_category_growth(self, expense_dict):
+        """True if any expense category declares its own ``growth_rate``."""
+        return any(
+            isinstance(expense_dict.get(category), dict)
+            and expense_dict[category].get('growth_rate') is not None
+            for category, _ in self.EXPENSE_CATEGORIES
+        )
+
     def add_expenses(self, config):
         for proj_num in range(0, len(config['projects'])):
             project = config['projects'][proj_num]
             expense_dict = project['entry']['expenses_breakdown']
-            expenses_per_unit_per_year = expense_dict['personnel']['per_unit_per_year'] + expense_dict[
-                'general_and_administration']['per_unit_per_year'] + expense_dict[
-                    'marketing']['per_unit_per_year'] + expense_dict['turnover'][
-                        'per_unit_per_year'] + expense_dict['repair_and_maintenance'][
-                            'per_unit_per_year'] + expense_dict['contract_servies'][
-                                'per_unit_per_year'] + expense_dict['utilities'][
-                                    'per_unit_per_year'] + expense_dict['utilities'][
-                                        'reimbursments_per_unit_per_year'] + expense_dict[
-                                            'property_taxes'][
-                                                'per_unit_per_year'] + expense_dict[
-                                                    'insurance'][
-                                                        'per_unit_per_year'] + expense_dict[
-                                                            'capital_expense_reserve'][
-                                                                'per_unit_per_year']
+            total_units = project['entry']['total_units']
 
-            expenses_per_year = -1 * expenses_per_unit_per_year * project[
-                'entry']['total_units']
-
-            project['expenses'].append(round(expenses_per_year, 0))
-            for years in range(0, project['hold_years']):
-                expenses_per_year = expenses_per_year * (
-                    1 + project['expense_growth_rate'] / 100)
+            if not self._has_per_category_growth(expense_dict):
+                # Backward-compatible path: single blended growth rate applied to
+                # the summed expense total (identical to the historical model).
+                expenses_per_unit_per_year = sum(
+                    self._category_base_per_unit(expense_dict[category], fields)
+                    for category, fields in self.EXPENSE_CATEGORIES
+                )
+                expenses_per_year = -1 * expenses_per_unit_per_year * total_units
                 project['expenses'].append(round(expenses_per_year, 0))
+                for years in range(0, project['hold_years']):
+                    expenses_per_year = expenses_per_year * (
+                        1 + project['expense_growth_rate'] / 100)
+                    project['expenses'].append(round(expenses_per_year, 0))
+                continue
+
+            # Per-category growth path (issue #36 item b): each category carries
+            # its own annual growth rate (or the blended fallback), so categories
+            # such as property taxes / insurance can outpace the blended rate.
+            base_amounts = []  # signed year-0 dollars per category
+            growth_factors = []
+            for category, fields in self.EXPENSE_CATEGORIES:
+                category_dict = expense_dict[category]
+                base = -1 * self._category_base_per_unit(
+                    category_dict, fields) * total_units
+                base_amounts.append(base)
+                rate = self._category_growth_rate(category_dict, project)
+                growth_factors.append(1 + rate / 100)
+
+            for year in range(0, project['hold_years'] + 1):
+                year_total = sum(
+                    base * factor ** year
+                    for base, factor in zip(base_amounts, growth_factors)
+                )
+                project['expenses'].append(round(year_total, 0))
 
         return config
 

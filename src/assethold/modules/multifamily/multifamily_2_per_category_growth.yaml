@@ -1,5 +1,5 @@
 projects:
-- Name: 2020_CA_85_drs
+- Name: 2020_CA_85_drs_per_category_growth   # issue #36 item b demo (synthetic)
 
   entry:
     Property_Value: NULL                    # Assumed same as purchase price
@@ -25,31 +25,34 @@ projects:
       construction_management_fee:
         yearly_percent: [7, 7]
         amount: NULL
-    # Each expense category may optionally carry its own `growth_rate` (percent
-    # per year, issue #36 item b). Categories without one fall back to the
-    # project-level blended `expense_growth_rate` below, so — as in this base
-    # config — omitting them all reproduces the original single-rate behaviour.
-    # See `multifamily_2_per_category_growth.yaml` for a worked per-category example.
+    # issue #36 item b: per-expense-category growth rates. Categories that
+    # declare their own `growth_rate` (percent/yr) override the blended
+    # `expense_growth_rate`; the rest fall back to it. Here taxes/insurance/
+    # utilities are modelled to outpace the 3% blended rate.
     expenses_breakdown:
       personnel:
-        per_unit_per_year: 1200
+        per_unit_per_year: 1200          # falls back to blended 3%
       general_and_administration:
-        per_unit_per_year: 200
+        per_unit_per_year: 200           # falls back to blended 3%
       marketing:
-        per_unit_per_year: 150
+        per_unit_per_year: 150           # falls back to blended 3%
       turnover:
-        per_unit_per_year: 200
+        per_unit_per_year: 200           # falls back to blended 3%
       repair_and_maintenance:
         per_unit_per_year: 500
+        growth_rate: 4
       contract_servies:
-        per_unit_per_year: 175
+        per_unit_per_year: 175           # falls back to blended 3%
       utilities:
         per_unit_per_year: 775
         reimbursments_per_unit_per_year: -225
+        growth_rate: 5
       property_taxes:
         per_unit_per_year: 1400
+        growth_rate: 6
       insurance:
         per_unit_per_year: 350
+        growth_rate: 9
       capital_expense_reserve:
         per_unit_per_year: 350
       bad_debt:                         # Not programmed

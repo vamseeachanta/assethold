@@ -61,6 +61,10 @@ def _apply_percent_change(project, kind, percent):
             if not isinstance(fields, dict):
                 continue
             for field_name, value in fields.items():
+                # `growth_rate` is a rate, not an expense level (issue #36 item b),
+                # so an "operating expenses ±X%" stress must not rescale it.
+                if field_name == "growth_rate":
+                    continue
                 if isinstance(value, (int, float)):
                     fields[field_name] = value * factor
 
