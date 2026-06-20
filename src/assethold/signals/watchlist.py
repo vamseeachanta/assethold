@@ -9,7 +9,28 @@ import yaml
 
 
 class Watchlist:
-    """Manage stock watchlist from YAML configuration."""
+    """Manage stock watchlist from YAML configuration.
+
+    The YAML has two top-level blocks: ``stocks:`` (per-ticker config, read
+    by the accessor methods below) and ``settings:`` (global knobs). The
+    ``settings:`` block is *not* read by this class directly; it is consumed
+    by callers via ``load()["settings"]``. In particular
+    ``settings.cache_ttl_hours`` is wired through ``watchlist_runner.main`` to
+    ``StockDataSource(cache_ttl_hours=...)`` so the cache freshness TTL is
+    tunable from one config value (see issue #42; it was orphan config before).
+
+    Cache-TTL precedence for ``StockDataSource`` consumers:
+
+    1. Explicit ``cache_ttl_hours=`` constructor argument (highest).
+    2. ``settings.cache_ttl_hours`` from ``watchlist.yml`` (read by
+       ``watchlist_runner.main``).
+    3. The ``StockDataSource`` default of 24h (lowest).
+
+    Note: the ``daily_strategy`` pipeline (``MarketDataFetcher``) deliberately
+    does *not* read this ``settings:`` block. It owns a separate
+    ``daily_strategy.yaml:price_cache_ttl_hours`` knob; merging the two is
+    tracked as a distinct deduplication concern and is out of scope for #42.
+    """
 
     def __init__(self, config_path: Optional[Path] = None):
         """
