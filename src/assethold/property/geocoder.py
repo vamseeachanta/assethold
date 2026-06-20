@@ -78,6 +78,7 @@ class Geocoder:
 
     NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
     _MIN_REQUEST_INTERVAL = 1.1  # seconds (Nominatim: max 1 req/s)
+    _MAX_RESPONSE_BYTES = 2 * 1024 * 1024  # cap response body at 2 MiB
 
     def __init__(
         self,
@@ -156,7 +157,26 @@ class Geocoder:
             url, headers={"User-Agent": self.user_agent}
         )
         with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-            data = json.loads(resp.read().decode())
+            status = getattr(resp, "status", None)
+            if status is not None and status != 200:
+                # Surface the HTTP status rather than letting an HTML error
+                # page fall through to an opaque JSONDecodeError.
+                raise GeocodeError(
+                    f"Nominatim returned HTTP {status} for query {address!r}"
+                )
+            # Cap the response so a runaway/error body cannot exhaust memory.
+            body = resp.read(self._MAX_RESPONSE_BYTES + 1)
+            if len(body) > self._MAX_RESPONSE_BYTES:
+                raise GeocodeError(
+                    "Nominatim response exceeded "
+                    f"{self._MAX_RESPONSE_BYTES} bytes for query {address!r}"
+                )
+            try:
+                data = json.loads(body.decode())
+            except json.JSONDecodeError as exc:
+                raise GeocodeError(
+                    f"Nominatim returned non-JSON for query {address!r}: {exc}"
+                ) from exc
 
         self._last_request_time = time.monotonic()
 

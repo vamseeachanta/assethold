@@ -3,12 +3,15 @@ Stock data acquisition from Yahoo Finance with local caching.
 """
 
 import hashlib
+import logging
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 class StockDataSource:
@@ -48,7 +51,12 @@ class StockDataSource:
     def _get_cache_path(self, ticker: str, start_date: str, end_date: str) -> Path:
         """Generate cache file path for given ticker and date range."""
         cache_key = f"{ticker}_{start_date}_{end_date}"
-        cache_hash = hashlib.md5(cache_key.encode()).hexdigest()[:8]
+        # sha256 (not for security) + 16 hex chars (64 bits) to keep the
+        # collision probability negligible across per-ticker/date-range
+        # entries; an 8-hex (32-bit) digest collides at ~50% by ~80k entries.
+        cache_hash = hashlib.sha256(
+            cache_key.encode(), usedforsecurity=False
+        ).hexdigest()[:16]
         return self.cache_dir / f"{ticker}_{cache_hash}.csv"
 
     def _is_cache_valid(self, cache_path: Path) -> bool:
@@ -181,7 +189,10 @@ class StockDataSource:
             try:
                 results[ticker] = self.fetch(ticker, start_date, end_date, use_cache)
             except (ValueError, ConnectionError) as e:
-                # Log error but continue with other tickers
+                # Log error but continue with other tickers. Surfacing the
+                # bound exception lets callers distinguish a delisted ticker
+                # from a transient network failure.
+                logger.warning("fetch failed for %s: %s", ticker, e)
                 results[ticker] = None
         return results
 

@@ -86,7 +86,7 @@ class SECDataForm():
                         result_array = self.parse_form_4(response_data)
                         sec_form_data.Date = pd.to_datetime(sec_form_data.Date, infer_datetime_format=True)
                         sec_form_data.sort_values(by='Date', ascending=True, inplace=True)
-                        if result_array[-1] is not None:
+                        if result_array is not None and result_array[-1] is not None:
                             sec_form_data.loc[len(sec_form_data)] = result_array
                     if filing_type == '13F-HR':
                         result = self.parse_form_13F_HR(response_data)
@@ -307,18 +307,21 @@ class SECDataForm():
 
     def parse_form_4(self, response_data):
         data = xmltodict.parse(response_data)
-        if data is not None:
+        if data is None:
+            # Early return so the caller can guard on None instead of indexing
+            # an implicit None (`result_array[-1]`), which raises TypeError.
+            return None
 
-            Owner, Relationship = self.get_owner_info(data['ownershipDocument']['reportingOwner'])
-            trasactionType, Cost, Transaction, share_ratio, total_shares, noShares = self.get_transaction_info(
-                data['ownershipDocument'])
-            Date = data['ownershipDocument']['periodOfReport']
+        Owner, Relationship = self.get_owner_info(data['ownershipDocument']['reportingOwner'])
+        trasactionType, Cost, Transaction, share_ratio, total_shares, noShares = self.get_transaction_info(
+            data['ownershipDocument'])
+        Date = data['ownershipDocument']['periodOfReport']
 
-            result_array = [
-                trasactionType, Owner, Relationship, Date, Transaction, Cost, noShares, None, total_shares, None, None,
-                share_ratio
-            ]
-            return result_array
+        result_array = [
+            trasactionType, Owner, Relationship, Date, Transaction, Cost, noShares, None, total_shares, None, None,
+            share_ratio
+        ]
+        return result_array
 
     def get_owner_info(self, owner_data):
         if type(owner_data) is list:

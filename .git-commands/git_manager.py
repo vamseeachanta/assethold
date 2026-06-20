@@ -57,6 +57,28 @@ class GitManager:
             return False, "Command timed out"
         except Exception as e:
             return False, str(e)
+
+    def run_argv(self, argv, repo_path: Path) -> Tuple[bool, str]:
+        """Run a command from an argument list (no shell).
+
+        Use this for any command that embeds caller/agent-supplied text (e.g.
+        a commit message). Passing argv avoids shell interpolation, so a value
+        like ``"; rm -rf $HOME #`` is treated as literal data, not shell.
+        """
+        try:
+            result = subprocess.run(
+                argv,
+                shell=False,
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            return result.returncode == 0, result.stdout + result.stderr
+        except subprocess.TimeoutExpired:
+            return False, "Command timed out"
+        except Exception as e:
+            return False, str(e)
     
     def get_default_branch(self, repo_path: Path) -> str:
         """Determine if repo uses main or master"""
@@ -95,10 +117,11 @@ class GitManager:
             result["message"] = f"Failed to add files: {output}"
             return result
         
-        # Commit with message
+        # Commit with message. Pass the message via an argv list (run_argv,
+        # no shell) so a commit message can never inject shell. The previous
+        # f'git commit -m "{commit_msg}"' under shell=True was injectable.
         commit_msg = message or f"{DEFAULT_COMMIT_MESSAGE}\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
-        commit_cmd = f'git commit -m "{commit_msg}"'
-        success, output = self.run_command(commit_cmd, repo_path)
+        success, output = self.run_argv(["git", "commit", "-m", commit_msg], repo_path)
         
         if success:
             result["status"] = "committed"
