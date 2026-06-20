@@ -77,6 +77,12 @@ class MarketDataFetcher:
             intraday_ttl_minutes:    Buffer (minutes) used during the regular
                                      session when market_hours_aware is True.
         """
+        # Cache-TTL precedence (issue #42): MarketDataFetcher intentionally
+        # uses its OWN price_cache_ttl_hours knob (sourced from
+        # daily_strategy.yaml:price_cache_ttl_hours, default 4h) rather than
+        # watchlist.yml:settings.cache_ttl_hours. The daily_strategy pipeline
+        # does not read watchlist.yml; unifying the two TTL knobs is a separate
+        # deduplication concern explicitly out of scope for #42.
         self._source = StockDataSource(
             cache_dir=cache_dir,
             cache_ttl_hours=price_cache_ttl_hours,

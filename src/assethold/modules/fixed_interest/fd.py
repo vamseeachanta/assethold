@@ -11,7 +11,6 @@ rate comparison utilities.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -110,6 +109,43 @@ class FixedDeposit:
             simple_total=principal + si,
             compound_total=principal + ci,
             compounding_frequency=compounding_frequency,
+        )
+
+    def maturity_value(
+        self,
+        principal: float,
+        annual_rate: float,
+        time_years: float,
+        method: str = "compound",
+        compounding_frequency: int = 4,
+    ) -> float:
+        """Compute the maturity (future) value of a fixed deposit.
+
+        For ``method="simple"`` the maturity value is ``P + P*r*t``.
+        For ``method="compound"`` it is the standard future-value formula
+        ``A = P * (1 + r/n)^(n*t)``.
+
+        Args:
+            principal: Initial deposit amount.
+            annual_rate: Annual interest rate as a decimal (e.g. 0.05 for 5%).
+            time_years: Duration in years.
+            method: Either ``"simple"`` or ``"compound"`` (default).
+            compounding_frequency: Compounding periods per year (compound only).
+
+        Returns:
+            Maturity value (principal + interest earned).
+
+        Raises:
+            ValueError: If ``method`` is not ``"simple"`` or ``"compound"``.
+        """
+        if method == "simple":
+            return principal + simple_interest(principal, annual_rate, time_years)
+        if method == "compound":
+            return principal + compound_interest(
+                principal, annual_rate, time_years, compounding_frequency
+            )
+        raise ValueError(
+            f"method must be 'simple' or 'compound', got {method!r}"
         )
 
     def compare_rates(

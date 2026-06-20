@@ -145,6 +145,26 @@ class TestReadDataFromSystemFilesJsonYaml:
         result = reader.get_data_from_yaml('/nonexistent/file.yaml')
         assert result is None
 
+    def test_get_data_from_yaml_rejects_python_objects(self):
+        """Security (#52): safe_load must NOT construct arbitrary Python objects.
+
+        With the unsafe yaml.Loader this payload would invoke os.system; with
+        yaml.safe_load it raises a ConstructorError instead.
+        """
+        reader = ReadDataFromSystemFiles()
+        malicious = "!!python/object/apply:os.system ['echo pwned']\n"
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(malicious)
+            f.flush()
+            temp_path = f.name
+
+        try:
+            with pytest.raises(yaml.YAMLError):
+                reader.get_data_from_yaml(temp_path)
+        finally:
+            os.unlink(temp_path)
+
 
 class TestReadDataFromString:
     """Tests for ReadDataFromString class."""
@@ -488,6 +508,19 @@ class TestDataFrameTransformations:
         assert result['col'].iloc[0] == 1
         assert result['col'].iloc[2] == 3
 
+    def test_transform_df_none_to_null_write_lands(self):
+        """Chained-assignment fix (#52): the None->NULL write must actually
+        land. Under the old `df[col].iloc[i] = ...` chained form, pandas>=2.2
+        writes to a temporary copy and the original stays None."""
+        import pandas as pd
+
+        df = pd.DataFrame({'col': ['a', 'b']}, dtype=object)
+        df.iloc[1, 0] = None
+
+        result = transform_df_None_to_NULL(df)
+
+        assert result['col'].iloc[1] == "NULL"
+
 
 class TestReadURLData:
     """Tests for ReadURLData class."""
@@ -529,3 +562,13 @@ class TestReadURLData:
         result = reader.get_response_data({'url': 'http://example.com'})
 
         assert result is None
+
+    @patch('assethold.common.data.urllib3.PoolManager')
+    def test_pool_manager_configured_with_timeout(self, mock_pool):
+        """Security (#52): PoolManager must be created with a request timeout
+        so a slow endpoint cannot hang the calling thread indefinitely."""
+        ReadURLData({})
+
+        assert mock_pool.called
+        _, kwargs = mock_pool.call_args
+        assert kwargs.get('timeout') is not None

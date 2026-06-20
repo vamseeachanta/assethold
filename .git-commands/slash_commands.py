@@ -20,7 +20,22 @@ class LocalGitCommands:
         """Run a shell command"""
         try:
             result = subprocess.run(
-                cmd, shell=True, capture_output=True, 
+                cmd, shell=True, capture_output=True,
+                text=True, timeout=30
+            )
+            return result.returncode == 0, result.stdout + result.stderr
+        except Exception as e:
+            return False, str(e)
+
+    def run_argv(self, argv) -> tuple:
+        """Run a command from an argument list (no shell).
+
+        Use for commands embedding caller-supplied text (e.g. a commit
+        message) so the value cannot inject shell.
+        """
+        try:
+            result = subprocess.run(
+                argv, shell=False, capture_output=True,
                 text=True, timeout=30
             )
             return result.returncode == 0, result.stdout + result.stderr
@@ -59,10 +74,11 @@ class LocalGitCommands:
         # Add all changes
         self.run_command("git add -A")
         
-        # Commit
+        # Commit. Pass the message via argv (run_argv, no shell) so it cannot
+        # inject shell — the prior f'git commit -m "{msg}"' under shell=True was
+        # injectable.
         msg = message or f"feat: Update {self.repo_name}\n\n🤖 Generated with Claude Code"
-        cmd = f'git commit -m "{msg}"'
-        success, output = self.run_command(cmd)
+        success, output = self.run_argv(["git", "commit", "-m", msg])
         
         if success:
             print(f"✅ Changes committed successfully!")

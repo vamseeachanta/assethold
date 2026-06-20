@@ -3,10 +3,13 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Optional
 
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -65,7 +68,19 @@ def compute_positions(transactions: pd.DataFrame) -> dict[str, Position]:
                 # Average-cost: remove proportional cost basis.
                 fraction = min(qty / acc.shares, 1.0)
                 acc.total_cost -= acc.total_cost * fraction
-            acc.shares -= qty
+            # Clamp to avoid driving shares negative on an over-sell (more
+            # shares sold than held). A negative share count would corrupt
+            # any subsequent same-symbol activity (e.g. dividend reinvest)
+            # processed later in this loop.
+            qty_sold = min(qty, acc.shares) if acc.shares > 0 else 0.0
+            if qty > acc.shares:
+                logger.warning(
+                    "Over-sell for %s: sold %s but only %s held; clamping to 0",
+                    symbol,
+                    qty,
+                    acc.shares,
+                )
+            acc.shares -= qty_sold
             acc.sell_count += 1
             acc.last_sell_date = run_date
         elif action == "dividend":

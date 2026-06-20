@@ -90,7 +90,9 @@ def make_cache_key(prefix: str, ticker: str, **kwargs: Any) -> str:
     for k in sorted(kwargs):
         parts.append(f"{k}={kwargs[k]}")
     raw = ":".join(parts)
-    md5_hex = hashlib.md5(raw.encode()).hexdigest()
+    # usedforsecurity=False documents that this digest is a cache key, not a
+    # security primitive, and quiets SAST/secret scanners that flag md5.
+    md5_hex = hashlib.md5(raw.encode(), usedforsecurity=False).hexdigest()
     return f"{prefix}:{md5_hex}"
 
 

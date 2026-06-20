@@ -6,6 +6,17 @@ from assethold.analysis.daily_strategy.signals import SignalEngine, PositionSign
 from assethold.analysis.daily_strategy.report import DailyStrategyReport
 from assethold.analysis.daily_strategy.html_report import DailyStrategyHtmlReport
 from assethold.analysis.daily_strategy.history import HistoryStore, SignalRecord, SignalChange
+from assethold.analysis.daily_strategy.tax_lots import (
+    TaxLot,
+    LotAging,
+    RealizedLot,
+    YearlyRealizedSummary,
+    age_lots,
+    almost_long_term_lots,
+    select_trim_lots,
+    match_sells_fifo,
+    realized_report,
+)
 
 __all__ = [
     "FidelityLoader",
@@ -20,4 +31,13 @@ __all__ = [
     "HistoryStore",
     "SignalRecord",
     "SignalChange",
+    "TaxLot",
+    "LotAging",
+    "RealizedLot",
+    "YearlyRealizedSummary",
+    "age_lots",
+    "almost_long_term_lots",
+    "select_trim_lots",
+    "match_sells_fifo",
+    "realized_report",
 ]
