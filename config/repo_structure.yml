@@ -50,6 +50,7 @@ allowed_roots:
   - coverage.json
   - .gitignore
   - mkdocs.yml
+  - mkdocs.pages.yml
   - poetry.lock
   - poetry_latest_versions.txt
   - .pre-commit-config.yaml
