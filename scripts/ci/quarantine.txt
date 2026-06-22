@@ -15,4 +15,9 @@
 # quarantined test; pytest silently ignores a --deselect that doesn't match the
 # active rootdir, so whichever form is correct wins.
 
-# (none yet — seed empty; add a node id here only with a tracking issue.)
+# issue #62 — repo_structure contract missing mkdocs.pages.yml (legitimate tracked
+# repo file from #59/#60 not in config/repo_structure.yml allowed_roots; analog of
+# worldenergydata #524). Proper fix = add mkdocs.pages.yml to allowed_roots
+# (owner-gated per #49); quarantine until then so the PR gate is not blocked.
+tests/repo_structure/test_repo_structure_contract.py::test_current_contract_accepts_approved_roots_and_exceptions
+repo_structure/test_repo_structure_contract.py::test_current_contract_accepts_approved_roots_and_exceptions
