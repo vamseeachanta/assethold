@@ -34,6 +34,11 @@ jobs:
           python-version: '3.11'
       - uses: astral-sh/setup-uv@v7
       - name: Build API docs (scoped to docs/api)
+        # UV_NO_SOURCES makes uv resolve the assetutilities dependency from PyPI
+        # instead of the local sibling path (../assetutilities), which doesn't
+        # exist on the CI runner.
+        env:
+          UV_NO_SOURCES: "true"
         run: uv run --group docs mkdocs build -f mkdocs.pages.yml
       - uses: actions/upload-pages-artifact@v3
         with:
