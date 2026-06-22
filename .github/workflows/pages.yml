@@ -1,0 +1,50 @@
+name: Deploy API Docs to Pages
+
+# Publishes ONLY the auto-generated API reference (docs/api) via mkdocs.pages.yml,
+# which scopes docs_dir to docs/api. The full docs/ tree is intentionally NOT
+# published (it holds third-party PDFs + personal docs — see #59).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'docs/api/**'
+      - 'mkdocs.yml'
+      - 'mkdocs.pages.yml'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v7
+      - name: Build API docs (scoped to docs/api)
+        run: uv run --group docs mkdocs build -f mkdocs.pages.yml
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
