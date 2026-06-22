@@ -38,6 +38,11 @@ jobs:
   domain-tests:
     uses: vamseeachanta/workspace-hub/.github/workflows/domain-matrix.yml@main
     with:
+      # Use actions/setup-python so the interpreter is ON PATH as the system
+      # python. assethold installs via `uv pip install --system` (below), which
+      # needs a system interpreter — the reusable default ("uv") provisions a
+      # uv-managed python NOT on PATH and would fail on Debian's PEP-668 /usr.
+      python-setup: setup-python
       # Custom install: clone the sibling assetutilities dependency, then install
       # it, the pytest plugins, and assethold itself into the system interpreter.
       install-cmd: |
