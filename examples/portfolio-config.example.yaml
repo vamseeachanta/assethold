@@ -1,0 +1,58 @@
+# ============================================================================
+# Portfolio Returns Analyzer — EXAMPLE CONFIG  (all data below is hypothetical)
+# Fill this in for your own account(s); the tool reads it and emits a single,
+# offline, interactive HTML dashboard (+ PDF) assessing your returns.
+# ============================================================================
+
+portfolio:
+  owner: "Jane Investor"        # label only; appears on the dashboard
+  as_of: "2026-05-31"           # the "current" date for the snapshot
+  currency: USD
+
+benchmark:
+  primary: VOO                  # S&P 500 total return (or SPY / VTI / ACWI …)
+  compare_also: [60-40, cash]   # optional extra lines: 60/40 (VOO+BND), cash/HYSA
+  cash_rate_apy: 0.045          # flat assumption for the cash/HYSA baseline
+  price_source: yahoo           # yahoo (no key) | stooq | alphavantage:<KEY>
+
+options:
+  resolution: daily             # daily = price flows on their exact dates (recommended)
+  risk_metrics: [max_drawdown, volatility]   # add 'sharpe' if you want it
+  real_returns: true            # also show inflation-adjusted (CPI-U) returns
+  output: jane_portfolio_dashboard.html
+
+# --- Accounts: give EITHER explicit values+flows (Mode A) OR raw files (Mode B) ---
+accounts:
+
+  # Mode A — type the numbers yourself (simplest; no broker export needed)
+  - id: brokerage
+    type: taxable
+    year_end_values:            # market value at each period end
+      2022-12-31: 100000
+      2023-12-31: 145000
+      2024-12-31: 188000
+      2025-12-31: 252000
+    cash_balance:               # uninvested cash at each period end (for cash-drag)
+      2022-12-31: 6000
+      2023-12-31: 9000
+      2024-12-31: 4000
+      2025-12-31: 12000
+    external_flows:             # deposits (+) / withdrawals (-), on EXACT dates
+      - { date: 2023-02-15, amount:  20000 }
+      - { date: 2024-06-03, amount:  25000 }
+      - { date: 2025-09-18, amount: -10000 }
+
+  # Mode B — point at broker exports; the tool parses them (Fidelity-style here)
+  - id: ira
+    type: ira
+    transactions_csv: [ "data/ira_history.csv" ]   # Run Date, Action, Symbol, Amount …
+    statements_dir:   "data/statements/ira/"       # year-end / monthly PDFs (optional)
+
+# --- Holdings: enables per-stock view, contribution attribution & the dropdown ---
+holdings:
+  - { ticker: AAPL, name: "Apple",      account: brokerage }
+  - { ticker: MSFT, name: "Microsoft",  account: brokerage }
+  - { ticker: VOO,  name: "S&P 500 ETF", account: ira }
+  # ticker renames (e.g. ABC -> COR): list both so history stays continuous
+  aliases:
+    ABC: COR
