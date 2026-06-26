@@ -1,0 +1,47 @@
+# ============================================================================
+# Portfolio Returns Analyzer — EXAMPLE CONFIG  (100% HYPOTHETICAL DATA)
+# Edit a copy of this for your own portfolio. `python analyze.py config.yaml`
+# emits a single self-contained dashboard.html. No personal data in this repo.
+# ============================================================================
+
+portfolio:
+  owner: "Jane Investor"
+  as_of: "2025-12-31"        # snapshot date; also the deterministic "generated" label
+
+benchmark:
+  primary: VOO               # must exist in benchmark_prices.json (frozen, offline)
+  cash_rate_apy: 0.045       # flat HYSA assumption (where a cash baseline is needed)
+
+# Provide year-end market value + dated external flows + (optional) cash sleeve.
+# The engine DERIVES each year's investment gain = end - start - net_flow.
+accounts:
+
+  - id: brokerage
+    type: taxable
+    year_end:    { 2019-12-31: 0, 2020-12-31: 32000, 2021-12-31: 60000, 2022-12-31: 58000, 2023-12-31: 92000, 2024-12-31: 128000, 2025-12-31: 170000 }
+    cash:        { 2020-12-31: 3000, 2021-12-31: 5000, 2022-12-31: 8000, 2023-12-31: 4000, 2024-12-31: 6000, 2025-12-31: 9000 }
+    external_flows:
+      - { date: 2020-01-15, amount: 15000 }
+      - { date: 2020-07-01, amount: 15000 }
+      - { date: 2021-03-10, amount: 20000 }
+      - { date: 2022-05-02, amount: 12000 }
+      - { date: 2023-02-15, amount: 15000 }
+      - { date: 2024-06-03, amount: 20000 }
+      - { date: 2025-04-21, amount: 22000 }
+      - { date: 2025-09-18, amount: -4000 }
+
+  - id: retirement
+    type: ira
+    year_end: { 2019-12-31: 0, 2020-12-31: 7000, 2021-12-31: 13000, 2022-12-31: 15000, 2023-12-31: 22000, 2024-12-31: 30000, 2025-12-31: 44000 }
+    cash:     { 2020-12-31: 200, 2021-12-31: 300, 2022-12-31: 300, 2023-12-31: 400, 2024-12-31: 400, 2025-12-31: 500 }
+    external_flows:
+      - { date: 2020-02-03, amount: 6000 }
+      - { date: 2021-02-01, amount: 5000 }
+      - { date: 2022-01-20, amount: 5000 }
+      - { date: 2023-01-25, amount: 4000 }
+      - { date: 2024-01-30, amount: 5000 }
+      - { date: 2025-01-28, amount: 6000 }
+
+options:
+  risk_metrics: [max_drawdown, volatility]
+  output: dashboard.html
