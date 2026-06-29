@@ -8,7 +8,7 @@ from assethold.engine import engine
 
 def _registered_workflows():
     registry = yaml.safe_load(Path("docs/registry/workflows.yaml").read_text())
-    assert registry["schema_version"] == 1
+    assert registry["schema_version"] == 2  # v2 superset (workspace-hub#3287)
     return registry["workflows"]
 
 
