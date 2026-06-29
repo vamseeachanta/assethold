@@ -1,4 +1,10 @@
-schema_version: 1
+# schema_version: 2 -- additive v2 superset (workspace-hub#3287, co-dependent #3295):
+#   top-level `invocation:` ({input}-only substitution) + `repo:`;
+#   per-row `result:` descriptor (kind: files default) + `market_data_as_of`.
+# See SCHEMA.md. `request_schema`/`response_schema` are RESERVED for #3295.
+schema_version: 2
+invocation: "uv run python -m assethold {input}"
+repo: assethold
 workflows:
   - id: portfolio-offline
     basename: portfolio
@@ -6,6 +12,9 @@ workflows:
     outputs:
       - examples/workflows/portfolio/outputs/positions.csv
       - examples/workflows/portfolio/outputs/allocation.csv
+    result:
+      kind: files
+    market_data_as_of: "2026-06-27"
     test: uv run python -m assethold examples/workflows/portfolio/input.yml
     runtime: uv-python
   - id: options-covered-call-offline
