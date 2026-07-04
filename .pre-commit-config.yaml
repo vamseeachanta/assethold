@@ -29,6 +29,14 @@ repos:
         types: [python]
         exclude: ^tests/
 
+      - id: legal-sanity-scan
+        name: Legal sanity scan (deny list)
+        language: script
+        entry: ../scripts/legal/legal-sanity-scan.sh
+        args: [--repo=assethold]
+        pass_filenames: false
+        stages: [pre-commit]
+
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.21.2
     hooks:
