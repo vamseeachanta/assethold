@@ -1,7 +1,7 @@
 {
   "probed_on": "2026-08-03",
-  "probed_at_utc": "2026-08-03T03:29:03+00:00",
-  "vantage_point": "US network (non-Indian egress)",
+  "probed_at_utc": "2026-08-03T07:29:29+00:00",
+  "vantage_point": "K\u0101kin\u0101da, Andhra Pradesh, IN, AS55836 Reliance Jio Infocomm Limited",
   "results": [
     {
       "key": "bhunaksha",
@@ -65,10 +65,10 @@
       "key": "kauda",
       "label": "KAUDA (Kakinada Urban Dev. Authority)",
       "url": "https://kauda.ap.gov.in/",
-      "why_it_matters": "Master plan + approved layouts for Valasapakala. Geo-blocked as of 2026-08-03.",
-      "access": "india-only",
+      "why_it_matters": "Master plan + approved layouts for Valasapakala. Host DOWN as of 2026-08-03 - fails from inside Kakinada too; KAUDA merged into GUDA.",
+      "access": "host down (KAUDA merged into GUDA)",
       "dns": "164.100.192.133",
-      "verdict": "GEO_BLOCKED",
+      "verdict": "UNREACHABLE",
       "main": {
         "http_status": null,
         "error": "timed out"
@@ -80,9 +80,9 @@
       "label": "KAUDA Kakinada Master Plan PDF",
       "url": "https://kauda.ap.gov.in/documents/MasterPlans/KakinadaMasterPlan.pdf",
       "why_it_matters": "Zoning designation drives buildability on the Kakinada fringe.",
-      "access": "india-only",
+      "access": "host down (KAUDA merged into GUDA)",
       "dns": "164.100.192.133",
-      "verdict": "GEO_BLOCKED",
+      "verdict": "UNREACHABLE",
       "main": {
         "http_status": null,
         "error": "timed out"
@@ -94,9 +94,9 @@
       "label": "KAUDA Zonal Development Plan 2040 PDF",
       "url": "https://kauda.ap.gov.in/documents/downloads/KAKINADA_ZDp_2040-compressed.pdf",
       "why_it_matters": "Forward zoning to 2040.",
-      "access": "india-only",
+      "access": "host down (KAUDA merged into GUDA)",
       "dns": "164.100.192.133",
-      "verdict": "GEO_BLOCKED",
+      "verdict": "UNREACHABLE",
       "main": {
         "http_status": null,
         "error": "timed out"
@@ -225,7 +225,7 @@
       "verdict": "OK",
       "main": {
         "http_status": 200,
-        "bytes": 24722,
+        "bytes": 25683,
         "final_url": "https://ccla.ap.gov.in/",
         "content_type": "text/html; charset=utf-8"
       },
@@ -267,7 +267,7 @@
       "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/26000/47000",
       "why_it_matters": "Satellite basemap used by fetch_basemap_tiles.py.",
       "access": "open (attribution)",
-      "dns": "23.41.120.96",
+      "dns": "104.122.217.63",
       "verdict": "OK",
       "main": {
         "http_status": 200,
@@ -287,7 +287,7 @@
       "verdict": "OK",
       "main": {
         "http_status": 200,
-        "bytes": 210,
+        "bytes": 213,
         "final_url": "https://overpass-api.de/api/status",
         "content_type": "text/plain; charset=utf-8"
       },

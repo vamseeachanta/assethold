@@ -23,9 +23,17 @@ Interpreting results - two traps this script is built to catch:
   a deliberately absent control path; if a real path returns the same byte
   count as the control, the host is flagged CATCH_ALL rather than OK.
 
-  GEO-BLOCK: some hosts resolve in DNS but never complete a TCP handshake from
-  outside India. That is reported as GEO_BLOCKED (DNS ok, connect fails), which
-  is a materially different problem from a dead host.
+  UNREACHABLE: some hosts resolve in DNS but never complete a TCP handshake.
+  That is reported as UNREACHABLE - deliberately NOT as "geo-blocked". DNS
+  resolving while TCP fails is equally consistent with a dead host, a firewall,
+  or an ISP routing problem, and a probe cannot tell those apart. The earlier
+  version of this script called it GEO_BLOCKED and was wrong: kauda.ap.gov.in
+  was labelled geo-blocked when in fact the host is simply down - it fails
+  identically from inside Kakinada, its own city. Diagnosing geo-blocking needs
+  a probe from two different countries, which this script does not do.
+
+The vantage point is DETECTED, not assumed, and recorded with every snapshot -
+"blocked from where?" is meaningless without it.
 """
 
 from __future__ import annotations
@@ -91,8 +99,8 @@ TARGETS = [
         "KAUDA (Kakinada Urban Dev. Authority)",
         "https://kauda.ap.gov.in/",
         None,
-        "Master plan + approved layouts for Valasapakala. Geo-blocked as of 2026-08-03.",
-        "india-only",
+        "Master plan + approved layouts for Valasapakala. Host DOWN as of 2026-08-03 - fails from inside Kakinada too; KAUDA merged into GUDA.",
+        "host down (KAUDA merged into GUDA)",
     ),
     (
         "kauda_masterplan",
@@ -100,7 +108,7 @@ TARGETS = [
         "https://kauda.ap.gov.in/documents/MasterPlans/KakinadaMasterPlan.pdf",
         None,
         "Zoning designation drives buildability on the Kakinada fringe.",
-        "india-only",
+        "host down (KAUDA merged into GUDA)",
     ),
     (
         "kauda_zdp",
@@ -108,7 +116,7 @@ TARGETS = [
         "https://kauda.ap.gov.in/documents/downloads/KAKINADA_ZDp_2040-compressed.pdf",
         None,
         "Forward zoning to 2040.",
-        "india-only",
+        "host down (KAUDA merged into GUDA)",
     ),
     (
         "dtcp",
@@ -209,6 +217,29 @@ TARGETS = [
 ]
 
 
+def detect_vantage_point() -> str:
+    """Report where this probe is actually running from.
+
+    Assuming the vantage point is how the 2026-08-03 survey mislabelled a dead
+    host as geo-blocked. Detect it instead; fall back to an explicit unknown
+    rather than a guess.
+    """
+    for url, fields in (
+        ("https://ipinfo.io/json", ("city", "region", "country", "org")),
+        ("http://ip-api.com/json/", ("city", "regionName", "country", "isp")),
+    ):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                d = json.loads(resp.read().decode("utf-8"))
+            parts = [str(d[f]) for f in fields if d.get(f)]
+            if parts:
+                return ", ".join(parts)
+        except Exception:  # noqa: BLE001 - any failure just means try the next
+            continue
+    return "UNKNOWN (detection failed)"
+
+
 def resolve(host: str) -> str | None:
     try:
         return socket.gethostbyname(host)
@@ -243,9 +274,10 @@ def fetch(url: str) -> dict:
 def classify(url: str, main: dict, control: dict | None, dns: str | None) -> str:
     if main.get("http_status") is None:
         if dns:
-            # Name resolves but the connection never completes - the signature of
-            # an IP-range firewall rather than a decommissioned host.
-            return "GEO_BLOCKED"
+            # Name resolves but the connection never completes. Do NOT call this
+            # geo-blocking: a dead host, a firewall and an ISP routing failure
+            # all look identical from a single vantage point.
+            return "UNREACHABLE"
         return "NO_DNS"
     status = main["http_status"]
     if control and control.get("http_status") == 200 and main.get("bytes") == control.get("bytes"):
@@ -262,7 +294,7 @@ def classify(url: str, main: dict, control: dict | None, dns: str | None) -> str
 VERDICT_NOTE = {
     "OK": "reachable",
     "CATCH_ALL": "200 for every path - login wall, content NOT accessible",
-    "GEO_BLOCKED": "DNS resolves but connection times out (blocked to non-Indian traffic)",
+    "UNREACHABLE": "DNS resolves but TCP never connects - dead host, firewall or routing; a single vantage point CANNOT distinguish these",
     "NO_DNS": "hostname does not resolve at all",
     "GONE_404": "published link is dead",
     "FORBIDDEN": "authentication required",
@@ -298,7 +330,7 @@ def probe_all() -> dict:
     return {
         "probed_on": date.today().isoformat(),
         "probed_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "vantage_point": "US network (non-Indian egress)",
+        "vantage_point": detect_vantage_point(),
         "results": results,
     }
 
@@ -316,8 +348,8 @@ def render_markdown(records: list[dict]) -> str:
         "",
         "Every finding about these portals is perishable: access rules, hostnames",
         "and published links change without notice. This log records what was",
-        "actually true on each probe date, from a **non-Indian network** — vantage",
-        "point matters, because several hosts are firewalled to Indian IP ranges.",
+        "actually true on each probe date, from the vantage point stated on that",
+        "snapshot — \"unreachable\" is meaningless without knowing from where.",
         "",
         "Verdicts:",
         "",
@@ -330,6 +362,11 @@ def render_markdown(records: list[dict]) -> str:
         "",
         "`CATCH_ALL` is the one to watch: those hosts answer **HTTP 200 for a path",
         "that cannot exist**, so a 200 there is not evidence of anything.",
+        "",
+        "The **Vantage point** on each snapshot is DETECTED, not assumed. An earlier",
+        "version of this log asserted hosts were *geo-blocked to non-Indian traffic*",
+        "while the probe was in fact running from Kakinada, Andhra Pradesh. Treat",
+        "`UNREACHABLE` as \"could not connect\", nothing more.",
         "",
         "The **Access** column is a documented human judgement, not a probe result.",
         "Reachability and access are different axes: BhuNaksha answers 200 and 404s",

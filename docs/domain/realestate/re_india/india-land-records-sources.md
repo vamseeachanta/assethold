@@ -1,7 +1,10 @@
 # India land records & mapping — source register (Andhra Pradesh focus)
 
 > **First compiled**: 2026-08-03
-> **Reflects probe date**: 2026-08-03 (US network / non-Indian egress)
+> **Reflects probe date**: 2026-08-03, probed from **Kākināda, Andhra Pradesh**
+> (Reliance Jio). An earlier revision of this page claimed the probes ran from a
+> US network and that several hosts were geo-blocked to non-Indian traffic. That
+> was wrong on both counts — see "Corrections" below.
 > **Live status table**: [`portal-status-log.md`](./portal-status-log.md) —
 > regenerate any time with
 > `python3 scripts/python/india_land_maps/probe_portals.py`
@@ -10,10 +13,29 @@
 > what to do about it; the dated log holds *what was true when*. If the two ever
 > disagree, the log wins — re-probe first, then correct this page.
 
-Reachability below is stated as observed, not as advertised. Several AP
-government hosts are firewalled to Indian IP ranges — that is called out
-explicitly because it changes *who* has to do the fetching, not *whether* the
-data exists.
+Reachability below is stated as observed, not as advertised.
+
+## Corrections (2026-08-03)
+
+Two claims in the first revision of this document were wrong and are retracted:
+
+1. **"KAUDA is geo-blocked to non-Indian traffic."** False. `kauda.ap.gov.in`
+   (164.100.192.133) fails identically *from inside Kakinada itself* — no ICMP,
+   every TCP port filtered. Meanwhile `lgdirectory.gov.in` (164.100.128.239)
+   answers 200 from the same line, so the NIC block routes fine. **The host is
+   simply down.** KAUDA has since been folded into **GUDA** (Godavari Urban
+   Development Authority); `guda.ap.gov.in` currently has no DNS record either,
+   so the master plan needs a different route entirely — DTCP, the KAUDA/GUDA
+   planning wing directly, or a physical office visit.
+2. **"The probes ran from a US network."** They did not. Vantage point was never
+   measured, only assumed. `probe_portals.py` now *detects* it via ipinfo/ip-api
+   and stamps it on every snapshot.
+
+The underlying mistake is worth remembering: **a single vantage point cannot
+distinguish a geo-block from a dead host from an ISP routing failure.** All three
+look like "DNS resolves, TCP times out". Proving a geo-block requires probing
+from two countries. The probe's verdict is now `UNREACHABLE`, which claims only
+what it can support.
 
 ## How fast does this go stale?
 
@@ -136,14 +158,16 @@ mapping, and worth an account if this work continues.
 
 ## Zoning & layout approvals
 
-### KAUDA — `kauda.ap.gov.in` — **geo-blocked**
+### KAUDA / GUDA — `kauda.ap.gov.in` — **host down**
 
 Kakinada Urban Development Authority. This is the correct authority for the
 Kakinada master plan and for approved layouts in the Kakinada urban fringe,
 **including Valasapakala**.
 
-- DNS resolves (`164.100.192.133`) but TCP connections **time out** from a US
-  network, on both 80 and 443. Not a bad path — the host is unreachable.
+- DNS resolves (`164.100.192.133`) but TCP times out on 80, 443 and 8080, and
+  ICMP gets no reply — **including from inside Kakinada**. The host is dead, not
+  filtered by geography. KAUDA is now **GUDA** (Godavari Urban Development
+  Authority), and `guda.ap.gov.in` does not resolve at present.
 - **No Wayback Machine snapshots exist** (`archive.org/wayback/available`
   returns an empty `archived_snapshots` object, and a CDX query for PDFs under
   `kauda.ap.gov.in` returns nothing). There is no archival fallback.
@@ -154,8 +178,8 @@ connection:
 - `https://kauda.ap.gov.in/documents/downloads/KAKINADA_ZDp_2040-compressed.pdf`
   (Zonal Development Plan 2040)
 
-**Action required**: someone on an Indian network (or an Indian VPN egress)
-must fetch these. They cannot be obtained from here.
+**Action required**: not a network problem — the host serving them is gone.
+Try DTCP, the GUDA/KAUDA planning wing directly, or the office in person.
 
 ### DTCP AP — `dtcp.ap.gov.in` — reachable, but its layout links are broken
 
@@ -193,9 +217,10 @@ Related systems:
 4. **Satellite imagery is not a boundary.** Use it to orient, to spot
    encroachment or new construction, and to compare against a sketch — never as
    the basis for a boundary claim.
-5. **Geo-blocking is the main structural obstacle**, not paywalls. The AP
-   planning-authority hosts that matter most (KAUDA) simply do not answer
-   non-Indian traffic.
+5. **Dead hosts and renames are the main structural obstacle**, not paywalls and
+   not geo-blocking. KAUDA became GUDA and its old host went away; guides and
+   search results still point at the corpse. Check whether an authority has been
+   renamed or merged before concluding its data is unavailable.
 
 ---
 
