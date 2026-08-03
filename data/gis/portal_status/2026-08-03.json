@@ -1,0 +1,297 @@
+{
+  "probed_on": "2026-08-03",
+  "probed_at_utc": "2026-08-03T03:29:03+00:00",
+  "vantage_point": "US network (non-Indian egress)",
+  "results": [
+    {
+      "key": "bhunaksha",
+      "label": "BhuNaksha AP (cadastral viewer)",
+      "url": "https://bhunaksha.ap.gov.in/",
+      "why_it_matters": "Authoritative AP cadastral maps / FMB. The only real plot-boundary source.",
+      "access": "login / counter",
+      "dns": "103.129.72.215",
+      "verdict": "OK",
+      "main": {
+        "http_status": 200,
+        "bytes": 36561,
+        "final_url": "https://bhunaksha.ap.gov.in/bhunakshalpm/28/index.jsp",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "control": {
+        "http_status": 404,
+        "bytes": 2667,
+        "final_url": "https://bhunaksha.ap.gov.in/bhunakshalpm/28/__assethold_control__.jsp",
+        "content_type": "text/html;charset=ISO-8859-1"
+      }
+    },
+    {
+      "key": "bhunaksha_rest",
+      "label": "BhuNaksha REST layer",
+      "url": "https://bhunaksha.ap.gov.in/bhunakshalpm/rest/MapInfo/getDistrictCodes",
+      "why_it_matters": "If this ever answers anonymously again, bulk map retrieval becomes possible.",
+      "access": "login",
+      "dns": "103.129.72.215",
+      "verdict": "GONE_404",
+      "main": {
+        "http_status": 404,
+        "bytes": 2667,
+        "final_url": "https://bhunaksha.ap.gov.in/bhunakshalpm/rest/MapInfo/getDistrictCodes",
+        "content_type": "text/html;charset=ISO-8859-1"
+      },
+      "control": null
+    },
+    {
+      "key": "meebhoomi",
+      "label": "MeeBhoomi (Adangal / 1-B / ROR)",
+      "url": "https://meebhoomi.ap.gov.in/",
+      "why_it_matters": "Record of Rights and village maps.",
+      "access": "login / counter",
+      "dns": "103.129.73.142",
+      "verdict": "CATCH_ALL",
+      "main": {
+        "http_status": 200,
+        "bytes": 82585,
+        "final_url": "https://meebhoomi.ap.gov.in/",
+        "content_type": "text/html; charset=utf-8"
+      },
+      "control": {
+        "http_status": 200,
+        "bytes": 82585,
+        "final_url": "https://meebhoomi.ap.gov.in/?aspxerrorpath=/__assethold_control__.aspx",
+        "content_type": "text/html; charset=utf-8"
+      }
+    },
+    {
+      "key": "kauda",
+      "label": "KAUDA (Kakinada Urban Dev. Authority)",
+      "url": "https://kauda.ap.gov.in/",
+      "why_it_matters": "Master plan + approved layouts for Valasapakala. Geo-blocked as of 2026-08-03.",
+      "access": "india-only",
+      "dns": "164.100.192.133",
+      "verdict": "GEO_BLOCKED",
+      "main": {
+        "http_status": null,
+        "error": "timed out"
+      },
+      "control": null
+    },
+    {
+      "key": "kauda_masterplan",
+      "label": "KAUDA Kakinada Master Plan PDF",
+      "url": "https://kauda.ap.gov.in/documents/MasterPlans/KakinadaMasterPlan.pdf",
+      "why_it_matters": "Zoning designation drives buildability on the Kakinada fringe.",
+      "access": "india-only",
+      "dns": "164.100.192.133",
+      "verdict": "GEO_BLOCKED",
+      "main": {
+        "http_status": null,
+        "error": "timed out"
+      },
+      "control": null
+    },
+    {
+      "key": "kauda_zdp",
+      "label": "KAUDA Zonal Development Plan 2040 PDF",
+      "url": "https://kauda.ap.gov.in/documents/downloads/KAKINADA_ZDp_2040-compressed.pdf",
+      "why_it_matters": "Forward zoning to 2040.",
+      "access": "india-only",
+      "dns": "164.100.192.133",
+      "verdict": "GEO_BLOCKED",
+      "main": {
+        "http_status": null,
+        "error": "timed out"
+      },
+      "control": null
+    },
+    {
+      "key": "dtcp",
+      "label": "DTCP AP (Town & Country Planning)",
+      "url": "https://dtcp.ap.gov.in/",
+      "why_it_matters": "Statewide planning directorate.",
+      "access": "open",
+      "dns": "103.129.75.18",
+      "verdict": "OK",
+      "main": {
+        "http_status": 200,
+        "bytes": 252693,
+        "final_url": "https://dtcp.ap.gov.in/",
+        "content_type": "text/html; charset=UTF-8"
+      },
+      "control": null
+    },
+    {
+      "key": "dtcp_approved_layouts",
+      "label": "DTCP approved-layouts page",
+      "url": "http://dtcp.ap.gov.in/webdtcp/approvedlayouts.html",
+      "why_it_matters": "Linked from the DTCP homepage but 404 as of 2026-08-03 - recheck periodically.",
+      "access": "open (link dead)",
+      "dns": "103.129.75.18",
+      "verdict": "GONE_404",
+      "main": {
+        "http_status": 404,
+        "bytes": 196,
+        "final_url": "http://dtcp.ap.gov.in/webdtcp/approvedlayouts.html",
+        "content_type": "text/html; charset=iso-8859-1"
+      },
+      "control": null
+    },
+    {
+      "key": "dtcp_unauth_layouts",
+      "label": "DTCP unauthorised-layout list (PDF)",
+      "url": "https://dtcp.ap.gov.in/downloads/Unauthorised%20Layout%20Details.pdf",
+      "why_it_matters": "Linked from the DTCP homepage but 404 as of 2026-08-03 - recheck periodically.",
+      "access": "open (link dead)",
+      "dns": "103.129.75.18",
+      "verdict": "GONE_404",
+      "main": {
+        "http_status": 404,
+        "bytes": 196,
+        "final_url": "https://dtcp.ap.gov.in/downloads/Unauthorised%20Layout%20Details.pdf",
+        "content_type": "text/html; charset=iso-8859-1"
+      },
+      "control": null
+    },
+    {
+      "key": "apdpms",
+      "label": "APDPMS / CivitPermit",
+      "url": "https://apdpms.ap.gov.in/",
+      "why_it_matters": "Building-permit workflow; public list endpoints on :8085 are port-blocked.",
+      "access": "login",
+      "dns": "4.187.152.50",
+      "verdict": "OK",
+      "main": {
+        "http_status": 200,
+        "bytes": 15962,
+        "final_url": "https://portal.apdpms.ap.gov.in/",
+        "content_type": "text/html"
+      },
+      "control": null
+    },
+    {
+      "key": "ucims",
+      "label": "UCIMS (unauthorised construction)",
+      "url": "http://ucimsapdtcp.ap.gov.in/ucims/home.aspx",
+      "why_it_matters": "Unauthorised layout / construction regulatory picture.",
+      "access": "open (login for data)",
+      "dns": "103.129.72.184",
+      "verdict": "OK",
+      "main": {
+        "http_status": 200,
+        "bytes": 24786,
+        "final_url": "http://ucimsapdtcp.ap.gov.in/ucims/home.aspx",
+        "content_type": "text/html; charset=utf-8"
+      },
+      "control": null
+    },
+    {
+      "key": "bhuvan_panchayat",
+      "label": "Bhuvan Panchayat / SISDP v4 (ISRO)",
+      "url": "https://bhuvanpanchayat.nrsc.gov.in/",
+      "why_it_matters": "Best official panchayat-scale thematic mapping; account needed for bulk download.",
+      "access": "open (account for bulk)",
+      "dns": "14.139.94.30",
+      "verdict": "OK",
+      "main": {
+        "http_status": 200,
+        "bytes": 38916,
+        "final_url": "https://bhuvanpanchayat.nrsc.gov.in/",
+        "content_type": "text/html; charset=UTF-8"
+      },
+      "control": null
+    },
+    {
+      "key": "bhuvan",
+      "label": "Bhuvan main portal (ISRO)",
+      "url": "https://bhuvan.nrsc.gov.in/",
+      "why_it_matters": "Indian EO imagery and thematic layers.",
+      "access": "open (account for bulk)",
+      "dns": "14.143.12.170",
+      "verdict": "OK",
+      "main": {
+        "http_status": 200,
+        "bytes": 14995,
+        "final_url": "https://bhuvan.nrsc.gov.in/ngmaps",
+        "content_type": "text/html; charset=utf-8"
+      },
+      "control": null
+    },
+    {
+      "key": "ccla",
+      "label": "CCLA AP (Chief Commissioner, Land Admin.)",
+      "url": "https://ccla.ap.gov.in/",
+      "why_it_matters": "Departmental landing page; policy and GO source.",
+      "access": "open",
+      "dns": "103.129.72.93",
+      "verdict": "OK",
+      "main": {
+        "http_status": 200,
+        "bytes": 24722,
+        "final_url": "https://ccla.ap.gov.in/",
+        "content_type": "text/html; charset=utf-8"
+      },
+      "control": null
+    },
+    {
+      "key": "webland",
+      "label": "Webland AP",
+      "url": "https://webland.ap.gov.in/",
+      "why_it_matters": "Legacy land-records front end.",
+      "access": "open",
+      "dns": "103.129.73.139",
+      "verdict": "OK",
+      "main": {
+        "http_status": 200,
+        "bytes": 13762,
+        "final_url": "https://webland.ap.gov.in/",
+        "content_type": "text/html; charset=utf-8"
+      },
+      "control": null
+    },
+    {
+      "key": "bhubharati",
+      "label": "bhubharati.ap.gov.in",
+      "url": "https://bhubharati.ap.gov.in/",
+      "why_it_matters": "Frequently cited in guides but has never resolved - kept here to stay disproved.",
+      "access": "n/a",
+      "dns": null,
+      "verdict": "NO_DNS",
+      "main": {
+        "http_status": null,
+        "error": "[Errno 8] nodename nor servname provided, or not known"
+      },
+      "control": null
+    },
+    {
+      "key": "esri_imagery",
+      "label": "ESRI World Imagery tiles",
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/26000/47000",
+      "why_it_matters": "Satellite basemap used by fetch_basemap_tiles.py.",
+      "access": "open (attribution)",
+      "dns": "23.41.120.96",
+      "verdict": "OK",
+      "main": {
+        "http_status": 200,
+        "bytes": 12186,
+        "final_url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/26000/47000",
+        "content_type": "image/jpeg"
+      },
+      "control": null
+    },
+    {
+      "key": "overpass",
+      "label": "Overpass API (OpenStreetMap)",
+      "url": "https://overpass-api.de/api/status",
+      "why_it_matters": "Vector context used by fetch_osm_extract.py.",
+      "access": "open",
+      "dns": "65.109.112.52",
+      "verdict": "OK",
+      "main": {
+        "http_status": 200,
+        "bytes": 210,
+        "final_url": "https://overpass-api.de/api/status",
+        "content_type": "text/plain; charset=utf-8"
+      },
+      "control": null
+    }
+  ]
+}

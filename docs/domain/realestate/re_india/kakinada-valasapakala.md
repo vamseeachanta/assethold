@@ -1,8 +1,17 @@
 # Valasapakala GP, Kakinada — map dossier
 
+> **Compiled**: 2026-08-03
+> **Portal access reflects**: 2026-08-03 probe — see
+> [`portal-status-log.md`](./portal-status-log.md)
+> **Imagery captured**: 2026-08-03 (ESRI World Imagery; Esri's own capture date
+> for these tiles is not exposed by the tile API — treat the scene as "recent,
+> undated" and re-pull before relying on it to show current construction)
+>
+> Sections below marked *blocked* were blocked **from a US network on that date**.
+> Re-run the probe before assuming they still are.
+
 **AOI**: `config/gis/aoi/kakinada_valasapakala.yaml`
 **Data**: `data/gis/kakinada_valasapakala/`
-**Compiled**: 2026-08-03
 
 ---
 
@@ -104,8 +113,10 @@ Both scripts are AOI-driven — point them at a different YAML in
 
 ## What is still missing, and how to get it
 
-Everything below is **blocked from a US network**. See
-`india-land-records-sources.md` for the full probe results.
+Everything below was **blocked from a US network on 2026-08-03**. Re-check with
+`python3 scripts/python/india_land_maps/probe_portals.py` before acting — see
+[`india-land-records-sources.md`](./india-land-records-sources.md) for why each
+one behaves the way it does.
 
 ### 1. Plot-level cadastre (FMB / village map) — the thing that actually matters
 

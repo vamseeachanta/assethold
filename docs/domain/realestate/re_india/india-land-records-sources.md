@@ -1,10 +1,33 @@
 # India land records & mapping — source register (Andhra Pradesh focus)
 
-**Status of every portal below was probed directly on 2026-08-03** from a US
-network. Reachability is stated as observed, not as advertised. Several AP
+> **First compiled**: 2026-08-03
+> **Reflects probe date**: 2026-08-03 (US network / non-Indian egress)
+> **Live status table**: [`portal-status-log.md`](./portal-status-log.md) —
+> regenerate any time with
+> `python3 scripts/python/india_land_maps/probe_portals.py`
+>
+> **This document ages.** It explains *why* each portal behaves as it does and
+> what to do about it; the dated log holds *what was true when*. If the two ever
+> disagree, the log wins — re-probe first, then correct this page.
+
+Reachability below is stated as observed, not as advertised. Several AP
 government hosts are firewalled to Indian IP ranges — that is called out
 explicitly because it changes *who* has to do the fetching, not *whether* the
 data exists.
+
+## How fast does this go stale?
+
+Fast, and unevenly. Observed within this single survey:
+
+- **BhuNaksha** moved behind a login at some point before 2026-08-03 — nearly all
+  public documentation, and the entire SEO cluster, still describes the old open
+  district/mandal/village flow. Treat any undated guide as wrong.
+- **DTCP** was, on 2026-08-03, still publishing two layout links from its live
+  homepage that both return 404. Published ≠ working.
+- **District names changed in April 2022** (Kakinada split from East Godavari)
+  and most records have not caught up.
+
+Re-probe before relying on anything here that is more than a few months old.
 
 ---
 
