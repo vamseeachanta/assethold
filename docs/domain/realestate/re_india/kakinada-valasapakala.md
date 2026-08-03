@@ -7,8 +7,10 @@
 > for these tiles is not exposed by the tile API — treat the scene as "recent,
 > undated" and re-pull before relying on it to show current construction)
 >
-> Sections below marked *blocked* were blocked **from a US network on that date**.
-> Re-run the probe before assuming they still are.
+> Sections below marked *blocked* record what could not be fetched on that date.
+> NOTE: an earlier revision attributed the KAUDA failures to geo-blocking from a
+> US network. Both halves were wrong — the probes ran from Kākināda, and the
+> KAUDA host is simply down. Re-run the probe before assuming anything here.
 
 **AOI**: `config/gis/aoi/kakinada_valasapakala.yaml`
 **Data**: `data/gis/kakinada_valasapakala/`
@@ -113,7 +115,8 @@ Both scripts are AOI-driven — point them at a different YAML in
 
 ## What is still missing, and how to get it
 
-Everything below was **blocked from a US network on 2026-08-03**. Re-check with
+Everything below could not be fetched on 2026-08-03 (probing from Kākināda).
+Re-check with
 `python3 scripts/python/india_land_maps/probe_portals.py` before acting — see
 [`india-land-records-sources.md`](./india-land-records-sources.md) for why each
 one behaves the way it does.
@@ -137,9 +140,11 @@ without them the offices cannot pull anything.
 
 ### 2. Kakinada master plan / zonal development plan
 
-KAUDA (`kauda.ap.gov.in`) is the authority covering Valasapakala. The host is
-**geo-blocked** — TCP times out from the US — and has **no Wayback snapshots**,
-so there is no archival fallback. Needs an Indian connection:
+KAUDA (`kauda.ap.gov.in`) is the authority covering Valasapakala. Its host is
+**down** — TCP times out even from inside Kakinada — and there are **no Wayback
+snapshots**, so there is no archival fallback. KAUDA has been folded into
+**GUDA** (Godavari Urban Development Authority), whose domain does not currently
+resolve either. An Indian connection does NOT help; these URLs are dead:
 
 - `https://kauda.ap.gov.in/documents/MasterPlans/KakinadaMasterPlan.pdf`
 - `https://kauda.ap.gov.in/documents/downloads/KAKINADA_ZDp_2040-compressed.pdf`

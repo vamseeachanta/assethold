@@ -8,8 +8,8 @@ python3 scripts/python/india_land_maps/probe_portals.py
 
 Every finding about these portals is perishable: access rules, hostnames
 and published links change without notice. This log records what was
-actually true on each probe date, from a **non-Indian network** — vantage
-point matters, because several hosts are firewalled to Indian IP ranges.
+actually true on each probe date, from the vantage point stated on that
+snapshot — "unreachable" is meaningless without knowing from where.
 
 Verdicts:
 
@@ -17,13 +17,18 @@ Verdicts:
 |---|---|
 | `OK` | reachable |
 | `CATCH_ALL` | 200 for every path - login wall, content NOT accessible |
-| `GEO_BLOCKED` | DNS resolves but connection times out (blocked to non-Indian traffic) |
+| `UNREACHABLE` | DNS resolves but TCP never connects - dead host, firewall or routing; a single vantage point CANNOT distinguish these |
 | `NO_DNS` | hostname does not resolve at all |
 | `GONE_404` | published link is dead |
 | `FORBIDDEN` | authentication required |
 
 `CATCH_ALL` is the one to watch: those hosts answer **HTTP 200 for a path
 that cannot exist**, so a 200 there is not evidence of anything.
+
+The **Vantage point** on each snapshot is DETECTED, not assumed. An earlier
+version of this log asserted hosts were *geo-blocked to non-Indian traffic*
+while the probe was in fact running from Kakinada, Andhra Pradesh. Treat
+`UNREACHABLE` as "could not connect", nothing more.
 
 The **Access** column is a documented human judgement, not a probe result.
 Reachability and access are different axes: BhuNaksha answers 200 and 404s
@@ -34,16 +39,16 @@ whenever a reachability verdict changes.
 
 ## 2026-08-03
 
-Probed 2026-08-03T03:29:03+00:00 from: US network (non-Indian egress)
+Probed 2026-08-03T07:29:29+00:00 from: Kākināda, Andhra Pradesh, IN, AS55836 Reliance Jio Infocomm Limited
 
 | Portal | Reachability | HTTP | Access | Notes |
 |---|---|---|---|---|
 | [BhuNaksha AP (cadastral viewer)](https://bhunaksha.ap.gov.in/) | `OK` | 200 | login / counter | Authoritative AP cadastral maps / FMB. The only real plot-boundary source. |
 | [BhuNaksha REST layer](https://bhunaksha.ap.gov.in/bhunakshalpm/rest/MapInfo/getDistrictCodes) | `GONE_404` | 404 | login | If this ever answers anonymously again, bulk map retrieval becomes possible. |
 | [MeeBhoomi (Adangal / 1-B / ROR)](https://meebhoomi.ap.gov.in/) | `CATCH_ALL` | 200 | login / counter | Record of Rights and village maps. |
-| [KAUDA (Kakinada Urban Dev. Authority)](https://kauda.ap.gov.in/) | `GEO_BLOCKED` | — (timed out) | india-only | Master plan + approved layouts for Valasapakala. Geo-blocked as of 2026-08-03. |
-| [KAUDA Kakinada Master Plan PDF](https://kauda.ap.gov.in/documents/MasterPlans/KakinadaMasterPlan.pdf) | `GEO_BLOCKED` | — (timed out) | india-only | Zoning designation drives buildability on the Kakinada fringe. |
-| [KAUDA Zonal Development Plan 2040 PDF](https://kauda.ap.gov.in/documents/downloads/KAKINADA_ZDp_2040-compressed.pdf) | `GEO_BLOCKED` | — (timed out) | india-only | Forward zoning to 2040. |
+| [KAUDA (Kakinada Urban Dev. Authority)](https://kauda.ap.gov.in/) | `UNREACHABLE` | — (timed out) | host down (KAUDA merged into GUDA) | Master plan + approved layouts for Valasapakala. Host DOWN as of 2026-08-03 - fails from inside Kakinada too; KAUDA merged into GUDA. |
+| [KAUDA Kakinada Master Plan PDF](https://kauda.ap.gov.in/documents/MasterPlans/KakinadaMasterPlan.pdf) | `UNREACHABLE` | — (timed out) | host down (KAUDA merged into GUDA) | Zoning designation drives buildability on the Kakinada fringe. |
+| [KAUDA Zonal Development Plan 2040 PDF](https://kauda.ap.gov.in/documents/downloads/KAKINADA_ZDp_2040-compressed.pdf) | `UNREACHABLE` | — (timed out) | host down (KAUDA merged into GUDA) | Forward zoning to 2040. |
 | [DTCP AP (Town & Country Planning)](https://dtcp.ap.gov.in/) | `OK` | 200 | open | Statewide planning directorate. |
 | [DTCP approved-layouts page](http://dtcp.ap.gov.in/webdtcp/approvedlayouts.html) | `GONE_404` | 404 | open (link dead) | Linked from the DTCP homepage but 404 as of 2026-08-03 - recheck periodically. |
 | [DTCP unauthorised-layout list (PDF)](https://dtcp.ap.gov.in/downloads/Unauthorised%20Layout%20Details.pdf) | `GONE_404` | 404 | open (link dead) | Linked from the DTCP homepage but 404 as of 2026-08-03 - recheck periodically. |
