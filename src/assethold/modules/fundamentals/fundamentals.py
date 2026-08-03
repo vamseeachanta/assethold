@@ -27,7 +27,7 @@ class FundamentalsWorkflow:
         ranked_df = pd.DataFrame(ranked)
 
         ranked_file = output_path(outputs["ranked_csv"])
-        ranked_df.to_csv(ranked_file, index=False)
+        ranked_df.to_csv(ranked_file, index=False, lineterminator="\n")
         report_file = write_text(
             outputs["report_txt"],
             FundamentalsReport().console_table(ranked_df),

@@ -52,18 +52,25 @@ def output_path(path: str) -> Path:
     return target
 
 
+# Workflow outputs are content-hashed into the workflow_api result_hash, which is
+# contractually platform-independent. Python's text mode translates "\n" to the
+# platform separator on write, so on Windows every emitted file would gain CRLF
+# and change both its sha256 and its size. Pinning newline="\n" keeps the bytes
+# identical everywhere. See assethold#85.
+#
+# Path.write_text() only grew a newline= parameter in 3.10 and this package still
+# supports 3.9 (requires-python >= 3.9), so these go through open() instead.
 def write_json(path: str, data: Any) -> Path:
     target = output_path(path)
-    target.write_text(
-        json.dumps(to_plain_data(data), indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    with target.open("w", encoding="utf-8", newline="\n") as fh:
+        fh.write(json.dumps(to_plain_data(data), indent=2, sort_keys=True) + "\n")
     return target
 
 
 def write_text(path: str, text: str) -> Path:
     target = output_path(path)
-    target.write_text(text, encoding="utf-8")
+    with target.open("w", encoding="utf-8", newline="\n") as fh:
+        fh.write(text)
     return target
 
 

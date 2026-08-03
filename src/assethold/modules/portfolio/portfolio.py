@@ -36,7 +36,16 @@ class PortfolioWorkflow:
 
         positions_file = output_path(outputs["positions_csv"])
         allocation_file = output_path(outputs["allocation_csv"])
-        positions_to_dataframe(positions).to_csv(positions_file, index=False)
-        allocation_to_dataframe(allocation).to_csv(allocation_file, index=False)
+        # lineterminator is pinned to LF so the emitted bytes are identical on
+        # every platform. pandas writes through a text-mode handle, so Windows
+        # would otherwise translate \n to \r\n, changing each file's sha256 and
+        # size -- and these files feed the workflow_api result_hash, which is
+        # contractually a cross-platform determinism value. See assethold#85.
+        positions_to_dataframe(positions).to_csv(
+            positions_file, index=False, lineterminator="\n"
+        )
+        allocation_to_dataframe(allocation).to_csv(
+            allocation_file, index=False, lineterminator="\n"
+        )
 
         return record_outputs(cfg, "portfolio", [positions_file, allocation_file])

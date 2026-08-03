@@ -57,7 +57,7 @@ class DividendForecastWorkflow:
                 "year": range(1, forecast.years + 1),
                 "dividend": forecast.dividends,
             }
-        ).to_csv(forecast_file, index=False)
+        ).to_csv(forecast_file, index=False, lineterminator="\n")
         summary_file = write_json(outputs["summary_json"], summary)
 
         return record_outputs(
