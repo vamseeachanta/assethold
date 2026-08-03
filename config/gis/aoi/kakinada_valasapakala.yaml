@@ -1,0 +1,68 @@
+# AOI: Valasapakala Gram Panchayat, Kakinada Rural mandal, Kakinada district, Andhra Pradesh
+#
+# Administrative context (post-2022 AP district reorganisation):
+#   State     : Andhra Pradesh (LGD state code 28)
+#   District  : Kakinada          (carved out of East Godavari in Apr 2022)
+#   Mandal    : Kakinada Rural
+#   Panchayat : Valasapakala      (revenue villages include Vakalapudi)
+#   PIN       : 533005
+#
+# Pre-2022 records, deeds and most third-party sites still say "East Godavari".
+# Search BOTH district names when querying government portals.
+
+name: kakinada_valasapakala
+label: "Valasapakala GP, Kakinada Rural, Kakinada, AP"
+country: IN
+state: Andhra Pradesh
+state_lgd_code: 28
+district: Kakinada
+district_former: East Godavari
+mandal: Kakinada Rural
+panchayat: Valasapakala
+pincode: "533005"
+
+# Anchor point = OSM node 12496017004 (place=neighbourhood, "Valasapakala")
+centre:
+  lat: 16.9963762
+  lon: 82.2563312
+  source: "OSM node 12496017004"
+
+# Bounding box chosen to cover the Valasapakala settlement plus Vakalapudi
+# (17.0145, 82.2827 - lighthouse) and the coastal strip to the east.
+# NOT an authoritative panchayat boundary - see caveat below.
+bbox:
+  min_lat: 16.982
+  min_lon: 82.243
+  max_lat: 17.028
+  max_lon: 82.300
+  approx_extent_km:
+    north_south: 5.1
+    east_west: 6.1
+
+# CAVEAT: no authoritative Valasapakala GP boundary polygon is published in any
+# openly accessible dataset. OpenStreetMap carries Valasapakala only as a single
+# place=neighbourhood NODE - there is no boundary way or relation for it.
+# This bbox is a generous working envelope, not a legal boundary.
+boundary_polygon_available: false
+
+basemap:
+  # ESRI World Imagery - free to use, attribution required.
+  source: esri_world_imagery
+  attribution: "Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+  zoom_levels:
+    - 16   # overview, whole AOI in one sheet
+    - 17
+    - 18   # ~0.6 m/px - individual buildings and plot edges legible
+
+osm:
+  overpass_endpoint: "https://overpass-api.de/api/interpreter"
+  feature_classes:
+    - place
+    - boundary
+    - landuse
+    - highway
+    - waterway
+    - natural=water
+    - building
+
+output_dir: "data/gis/kakinada_valasapakala"

@@ -15,6 +15,11 @@ allowed_roots:
   - business
   - dev_tools
   - bin
+  # Standalone operator tooling (tools/portfolio-analyzer). Tracked since before
+  # this contract was written, but never listed - so the checker failed on every
+  # run from 2026-07-19 onward, and because it gates the job before pytest, the
+  # whole test suite stopped executing. Listing it restores the suite.
+  - tools
 
   # Agent/tooling and repo metadata roots intentionally tracked today
   - .agent-os
