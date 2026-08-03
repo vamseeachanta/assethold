@@ -99,8 +99,13 @@ class MarketAlertsWorkflow:
 def _write_snapshot_csv(path: str, holdings: List[dict]):
     target = output_path(path)
     cols = ["ticker", "usd", "weight", "price", "prev_close", "pct_change", "pe", "dividend_yield"]
+    # newline="" stops the text layer translating, and lineterminator="\n"
+    # overrides csv's own "\r\n" default - without the second half this writes
+    # CRLF on every platform, which is merely inconsistent with the other
+    # workflows today but becomes platform-dependent the moment newline="" is
+    # dropped. Emitted artifacts are content-hashed; see assethold#85.
     with target.open("w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=cols)
+        w = csv.DictWriter(fh, fieldnames=cols, lineterminator="\n")
         w.writeheader()
         for h in holdings:
             w.writerow({k: h.get(k) for k in cols})

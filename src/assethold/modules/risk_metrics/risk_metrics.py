@@ -29,7 +29,7 @@ class RiskMetricsWorkflow:
         metrics_file = output_path(outputs["metrics_csv"])
         report_file = write_text(outputs["report_txt"], risk.report(risk_free_rate))
         pd.DataFrame([risk.compute(risk_free_rate)]).to_csv(
-            metrics_file, index=False
+            metrics_file, index=False, lineterminator="\n"
         )
 
         return record_outputs(cfg, "risk_metrics", [metrics_file, report_file])

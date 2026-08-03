@@ -43,5 +43,5 @@ class OptionsWorkflow:
             ).reset_index(drop=True)
 
         output_file = output_path(outputs["opportunities_csv"])
-        table.to_csv(output_file, index=False)
+        table.to_csv(output_file, index=False, lineterminator="\n")
         return record_outputs(cfg, "options", [output_file])
