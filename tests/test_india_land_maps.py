@@ -251,9 +251,40 @@ class TestProbeVerdicts:
         control = {"http_status": 404, "bytes": 2667}
         assert probe.classify("u", main, control, "1.2.3.4") == "OK"
 
-    def test_geo_block_is_dns_ok_but_connect_fails(self):
+    def test_dns_ok_but_connect_fails_is_unreachable_not_geo_blocked(self):
+        """Regression for the wrong call made on 2026-08-03.
+
+        This assertion used to demand "GEO_BLOCKED", encoding the belief that
+        DNS-resolves-plus-TCP-fails proves an IP-range block. It does not: a dead
+        host, a firewall and an ISP routing failure are indistinguishable from a
+        single vantage point. kauda.ap.gov.in was labelled geo-blocked and was in
+        fact simply down - it failed identically from inside its own city.
+
+        The verdict must claim only what one probe can support.
+        """
         failed = {"http_status": None, "error": "timed out"}
-        assert probe.classify("u", failed, None, "164.100.192.133") == "GEO_BLOCKED"
+        assert probe.classify("u", failed, None, "164.100.192.133") == "UNREACHABLE"
+
+    def test_no_verdict_asserts_geo_blocking(self):
+        """No verdict may claim geo-blocking - the probe cannot establish it."""
+        assert not any("GEO" in v.upper() for v in probe.VERDICT_NOTE), (
+            "a single-vantage-point probe cannot prove a geo-block; "
+            "use UNREACHABLE and record the vantage point instead"
+        )
+
+    def test_vantage_point_is_detected_not_hardcoded(self):
+        """The snapshot's vantage point must come from detection, not a literal.
+
+        Assuming it (as 'US network') is precisely what produced the wrong
+        published conclusion.
+        """
+        import inspect
+
+        src = inspect.getsource(probe)
+        assert "def detect_vantage_point" in src
+        assert '"vantage_point": detect_vantage_point()' in src, (
+            "vantage_point must be detected at probe time"
+        )
 
     def test_no_dns_when_name_does_not_resolve(self):
         failed = {"http_status": None, "error": "nodename nor servname provided"}
