@@ -45,6 +45,17 @@ nav:
       - signals: api/signals.md
       - portfolio: api/portfolio.md
       - net_lease: api/net_lease.md
+      - survey_measure: api/survey_measure.md
+      - land_development: api/land_development.md
+  - Guides:
+      - Parcel measurement: guides/parcel-measurement.md
+      - Land subdivision: guides/land-subdivision.md
+  - Standards:
+      - Repository structure: standards/repo-structure.md
+      - Print report generation: standards/print-report-generation.md
+      - HTML reporting: HTML_REPORTING_STANDARDS.md
+  - Domain:
+      - Houston/Harris County site standards: domain/realestate/re_cre/houston-harris-county-site-standards.md
   - Modules:
       - daily_strategy: modules/stocks/data.md
       - fundamentals: modules/portfolio/portfolio_ffn_vs_assethold_calc.md
