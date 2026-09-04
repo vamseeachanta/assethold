@@ -37,6 +37,31 @@ whenever a reachability verdict changes.
 
 ---
 
+## 2026-09-04
+
+Probed 2026-09-04T17:19:10+00:00 from: Houston, Texas, US, AS7922 Comcast Cable Communications, LLC
+
+| Portal | Reachability | HTTP | Access | Notes |
+|---|---|---|---|---|
+| [BhuNaksha AP (cadastral viewer)](https://bhunaksha.ap.gov.in/) | `UNREACHABLE` | — (timed out) | login / counter | Authoritative AP cadastral maps / FMB. The only real plot-boundary source. |
+| [BhuNaksha REST layer](https://bhunaksha.ap.gov.in/bhunakshalpm/rest/MapInfo/getDistrictCodes) | `UNREACHABLE` | — (timed out) | login | If this ever answers anonymously again, bulk map retrieval becomes possible. |
+| [MeeBhoomi (Adangal / 1-B / ROR)](https://meebhoomi.ap.gov.in/) | `UNREACHABLE` | — (timed out) | login / counter | Record of Rights and village maps. |
+| [KAUDA (Kakinada Urban Dev. Authority)](https://kauda.ap.gov.in/) | `UNREACHABLE` | — (timed out) | host down (KAUDA merged into GUDA) | Master plan + approved layouts for Valasapakala. Host DOWN as of 2026-08-03 - fails from inside Kakinada too; KAUDA merged into GUDA. |
+| [KAUDA Kakinada Master Plan PDF](https://kauda.ap.gov.in/documents/MasterPlans/KakinadaMasterPlan.pdf) | `UNREACHABLE` | — (timed out) | host down (KAUDA merged into GUDA) | Zoning designation drives buildability on the Kakinada fringe. |
+| [KAUDA Zonal Development Plan 2040 PDF](https://kauda.ap.gov.in/documents/downloads/KAKINADA_ZDp_2040-compressed.pdf) | `UNREACHABLE` | — (timed out) | host down (KAUDA merged into GUDA) | Forward zoning to 2040. |
+| [DTCP AP (Town & Country Planning)](https://dtcp.ap.gov.in/) | `UNREACHABLE` | — (timed out) | open | Statewide planning directorate. |
+| [DTCP approved-layouts page](http://dtcp.ap.gov.in/webdtcp/approvedlayouts.html) | `UNREACHABLE` | — (timed out) | open (link dead) | Linked from the DTCP homepage but 404 as of 2026-08-03 - recheck periodically. |
+| [DTCP unauthorised-layout list (PDF)](https://dtcp.ap.gov.in/downloads/Unauthorised%20Layout%20Details.pdf) | `UNREACHABLE` | — (timed out) | open (link dead) | Linked from the DTCP homepage but 404 as of 2026-08-03 - recheck periodically. |
+| [APDPMS / CivitPermit](https://apdpms.ap.gov.in/) | `OK` | 200 | login | Building-permit workflow; public list endpoints on :8085 are port-blocked. |
+| [UCIMS (unauthorised construction)](http://ucimsapdtcp.ap.gov.in/ucims/home.aspx) | `UNREACHABLE` | — (timed out) | open (login for data) | Unauthorised layout / construction regulatory picture. |
+| [Bhuvan Panchayat / SISDP v4 (ISRO)](https://bhuvanpanchayat.nrsc.gov.in/) | `OK` | 200 | open (account for bulk) | Best official panchayat-scale thematic mapping; account needed for bulk download. |
+| [Bhuvan main portal (ISRO)](https://bhuvan.nrsc.gov.in/) | `OK` | 200 | open (account for bulk) | Indian EO imagery and thematic layers. |
+| [CCLA AP (Chief Commissioner, Land Admin.)](https://ccla.ap.gov.in/) | `UNREACHABLE` | — (timed out) | open | Departmental landing page; policy and GO source. |
+| [Webland AP](https://webland.ap.gov.in/) | `UNREACHABLE` | — (timed out) | open | Legacy land-records front end. |
+| [bhubharati.ap.gov.in](https://bhubharati.ap.gov.in/) | `NO_DNS` | — ([Errno 8] nodename nor servname pr) | n/a | Frequently cited in guides but has never resolved - kept here to stay disproved. |
+| [ESRI World Imagery tiles](https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/26000/47000) | `OK` | 200 | open (attribution) | Satellite basemap used by fetch_basemap_tiles.py. |
+| [Overpass API (OpenStreetMap)](https://overpass-api.de/api/status) | `OK` | 200 | open | Vector context used by fetch_osm_extract.py. |
+
 ## 2026-08-03
 
 Probed 2026-08-03T07:29:29+00:00 from: Kākināda, Andhra Pradesh, IN, AS55836 Reliance Jio Infocomm Limited
