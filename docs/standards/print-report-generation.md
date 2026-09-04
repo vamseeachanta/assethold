@@ -115,6 +115,66 @@ the earlier statement and record what changed and why. Do not delete it.
 Analysis documents are read by people deciding whether to trust the analysis. A file that
 silently changes its mind offers no way to judge that.
 
+## Field documents, and the tooling for them
+
+A development or analysis document usually needs to exist twice.
+
+The **commercial** version carries rates, budgets, tax position and negotiating strategy. The
+**field** version — the one that reaches a contractor, a surveyor, a vendor — carries quantities
+and sequence and **no prices at all**. A rupee or dollar figure on the field copy is negotiating
+information handed to the other side, and a sale strategy on it is nobody's business.
+
+Two scripts in [`scripts/python/printable_doc/`](https://github.com/vamseeachanta/assethold/tree/main/scripts/python/printable_doc)
+build that second version. Both drive headless Chrome per §1 and take no third-party dependencies.
+
+### `md_to_printable.py` — Markdown checklist to A4 PDF
+
+```bash
+python md_to_printable.py CHECKLIST.md -o checklist.pdf \
+    --image site_plan.png --image-before "Part A" \
+    --caption "The layout as measured." --check-currency
+```
+
+A deliberately small Markdown subset — headings, tables, task and plain lists, block quotes, fenced
+code, inline emphasis. A document needing more than that has stopped being a checklist. What it
+adds over a general converter is the three things a checklist actually needs in print:
+
+- `- [ ]` renders as a real empty box big enough to tick, not a literal `[ ]` and not a disabled
+  HTML checkbox that prints as a grey smudge;
+- **blank table cells keep their height and a rule**, so a tally sheet prints as somewhere to write
+  rather than a row of hairlines;
+- wide numeric tables shrink to the page instead of clipping at the margin. A quantity table that
+  loses its last column in print is worse than no table.
+
+**`--check-currency` refuses to build a document containing a currency symbol.** It is the cheapest
+possible guard on the rule above, and it belongs in whatever produces the field copy.
+
+### `svg_to_png.py` — a vector drawing out of a report, at print resolution
+
+```bash
+python svg_to_png.py report.html -o plan.png --index 1 --scale 3
+```
+
+A diagram authored as inline SVG has no raster to extract — `pdfimages` on the printed PDF returns
+nothing — and cropping pixels out of the PDF discards the resolution the vector had. This
+re-renders from source at any scale, sizing the window from the SVG's own `viewBox` so the output
+is the drawing and nothing else.
+
+`--strip` and `--replace` produce a **field variant of the same drawing**: the same geometry with
+the money figures and the sale ordering removed. One source feeding two renders beats two drawings
+that will drift apart.
+
+### Three things that fail silently in print
+
+- **Box-drawing characters do not survive.** A sequence diagram drawn with `─ ├ └ ►` loses its
+  rules, because the mono webfont has no glyph and the fallback is blank — the diagram still
+  renders, just wrong. **Draw it in plain ASCII** (`-` `|` `+` `>` `v`) and it works in print, in a
+  terminal and in a chat message.
+- **Chrome will not load `file://` subresources into a page it is printing.** Images must be
+  inlined as data URIs; `--image` does that. This is the same constraint as §3.
+- **Webfonts need time.** `--virtual-time-budget` has to outlast the font fetch or the PDF renders
+  in a fallback face at different metrics, which reflows every table.
+
 ## Client data
 
 Reports about specific holdings — with addresses, tenants, rents, or recorded
