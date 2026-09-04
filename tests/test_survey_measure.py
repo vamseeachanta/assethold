@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 from assethold.property.survey_measure import (
+    Canvas,
     GrayImage,
     RasterFrame,
     acres,
@@ -78,9 +79,10 @@ def test_parse_bearing_rejects_nonsense(bad):
 # Traverse closure and area, against a sealed ALTA survey
 # ---------------------------------------------------------------------------
 
-# Field note for a 1.5628-acre tract out of Unrestricted Reserve "E", Clayton
-# Section Two, Harris County, Texas (recorded plat Vol. 247 Pg. 70 H.C.M.R.).
-# The west line is a right-of-way curve, walked here on its chord.
+# Field note from a sealed ALTA/ACSM survey of a 1.5628-acre commercial tract:
+# four courses, with the west line a right-of-way curve walked here on its chord.
+# Real calls rather than invented ones, so the recomputed area can be checked
+# against an acreage a licensed surveyor independently certified.
 ALTA_CALLS = [
     ("N 61-43-40 E", 135.92),
     ("S 28-16-20 E", 326.36),
@@ -360,3 +362,80 @@ def test_inset_polygon_is_orientation_independent():
 def test_inset_polygon_needs_a_polygon():
     with pytest.raises(ValueError):
         inset_polygon([(0.0, 0.0), (1.0, 1.0)], 1.0)
+
+
+# ---------------------------------------------------------------------------
+# Overlay rendering
+# ---------------------------------------------------------------------------
+
+RED = (255, 0, 0)
+
+
+def _blank_canvas(size: int = 40) -> Canvas:
+    return Canvas.from_gray(GrayImage(size, size, bytearray([255] * (size * size))))
+
+
+def _pixel(canvas: Canvas, x: int, y: int):
+    i = 3 * (y * canvas.width + x)
+    return tuple(canvas.data[i : i + 3])
+
+
+def test_canvas_from_gray_expands_to_rgb():
+    canvas = Canvas.from_gray(GrayImage(2, 1, bytearray([0, 128])))
+    assert _pixel(canvas, 0, 0) == (0, 0, 0)
+    assert _pixel(canvas, 1, 0) == (128, 128, 128)
+
+
+def test_canvas_line_and_clipping_off_canvas():
+    canvas = _blank_canvas()
+    canvas.line((5.0, 5.0), (5.0, 15.0), RED)
+    assert _pixel(canvas, 5, 10) == RED
+    assert _pixel(canvas, 6, 10) == (255, 255, 255)
+    canvas.line((-50.0, -50.0), (-40.0, -40.0), RED)  # must not raise
+
+
+def test_canvas_dashed_line_leaves_gaps():
+    canvas = _blank_canvas()
+    canvas.line((0.0, 3.0), (39.0, 3.0), RED, dash=4)
+    painted = [x for x in range(40) if _pixel(canvas, x, 3) == RED]
+    assert painted, "dashed line painted nothing"
+    assert len(painted) < 40, "dashed line painted every pixel"
+
+
+def test_canvas_polygon_closes_the_figure():
+    canvas = _blank_canvas()
+    square = [(5.0, 5.0), (15.0, 5.0), (15.0, 15.0), (5.0, 15.0)]
+    canvas.polygon(square, RED)
+    for x, y in [(10, 5), (15, 10), (10, 15), (5, 10)]:  # all four edges drawn
+        assert _pixel(canvas, x, y) == RED
+    assert _pixel(canvas, 10, 10) == (255, 255, 255)  # outline only, not filled
+
+
+def test_canvas_shade_fills_inside_only_and_blends():
+    canvas = _blank_canvas()
+    square = [(10.0, 10.0), (30.0, 10.0), (30.0, 30.0), (10.0, 30.0)]
+    canvas.shade(square, (0, 0, 255), alpha=0.5)
+    inside = _pixel(canvas, 20, 20)
+    assert inside[2] == 255 and inside[0] < 200  # tinted blue, not opaque
+    assert _pixel(canvas, 5, 20) == (255, 255, 255)  # outside untouched
+    assert _pixel(canvas, 35, 20) == (255, 255, 255)
+
+
+def test_canvas_shade_rejects_bad_arguments():
+    canvas = _blank_canvas()
+    with pytest.raises(ValueError):
+        canvas.shade([(0.0, 0.0), (1.0, 1.0)], RED)
+    with pytest.raises(ValueError):
+        canvas.shade([(0.0, 0.0), (5.0, 0.0), (5.0, 5.0)], RED, alpha=1.5)
+
+
+def test_canvas_save_png_roundtrips_through_the_reader(tmp_path):
+    """The writer and the reader must agree, or an overlay cannot be re-opened."""
+    canvas = _blank_canvas(12)
+    canvas.line((0.0, 6.0), (11.0, 6.0), (0, 0, 0))
+    path = tmp_path / "overlay.png"
+    canvas.save_png(path)
+    reopened = read_png_gray(path)
+    assert (reopened.width, reopened.height) == (12, 12)
+    assert reopened.at(5, 6) == 0
+    assert reopened.at(5, 2) == 255

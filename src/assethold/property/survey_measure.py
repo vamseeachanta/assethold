@@ -439,6 +439,127 @@ class RasterFrame:
         return found
 
 
+@dataclass
+class Canvas:
+    """A small RGB drawing surface, for overlaying measurements on a survey render.
+
+    An overlay is the cheapest check there is on a registration: draw the closed
+    traverse back onto the drawing it was measured from, and a frame that is off
+    by a few feet is obvious at a glance in a way that a residual in degrees is
+    not.  Worth producing every time, and worth keeping with the measurement.
+    """
+
+    width: int
+    height: int
+    data: bytearray
+
+    @classmethod
+    def from_gray(cls, image: GrayImage) -> "Canvas":
+        """Start from a greyscale render, so the line work shows through."""
+        data = bytearray(image.width * image.height * 3)
+        for i, v in enumerate(image.data):
+            data[3 * i] = data[3 * i + 1] = data[3 * i + 2] = v
+        return cls(image.width, image.height, data)
+
+    def dot(self, x: float, y: float, color: Tuple[int, int, int], radius: int = 0) -> None:
+        """Paint a square nib of half-width ``radius`` centred on a point."""
+        cx, cy = int(round(x)), int(round(y))
+        for dy in range(-radius, radius + 1):
+            for dx in range(-radius, radius + 1):
+                px, py = cx + dx, cy + dy
+                if 0 <= px < self.width and 0 <= py < self.height:
+                    i = 3 * (py * self.width + px)
+                    self.data[i], self.data[i + 1], self.data[i + 2] = color
+
+    def line(
+        self,
+        start: Point,
+        end: Point,
+        color: Tuple[int, int, int],
+        radius: int = 0,
+        dash: Optional[int] = None,
+    ) -> None:
+        """Draw a straight line, optionally dashed with ``dash``-pixel segments."""
+        steps = int(max(abs(end[0] - start[0]), abs(end[1] - start[1]))) + 1
+        for i in range(steps + 1):
+            if dash and (i // dash) % 2:
+                continue
+            t = i / steps
+            self.dot(
+                start[0] + (end[0] - start[0]) * t,
+                start[1] + (end[1] - start[1]) * t,
+                color,
+                radius,
+            )
+
+    def polygon(
+        self,
+        points: Sequence[Point],
+        color: Tuple[int, int, int],
+        radius: int = 0,
+        dash: Optional[int] = None,
+    ) -> None:
+        """Outline a closed polygon."""
+        for i in range(len(points)):
+            self.line(points[i], points[(i + 1) % len(points)], color, radius, dash)
+
+    def shade(
+        self, points: Sequence[Point], color: Tuple[int, int, int], alpha: float = 0.25
+    ) -> None:
+        """Tint the interior of a polygon, leaving the drawing beneath legible.
+
+        Even-odd scanline fill.  ``alpha`` is a straight blend against whatever
+        is already on the canvas.
+        """
+        if not 0.0 <= alpha <= 1.0:
+            raise ValueError("alpha must be between 0 and 1")
+        if len(points) < 3:
+            raise ValueError("need at least three vertices")
+        top = max(0, int(math.floor(min(p[1] for p in points))))
+        bottom = min(self.height - 1, int(math.ceil(max(p[1] for p in points))))
+        for y in range(top, bottom + 1):
+            crossings = []
+            for i in range(len(points)):
+                x1, y1 = points[i]
+                x2, y2 = points[(i + 1) % len(points)]
+                if (y1 <= y < y2) or (y2 <= y < y1):
+                    crossings.append(x1 + (y - y1) * (x2 - x1) / (y2 - y1))
+            crossings.sort()
+            for j in range(0, len(crossings) - 1, 2):
+                lo = max(0, int(math.ceil(crossings[j])))
+                hi = min(self.width - 1, int(math.floor(crossings[j + 1])))
+                for x in range(lo, hi + 1):
+                    i = 3 * (y * self.width + x)
+                    for k in range(3):
+                        self.data[i + k] = int(
+                            self.data[i + k] * (1 - alpha) + color[k] * alpha
+                        )
+
+    def save_png(self, path: str | Path) -> None:
+        """Write the canvas as an 8-bit RGB PNG."""
+        rows = b"".join(
+            b"\x00" + bytes(self.data[y * self.width * 3 : (y + 1) * self.width * 3])
+            for y in range(self.height)
+        )
+
+        def chunk(kind: bytes, body: bytes) -> bytes:
+            return (
+                struct.pack(">I", len(body))
+                + kind
+                + body
+                + struct.pack(">I", zlib.crc32(kind + body) & 0xFFFFFFFF)
+            )
+
+        Path(path).write_bytes(
+            b"\x89PNG\r\n\x1a\n"
+            + chunk(
+                b"IHDR", struct.pack(">IIBBBBB", self.width, self.height, 8, 2, 0, 0, 0)
+            )
+            + chunk(b"IDAT", zlib.compress(rows, 6))
+            + chunk(b"IEND", b"")
+        )
+
+
 def to_baseline_frame(
     points: Iterable[Point], origin: Point, along: Point, interior: Point
 ) -> List[Point]:
