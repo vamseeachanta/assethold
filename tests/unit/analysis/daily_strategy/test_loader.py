@@ -43,7 +43,7 @@ def _row(
     amount: float,
     price: float = 0.0,
     account: str = "Individual - TOD",
-    account_number: str = "X78707567",
+    account_number: str = "X00000001",
     description: str = "",
     run_date: str = "01/02/2024",
 ) -> dict:
@@ -192,15 +192,15 @@ class TestSkippedRows:
 
 
 class TestEmployeeAccount:
-    def test_cencora_account_is_nontradeable(self):
+    def test_employee_plan_account_is_nontradeable(self):
         rows = [
             _row(
                 "Dividend",
                 "",
                 0.289,
                 38.59,
-                account="CENCORA EMPLOYEE INV",
-                account_number="82897",
+                account="ACME EMPLOYEE INV",
+                account_number="00001",
                 description="FID 500 INDEX",
             )
         ]
@@ -212,8 +212,8 @@ class TestEmployeeAccount:
                 "",
                 5.0,
                 -100.0,
-                account="CENCORA EMPLOYEE INV",
-                account_number="82897",
+                account="ACME EMPLOYEE INV",
+                account_number="00001",
                 description="FID 500 INDEX",
             )
         ]
@@ -228,8 +228,8 @@ class TestEmployeeAccount:
                 "",
                 5.0,
                 -100.0,
-                account="CENCORA EMPLOYEE INV",
-                account_number="82897",
+                account="ACME EMPLOYEE INV",
+                account_number="00001",
                 description="FID 500 INDEX",
             )
         ]
@@ -276,7 +276,7 @@ class TestMultipleAccounts:
                 10.0,
                 -2981.0,
                 account="Traditional IRA",
-                account_number="224886419",
+                account_number="000000002",
             ),
         ]
         positions = _loader_from_df(_df(rows))
@@ -347,7 +347,7 @@ class TestConfigColumnRemapping:
             {
                 "Date": "01/02/2024",
                 "Acct": "Individual - TOD",
-                "AcctNo": "X78707567",
+                "AcctNo": "X00000001",
                 "Trans": "YOU BOUGHT BRKB (Cash)",
                 "Ticker": "BRKB",
                 "Desc": "BERKSHIRE HATHAWAY",

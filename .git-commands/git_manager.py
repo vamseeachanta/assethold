@@ -36,7 +36,7 @@ class GitManager:
             "assetutilities", "client_projects", "digitalmodel",
             "energy", "frontierdeepwater", "hobbies", "investments",
             "OGManufacturing", "pyproject-starter", "rock-oil-field",
-            "sabithaandkrishnaestates", "saipem", "sd-work",
+            "saipem", "sd-work",
             "seanation", "teamresumes", "worldenergydata"
         ]
         return [r for r in repos if (self.base_path / r).exists()]

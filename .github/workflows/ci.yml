@@ -55,3 +55,20 @@ jobs:
       test-runner: pytest
       # selector / python-version / max-parallel / quarantine-file all match the
       # reusable defaults, so they are intentionally omitted.
+
+  # Leak scan for this public repository: fails on the owner's email address,
+  # on paths that were moved to private storage (2026-11-15), and on any literal
+  # in the LEAK_SCAN_EXTRA_PATTERNS secret (private names and numbers are kept
+  # there so they never appear in this public tree). Standard library only.
+  leak-scan:
+    name: Leak scan (private data)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Scan tracked files
+        env:
+          LEAK_SCAN_EXTRA_PATTERNS: ${{ secrets.LEAK_SCAN_EXTRA_PATTERNS }}
+        run: python scripts/ci/leak_scan.py

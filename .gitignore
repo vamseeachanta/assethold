@@ -217,3 +217,15 @@ data/gis/*/*_esri_z*.prj
 
 # Verbatim Overpass responses - large and fully regenerable from the AOI config
 data/gis/*/*_osm_raw.json
+
+# Private material moved out of this public repository on 2026-11-15 and kept in
+# private storage. Never re-add; scripts/ci/leak_scan.py fails CI on these paths.
+data/sandsig-cre-listings/email/
+data/cre/net_lease/nola-*
+reports/daily-strategy/
+config/daily_strategy.yaml
+tests/modules/stocks/data/clients/
+docs/business/
+docs/domain/realestate/re_multifamily/walzel_properties/
+docs/domain/realestate/re_cre/kkd/
+*_conversations.md
