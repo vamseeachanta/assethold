@@ -139,7 +139,7 @@ line_length = 88
 #   - "3.9" is rejected outright by current mypy ("must be 3.10 or higher")
 #   - any value below 3.12 makes mypy refuse to parse numpy's bundled stubs,
 #     which use PEP 695 `type` statements, killing the 3.12 leg with exit 2
-# Runtime support is unchanged and still declared by requires-python = ">=3.9".
+# Runtime support is declared by requires-python = ">=3.10".
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
