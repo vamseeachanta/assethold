@@ -1,7 +1,7 @@
 # Zillow Metro Housing Market Datasets
 
-**Source:** Zillow Research public data (zillow.com/research/data), migrated from the
-retired `vamseeachanta/aceengineercode` repo (`data_manager/data/housing/`) on 2026-09-22.
+**Source:** Zillow Research public data (zillow.com/research/data), migrated from a
+retired private repository (`data_manager/data/housing/`) on 2026-09-22.
 **Coverage:** US metropolitan areas, monthly time series.
 **License:** Zillow public research data — free for use with attribution.
 
@@ -15,5 +15,5 @@ retired `vamseeachanta/aceengineercode` repo (`data_manager/data/housing/`) on 2
 
 ## Notes
 
-- Full retired-repo archive (mirrored tree) is at `ace-linux-1:/mnt/ace/archive/aceengineercode/`.
+- The full retired-repo archive (mirrored tree) is kept in private storage.
 - See `CODE-PLACEMENT.md` in the retirement knowledge-staging dir for the placement rationale.

@@ -7,11 +7,13 @@ Fails (exit 1) when a tracked file:
   contains the owner's surname; GitHub noreply addresses are allowed), or
 * sits under a path that was moved to private storage on 2026-11-15
   (raw broker emails, data-room files, personal brokerage reports and config,
-  personal statements, personal business and property documents), or
+  personal statements, personal business and property documents, chat
+  exports), or
 * contains any literal listed in the ``LEAK_SCAN_EXTRA_PATTERNS`` environment
   variable (one per line, case-insensitive). CI fills it from a repository
-  secret so that private names and numbers never have to be written into this
-  public tree.
+  secret so that private names and numbers (for example the names of private
+  repositories and account numbers) never have to be written into this public
+  tree.
 
 Standard library only. Usage: ``python scripts/ci/leak_scan.py [repo_root]``.
 """
@@ -42,8 +44,10 @@ FORBIDDEN_PATH_PREFIXES = (
     "docs/business/",
     "docs/domain/realestate/re_multifamily/walzel_properties/",
     "docs/domain/realestate/re_cre/kkd/",
+    "data/private/",
 )
 FORBIDDEN_PATH_SUFFIXES = ("_conversations.md",)
+FORBIDDEN_PATH_SUBSTRINGS = ("whatsapp chat with",)
 
 EXTRA_PATTERNS_ENV = "LEAK_SCAN_EXTRA_PATTERNS"
 
@@ -58,7 +62,11 @@ def tracked_files(root: Path) -> list[str]:
 def path_findings(paths: list[str]) -> list[str]:
     findings = []
     for p in paths:
-        if p.startswith(FORBIDDEN_PATH_PREFIXES) or p.endswith(FORBIDDEN_PATH_SUFFIXES):
+        if (
+            p.startswith(FORBIDDEN_PATH_PREFIXES)
+            or p.endswith(FORBIDDEN_PATH_SUFFIXES)
+            or any(s in p.lower() for s in FORBIDDEN_PATH_SUBSTRINGS)
+        ):
             findings.append(f"{p}: path is reserved for private storage")
     return findings
 

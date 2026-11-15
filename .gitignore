@@ -229,3 +229,6 @@ docs/business/
 docs/domain/realestate/re_multifamily/walzel_properties/
 docs/domain/realestate/re_cre/kkd/
 *_conversations.md
+# Default local location for private brokerage exports (daily-strategy loader)
+data/private/
+*WhatsApp Chat with*

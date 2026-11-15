@@ -49,6 +49,8 @@ def test_extra_patterns_come_from_environment(monkeypatch):
         "tests/modules/stocks/data/clients/client9/2030.csv",
         "docs/business/x.pdf",
         "docs/domain/realestate/x/someone_conversations.md",
+        "docs/x/WhatsApp Chat with Someone.txt",
+        "data/private/fidelity/2030.csv",
     ],
 )
 def test_private_paths_are_flagged(path):

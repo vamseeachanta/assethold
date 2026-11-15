@@ -28,18 +28,18 @@ class GitManager:
         self.results = {}
         
     def get_all_repos(self) -> List[str]:
-        """Get list of all repository directories"""
-        repos = [
-            "doris", "aceengineer-admin", "aceengineer-website", 
-            "aceengineercode", "achantas-data", "achantas-media",
-            "acma-projects", "ai-native-traditional-eng", "assethold",
-            "assetutilities", "client_projects", "digitalmodel",
-            "energy", "frontierdeepwater", "hobbies", "investments",
-            "OGManufacturing", "pyproject-starter", "rock-oil-field",
-            "saipem", "sd-work",
-            "seanation", "teamresumes", "worldenergydata"
-        ]
-        return [r for r in repos if (self.base_path / r).exists()]
+        """Get list of all repository directories.
+
+        GIT_MANAGER_REPOS (comma-separated) limits the run to named repos;
+        otherwise every git checkout under base_path is used. Repository
+        names are not hard-coded here because some of them are private.
+        """
+        names = [r.strip() for r in os.environ.get("GIT_MANAGER_REPOS", "").split(",") if r.strip()]
+        if names:
+            return [r for r in names if (self.base_path / r).exists()]
+        if not self.base_path.is_dir():
+            return []
+        return sorted(d.name for d in self.base_path.iterdir() if d.is_dir() and (d / ".git").exists())
     
     def run_command(self, cmd: str, repo_path: Path) -> Tuple[bool, str]:
         """Run a shell command in the given repository"""

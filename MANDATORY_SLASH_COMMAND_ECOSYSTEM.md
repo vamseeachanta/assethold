@@ -57,7 +57,7 @@ When creating slash commands, ALWAYS:
 ```python
 # ❌ Bad: Hardcoded for specific repo
 def update_aceengineer_config():
-    path = "/mnt/github/github/aceengineer-admin/config.yml"
+    path = "/mnt/github/github/example-admin-repo/config.yml"
     
 # ✅ Good: Works in any repo
 def update_config():

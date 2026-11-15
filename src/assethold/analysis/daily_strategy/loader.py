@@ -20,7 +20,8 @@ Data-directory lookup order:
     1. ``data_dir`` argument
     2. ``loader.data_dir`` key in config
     3. ``FIDELITY_DATA_DIR`` environment variable
-    4. ``<workspace-root>/achantas-data/_finance/fidelity``
+    4. ``$ASSETHOLD_PRIVATE_DATA_ROOT/_finance/fidelity`` (a private data checkout)
+    5. ``<assethold-repo>/data/private/fidelity`` (gitignored)
 """
 
 from __future__ import annotations
@@ -207,10 +208,11 @@ class FidelityLoader:
         env_dir = os.environ.get("FIDELITY_DATA_DIR")
         if env_dir:
             return Path(env_dir)
-        # loader.py → daily_strategy/ → analysis/ → assethold-pkg/ → src/
-        # → assethold-repo/ → workspace-hub/
-        workspace = Path(__file__).parents[5]
-        return workspace / "achantas-data" / "_finance" / "fidelity"
+        private_root = os.environ.get("ASSETHOLD_PRIVATE_DATA_ROOT")
+        if private_root:
+            return Path(private_root) / "_finance" / "fidelity"
+        # loader.py → daily_strategy/ → analysis/ → assethold/ → src/ → repo/
+        return Path(__file__).parents[4] / "data" / "private" / "fidelity"
 
     def _reconstruct_positions(self, df: pd.DataFrame) -> list[Position]:
         """Turn raw transaction rows into a list of Position objects."""

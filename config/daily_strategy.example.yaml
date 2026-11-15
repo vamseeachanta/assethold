@@ -12,7 +12,8 @@
 # ---------------------------------------------------------------------------
 loader:
   # Override the data directory. Null = use FIDELITY_DATA_DIR env var, then
-  # fall back to <workspace-root>/achantas-data/_finance/fidelity.
+  # $ASSETHOLD_PRIVATE_DATA_ROOT/_finance/fidelity, then data/private/fidelity
+  # (gitignored).
   data_dir: null
 
   # Column name mapping.  Update here if Fidelity renames a column header.
