@@ -15,6 +15,9 @@ Fails (exit 1) when a tracked file:
   repositories and account numbers) never have to be written into this public
   tree.
 
+The scanner scans its own source too: its email pattern is assembled at run
+time, so the file does not match itself.
+
 Standard library only. Usage: ``python scripts/ci/leak_scan.py [repo_root]``.
 """
 
@@ -48,6 +51,16 @@ FORBIDDEN_PATH_PREFIXES = (
 )
 FORBIDDEN_PATH_SUFFIXES = ("_conversations.md",)
 FORBIDDEN_PATH_SUBSTRINGS = ("whatsapp chat with",)
+# Single files removed on 2026-11-15 that no folder rule above covers.
+FORBIDDEN_PATHS = frozenset(
+    {
+        "docs/domain/realestate/re_farmland/farmfolio/Las Lomas Property Service Agreement v3 for LOT #65_encrypted_.pdf",
+        "docs/domain/realestate/re_cre/202-08-Stryker CRE News & Insights.pdf",
+        "docs/domain/realestate/re_cre/2023-08-10 STRYKER- AquaSonic Car wash Development - Florida.pdf",
+        "docs/plans/reviews/2026-09-22-plan-90-adversarial-review.md",
+        "docs/session-handoffs/2026-09-22-issue-90-dual-basis-valuation-exit.md",
+    }
+)
 
 EXTRA_PATTERNS_ENV = "LEAK_SCAN_EXTRA_PATTERNS"
 
@@ -63,7 +76,8 @@ def path_findings(paths: list[str]) -> list[str]:
     findings = []
     for p in paths:
         if (
-            p.startswith(FORBIDDEN_PATH_PREFIXES)
+            p in FORBIDDEN_PATHS
+            or p.startswith(FORBIDDEN_PATH_PREFIXES)
             or p.endswith(FORBIDDEN_PATH_SUFFIXES)
             or any(s in p.lower() for s in FORBIDDEN_PATH_SUBSTRINGS)
         ):
@@ -93,10 +107,9 @@ def scan(root: Path) -> list[str]:
     paths = tracked_files(root)
     extra = load_extra_patterns()
     findings = path_findings(paths)
-    self_path = Path(__file__).resolve()
     for p in paths:
         full = root / p
-        if not full.is_file() or full.resolve() == self_path:
+        if not full.is_file():
             continue
         findings.extend(content_findings(p, full.read_bytes(), extra))
     return findings

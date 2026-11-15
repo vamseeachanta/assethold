@@ -7,7 +7,7 @@
 > **Client:** N/A
 > **Lane:** lane:claude
 > **Review artifacts:** the adversarial review record (moved to private storage on 2026-11-15 because it quoted confidential data-room figures) — r1 REJECT (12 MAJOR), r2 REJECT (16 MAJOR)
-> **⚠ Do not implement from this document.** Five defects were verified first-hand: the core identity returns a non-zero gap on an at-market asset; the rent benchmark calls the repo's only asset under-rented when it is over-rented at 14.4% occupancy cost; two NOI bases differ by $240,745 of value; the traffic score is sign-inverted for retail; and the asserted CI legal scan does not exist in this repo.
+> **⚠ Do not implement from this document.** Five defects were verified first-hand: the core identity returns a non-zero gap on an at-market asset; the rent benchmark can call an over-rented asset under-rented because it ignores occupancy cost (rent as a share of tenant sales); two NOI bases (offering vs owner-reported) can differ materially and the plan names neither; the traffic score is sign-inverted for retail; and the asserted CI legal scan does not exist in this repo.
 
 ---
 
@@ -103,8 +103,8 @@ class Confidence(Enum):
 
 `Valued[T]` wraps a figure with its `Confidence` and a `source` string. **Rule enforced in code: an
 exact amount, once supplied at `ACTUAL` or `CONTRACTUAL`, is never recomputed from a rounded per-unit
-figure.** This is a concrete defect that occurred in practice — a contractual $121,700 rendered as
-$121,722 because annual rent was back-computed from a rounded $/sq ft. The wrapper makes the override
+figure.** This is a concrete defect that occurred in practice — a contractual annual rent rendered
+slightly off because it was back-computed from a rounded $/sq ft. The wrapper makes the override
 explicit and a test asserts it.
 
 **`src/assethold/modules/net_lease/cap_rate_model.py`**
@@ -180,7 +180,7 @@ N=3 is the pattern — correct refusal beats a confident wrong number.
 
 | Module | Tests that must exist first |
 |---|---|
-| `confidence` | Round-trip; **an `ACTUAL` figure survives a per-unit recomputation attempt unchanged** (the $121,700 / $121,722 regression) |
+| `confidence` | Round-trip; **an `ACTUAL` figure survives a per-unit recomputation attempt unchanged** (the rounded per-unit rent regression) |
 | `cap_rate_model` | Monotonicity: absolute-NNN cap <= NN cap <= NN+ cap at equal credit and term; shorter term never yields a tighter cap; confidence degrades to `DERIVED` at low N; unknown structure raises rather than defaulting |
 | `rent_benchmark` | N below floor returns `NOT_DOCUMENTED`, not 0%; empty comp set raises; over- and under-rented signs are correct |
 | `use_feasibility` | A use needing more spaces than available is rejected **with the gate named**; the occupancy trigger fires on the incapable-of-self-preservation flag and not on "medical" generally |

@@ -67,3 +67,32 @@ def test_scan_end_to_end_on_a_temporary_repo(tmp_path):
     (tmp_path / "bad.md").write_text("mail someone." + SURNAME + "@example.com\n")
     subprocess.run(["git", "add", "ok.md", "bad.md"], cwd=tmp_path, check=True)
     assert leak_scan.scan(tmp_path) == ["bad.md: owner email address"]
+
+
+# Last main commit before the 2026-11-15 clean-up. Every file deleted since then
+# must stay blocked by the path rules, so restoring any of them fails the scan.
+CLEANUP_BASE = "0e734cc7f406bd8b72a9a68672d027277437eaf9"
+
+
+def _removed_since_cleanup_base() -> list[str]:
+    root = Path(__file__).resolve().parents[2]
+    proc = subprocess.run(
+        ["git", "diff", "--name-only", "--no-renames", "--diff-filter=D", "-z", CLEANUP_BASE, "HEAD"],
+        cwd=root,
+        capture_output=True,
+    )
+    if proc.returncode != 0:
+        pytest.skip("clean-up base commit not in this clone (shallow checkout)")
+    return [p for p in proc.stdout.decode("utf-8").split("\0") if p]
+
+
+def test_every_removed_path_is_blocked_by_path_rules():
+    removed = _removed_since_cleanup_base()
+    assert len(removed) >= 525
+    unprotected = [p for p in removed if not leak_scan.path_findings([p])]
+    assert unprotected == []
+
+
+def test_scanner_source_is_scanned_and_clean():
+    data = _SCRIPT.read_bytes()
+    assert leak_scan.content_findings("scripts/ci/leak_scan.py", data, []) == []

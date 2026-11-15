@@ -65,6 +65,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history so the path-rule test can list every removed file.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -72,3 +75,7 @@ jobs:
         env:
           LEAK_SCAN_EXTRA_PATTERNS: ${{ secrets.LEAK_SCAN_EXTRA_PATTERNS }}
         run: python scripts/ci/leak_scan.py
+      - name: Path rules cover every removed file
+        run: |
+          python -m pip install --quiet pytest
+          python -m pytest -q -o addopts="" -p no:cacheprovider --noconftest tests/ci/test_leak_scan.py
