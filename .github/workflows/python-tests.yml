@@ -273,22 +273,6 @@ jobs:
       env:
         TESTING: true
 
-    - name: Run scraping tests (mocked)
-      run: |
-        # No tests currently match "scraping"; pytest exit code 5 (nothing selected) is accepted,
-        # any other non-zero exit still fails the step.
-        rc=0
-        pytest tests/ \
-          --ignore=tests/modules/multifamily \
-          --ignore=tests/modules/stocks/analysis/investment \
-          --ignore=tests/modules/stocks/data/test_stock_data.py \
-          --verbose \
-          -k "scraping or scrape" \
-          --tb=short || rc=$?
-        if [ "$rc" -ne 0 ] && [ "$rc" -ne 5 ]; then exit "$rc"; fi
-      env:
-        TESTING: true
-
   security:
     name: Security Scan
     runs-on: ubuntu-latest
