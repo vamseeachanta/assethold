@@ -7,7 +7,7 @@ name = "assethold"
 version = "0.1.0"
 description = "Standardized project configuration for assethold"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "Development Team", email = "dev@example.com"}
@@ -17,9 +17,9 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 
 dependencies = [
@@ -42,8 +42,7 @@ dependencies = [
     "numpy_financial==1.0.0",
     "openpyxl",
     "pandas==2.2.3",
-    "pandas-market-calendars>=4.6.1,<5; python_version<'3.10'",
-    "pandas-market-calendars>=5.3.2; python_version>='3.10'",
+    "pandas-market-calendars>=5.3.2",
     "plotly>=5.17.0,<6.0.0",
     "PyPDF2",
     "python-certifi-win32; sys_platform=='win32'",
@@ -127,7 +126,7 @@ exclude = ["tests*", "docs*", "scripts*", "business*"]
 
 [tool.black]
 line-length = 88
-target-version = ['py39', 'py310', 'py311', 'py312']
+target-version = ['py310', 'py311', 'py312']
 include = '\.pyi?$'
 
 [tool.isort]

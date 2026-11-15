@@ -273,6 +273,20 @@ jobs:
       env:
         TESTING: true
 
+    - name: Run scraping tests (mocked)
+      # The scraping tests patch the HTTP layer and block DNS/socket connects,
+      # so no live request leaves CI. pytest exit 5 (nothing selected) fails the step.
+      run: |
+        pytest tests/ \
+          --ignore=tests/modules/multifamily \
+          --ignore=tests/modules/stocks/analysis/investment \
+          --ignore=tests/modules/stocks/data/test_stock_data.py \
+          --verbose \
+          -m "scraping" \
+          --tb=short
+      env:
+        TESTING: true
+
   security:
     name: Security Scan
     runs-on: ubuntu-latest
