@@ -48,14 +48,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        # Python 3.9 is dropped: setup-python has no 3.9 build for the current ubuntu-latest image.
+        python-version: ['3.10', '3.11', '3.12']
         os: [ubuntu-latest, windows-latest, macos-latest]
-        # Exclude combinations to optimize CI time
-        exclude:
-          - os: windows-latest
-            python-version: '3.9'
-          - os: macos-latest
-            python-version: '3.9'
 
     steps:
     - name: Checkout code
@@ -273,7 +268,7 @@ jobs:
           --ignore=tests/modules/stocks/data/test_stock_data.py \
           --cov=src \
           --verbose \
-          -m "financial" \
+          -k "financial or portfolio" \
           --tb=short
       env:
         TESTING: true
@@ -285,7 +280,7 @@ jobs:
           --ignore=tests/modules/stocks/analysis/investment \
           --ignore=tests/modules/stocks/data/test_stock_data.py \
           --verbose \
-          -m "scraping" \
+          -k "scraping or scrape" \
           --tb=short
       env:
         TESTING: true
