@@ -53,7 +53,7 @@ dependencies = [
     "sqlalchemy==2.0.40",
     "sympy>=1.13.3",
     "ta==0.11.0",
-    "urllib3==2.4.0",
+    "urllib3==2.8.0",
     "webcolors",
     "xlsxwriter",
     "xmltodict==0.14.2",
@@ -103,7 +103,7 @@ providers = [
     "finnhub-python>=2.4.0",
 ]
 scraping = [
-    "scrapy==2.12",
+    "scrapy==2.17.0",
     "selenium",
     "playwright",
     "undetected-chromedriver",
