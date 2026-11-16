@@ -7,7 +7,7 @@ name = "assethold"
 version = "0.1.0"
 description = "Standardized project configuration for assethold"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11.5"
 license = {text = "MIT"}
 authors = [
     {name = "Development Team", email = "dev@example.com"}
@@ -17,7 +17,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
@@ -126,7 +125,7 @@ exclude = ["tests*", "docs*", "scripts*", "business*"]
 
 [tool.black]
 line-length = 88
-target-version = ['py310', 'py311', 'py312']
+target-version = ['py311', 'py312']
 include = '\.pyi?$'
 
 [tool.isort]
@@ -139,7 +138,7 @@ line_length = 88
 #   - "3.9" is rejected outright by current mypy ("must be 3.10 or higher")
 #   - any value below 3.12 makes mypy refuse to parse numpy's bundled stubs,
 #     which use PEP 695 `type` statements, killing the 3.12 leg with exit 2
-# Runtime support is declared by requires-python = ">=3.10".
+# Runtime support is declared by requires-python = ">=3.11.5".
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

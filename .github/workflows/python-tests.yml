@@ -49,7 +49,9 @@ jobs:
       fail-fast: false
       matrix:
         # Python 3.9 is dropped: setup-python has no 3.9 build for the current ubuntu-latest image.
-        python-version: ['3.10', '3.11', '3.12']
+        # Python 3.10 is dropped: requires-python is >=3.11.5 (fixed pillow, soupsieve and
+        # filelock releases need Python 3.11+; 3.10 reached end of life in October 2026).
+        python-version: ['3.11', '3.12']
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:

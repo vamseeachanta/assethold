@@ -3,7 +3,7 @@
 ## Core Technologies
 
 ### Language & Runtime
-- **Python** 3.10+ - Primary development language
+- **Python** 3.11.5+ - Primary development language
 - **Poetry** - Dependency management and packaging
 
 ### Application Architecture
