@@ -59,15 +59,18 @@ class Portfolio:
         df['Symbol'] = df['Symbol'].replace('', np.nan) # replace empty strings with NaN
         df['Account'] = df['Account'].str.strip()
 
-        #  replace missing 'Symbol' with 'cash'
-        mask_individual = (df['Account'] == 'Individual X78707567') & df['Symbol'].isna() & df['Action'].str.contains('cash', case=False, na=False)
-        df.loc[mask_individual, 'Symbol'] = 'cash'
+        #  replace missing 'Symbol' with 'cash' in brokerage and IRA accounts.
+        #  Accounts are matched by type prefix, never by account number.
+        no_symbol = df['Symbol'].isna()
+        cash_action = df['Action'].str.contains('cash', case=False, na=False)
+        brokerage_acc = df['Account'].str.startswith(('Individual', 'Traditional IRA'), na=False)
+        df.loc[brokerage_acc & no_symbol & cash_action, 'Symbol'] = 'cash'
 
-        mask_individual = (df['Account'] == 'Traditional IRA 224886419') & df['Symbol'].isna() & df['Action'].str.contains('cash', case=False, na=False)
-        df.loc[mask_individual, 'Symbol'] = 'cash'
-
-        cencora_acc = (df['Account'] == 'CENCORA 82897') & df['Symbol'].isna() 
-        df.loc[cencora_acc, 'Symbol'] = df.loc[cencora_acc, 'Description']
+        #  Employer-plan rows carry the fund name in Description, not Symbol.
+        #  The plan account name is personal, so it comes from the environment.
+        employer_plan = os.environ.get('ASSETHOLD_EMPLOYER_PLAN_ACCOUNT', 'EMPLOYEE')
+        employer_acc = df['Account'].str.contains(employer_plan, case=False, regex=False, na=False) & no_symbol
+        df.loc[employer_acc, 'Symbol'] = df.loc[employer_acc, 'Description']
 
         accounts = df['Account'].unique()
         account_dfs = {account: df[df['Account'] == account] for account in accounts}

@@ -11,13 +11,17 @@ code when Fidelity changes its export format.
 Config lookup order:
     1. ``config`` dict passed directly to ``FidelityLoader(config=...)``
     2. ``config_path`` YAML file path passed to ``FidelityLoader(config_path=...)``
-    3. ``<assethold-repo>/config/daily_strategy.yaml`` (default)
+    3. ``ASSETHOLD_DAILY_STRATEGY_CONFIG`` environment variable (a private file)
+    4. ``<assethold-repo>/config/daily_strategy.yaml`` if present (gitignored,
+       local only - personal targets never go into the public repo)
+    5. ``<assethold-repo>/config/daily_strategy.example.yaml`` (fictional values)
 
 Data-directory lookup order:
     1. ``data_dir`` argument
     2. ``loader.data_dir`` key in config
     3. ``FIDELITY_DATA_DIR`` environment variable
-    4. ``<workspace-root>/achantas-data/_finance/fidelity``
+    4. ``$ASSETHOLD_PRIVATE_DATA_ROOT/_finance/fidelity`` (a private data checkout)
+    5. ``<assethold-repo>/data/private/fidelity`` (gitignored)
 """
 
 from __future__ import annotations
@@ -53,10 +57,25 @@ def _load_yaml(path: Path) -> dict[str, Any]:
         return {}
 
 
+CONFIG_ENV_VAR = "ASSETHOLD_DAILY_STRATEGY_CONFIG"
+
+
 def _default_config_path() -> Path:
-    """Return the default config/daily_strategy.yaml relative to repo root."""
+    """Return the daily-strategy config to use when none is passed explicitly.
+
+    Order: ``$ASSETHOLD_DAILY_STRATEGY_CONFIG`` (a private file), then a local
+    gitignored ``config/daily_strategy.yaml``, then the committed
+    ``config/daily_strategy.example.yaml`` with fictional values.
+    """
+    env_path = os.environ.get(CONFIG_ENV_VAR)
+    if env_path:
+        return Path(env_path)
     # loader.py → daily_strategy/ → analysis/ → assethold/ → src/ → repo/
-    return Path(__file__).parents[4] / "config" / "daily_strategy.yaml"
+    config_dir = Path(__file__).parents[4] / "config"
+    private = config_dir / "daily_strategy.yaml"
+    if private.is_file():
+        return private
+    return config_dir / "daily_strategy.example.yaml"
 
 
 class ComparisonLoader:
@@ -126,7 +145,7 @@ class FidelityLoader:
         )
         self._employee_patterns: list[str] = [
             p.upper()
-            for p in self._cfg.get("employee_account_patterns", ["CENCORA", "EMPLOYEE INV"])
+            for p in self._cfg.get("employee_account_patterns", ["EMPLOYEE INV"])
         ]
         self._col: dict[str, str] = {
             "run_date": "Run Date",
@@ -189,10 +208,11 @@ class FidelityLoader:
         env_dir = os.environ.get("FIDELITY_DATA_DIR")
         if env_dir:
             return Path(env_dir)
-        # loader.py → daily_strategy/ → analysis/ → assethold-pkg/ → src/
-        # → assethold-repo/ → workspace-hub/
-        workspace = Path(__file__).parents[5]
-        return workspace / "achantas-data" / "_finance" / "fidelity"
+        private_root = os.environ.get("ASSETHOLD_PRIVATE_DATA_ROOT")
+        if private_root:
+            return Path(private_root) / "_finance" / "fidelity"
+        # loader.py → daily_strategy/ → analysis/ → assethold/ → src/ → repo/
+        return Path(__file__).parents[4] / "data" / "private" / "fidelity"
 
     def _reconstruct_positions(self, df: pd.DataFrame) -> list[Position]:
         """Turn raw transaction rows into a list of Position objects."""

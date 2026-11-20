@@ -71,6 +71,12 @@ uv run python -m assethold.analysis.daily_strategy --compare AAPL,MSFT,NVDA
 uv run python -m assethold.analysis.daily_strategy --config /path/to/daily_strategy.yaml
 ```
 
+Config lookup: `--config`, then `$ASSETHOLD_DAILY_STRATEGY_CONFIG`, then a local
+`config/daily_strategy.yaml` (gitignored), then the committed
+`config/daily_strategy.example.yaml` (fictional values). Keep your own targets
+and any brokerage exports in private storage, never in this public repository.
+Generated reports under `reports/daily-strategy/` are gitignored.
+
 Reports are written in two formats:
 - `reports/daily-strategy/YYYY-MM-DD.html` — **primary**: interactive Plotly charts, sectioned layout
 - `reports/daily-strategy/YYYY-MM-DD.md` — archival Markdown for git diffing
@@ -96,10 +102,10 @@ Reports are written in two formats:
 | Insider trend (90d) | 10% | Open-market buys → bullish; sells → bearish |
 | Portfolio weight | 10% | Drift from target triggers build/trim |
 
-### Position modes (configured in `config/daily_strategy.yaml`)
+### Position modes (configured in your private `daily_strategy.yaml`; see `config/daily_strategy.example.yaml`)
 
-- **managed** — full signal range (e.g. BRKB, VOO with 25% target weight)
-- **trim_only** — score clamped to ≤ 0; build signals suppressed (e.g. XOM, RIG)
+- **managed** — full signal range (e.g. a broad index ETF with a target weight)
+- **trim_only** — score clamped to ≤ 0; build signals suppressed
 
 ### Data sources
 

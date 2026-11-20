@@ -211,11 +211,10 @@ The enhanced workflow integrates with the AssetUtilities hub to share components
 
 #### Supported Repositories
 
-**Engineering:** aceengineer-website, aceengineercode, digitalmodel, energy, rock-oil-field, saipem
-**Project Management:** acma-projects, client_projects, investments, teamresumes
-**Infrastructure:** assethold, pyproject-starter, worldenergydata
-**Development:** ai-native-traditional-eng
-**Documentation:** frontierdeepwater, OGManufacturing
+**Engineering:** aceengineer-website, digitalmodel
+**Infrastructure:** assethold, assetutilities, worldenergydata
+
+Private repositories in the ecosystem are not listed in this public guide.
 
 #### Reference Patterns
 

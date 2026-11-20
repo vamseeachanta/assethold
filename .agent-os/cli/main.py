@@ -151,7 +151,7 @@ Available commands:
 
 Examples:
   create-module-agent finance-analytics
-  create-module-agent devops --type infrastructure --repos assetutilities,pyproject-starter
+  create-module-agent devops --type infrastructure --repos assetutilities,worldenergydata
         """)
     
     def execute_command_string(self, command_string: str) -> int:
@@ -215,7 +215,7 @@ Options:
 Examples:
   create-module-agent finance-analytics
   create-module-agent devops --type infrastructure
-  create-module-agent api --repos assetutilities,pyproject-starter
+  create-module-agent api --repos assetutilities,worldenergydata
             """)
             return 0
         

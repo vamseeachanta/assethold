@@ -205,11 +205,9 @@ class InteractiveMode:
             print("\nAvailable repositories:")
             available_repos = [
                 "assetutilities",
-                "pyproject-starter", 
                 "worldenergydata",
                 "aceengineer-website",
-                "frontierdeepwater",
-                "OGManufacturing"
+                "digitalmodel"
             ]
             
             for repo in available_repos:

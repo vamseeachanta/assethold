@@ -196,7 +196,7 @@ def _pad(row: list[str], length: int) -> list[str]:
 def _extract_account_number_old(account_field: str) -> str:
     """Extract account number from old-format Account field.
 
-    Old format embeds the number: '"Individual" X78707567' or '"CENCORA" 82897'.
+    Old format embeds the number: '"Individual" X00000001' or '"EXAMPLE EMPLOYER" 00001'.
     """
     cleaned = account_field.strip().strip('"')
     match = re.search(r"[A-Z]?\d{5,}", cleaned)

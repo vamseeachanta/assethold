@@ -7,6 +7,11 @@
 
 ## Files
 
+The raw broker emails these tables were extracted from are not kept in this public
+repository (they carry the recipient's name and address); they are held in private
+storage. The subscriber name in subject lines is replaced with "Subscriber".
+
+
 | File | Size | Description |
 |------|------|-------------|
 | `listings.json` | 245 KB | Raw extracted listings with all email fields |

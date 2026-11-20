@@ -5,8 +5,8 @@ Analysis:
   file_name: market-alerts-run
 
 # Offline example: deterministic fixture quotes (no network) so the registry test is
-# reproducible. Real runs set data.source: yfinance (see the achantas-data config that
-# consumes this engine with live data + real positions).
+# reproducible. Real runs set data.source: yfinance from a private config that
+# supplies live data and real positions (never committed here).
 market_alerts:
   data:
     source: fixture

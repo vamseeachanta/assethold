@@ -1,4 +1,7 @@
-"""Tests for the net_lease module — NNLeaseProperty model."""
+"""Tests for the net_lease module — NNLeaseProperty model.
+
+The sample property below is fictional: invented address, parcel and figures.
+"""
 
 from __future__ import annotations
 
@@ -25,7 +28,7 @@ def sample_tenant() -> NNLeaseTenant:
         guaranty="corporate",
         credit_profile="investment_grade_parent",
         lease_type=LeaseType.NN,
-        tenant_since_year=2000,
+        tenant_since_year=2005,
         sales_reporting=True,
     )
 
@@ -33,14 +36,14 @@ def sample_tenant() -> NNLeaseTenant:
 @pytest.fixture()
 def sample_financials() -> NNLeaseFinancials:
     return NNLeaseFinancials(
-        fixed_rent_annual=284_000.0,
-        fixed_rent_monthly=23_667.0,
-        noi=284_000.0,
-        rent_psf_annual=19.03,
+        fixed_rent_annual=240_000.0,
+        fixed_rent_monthly=20_000.0,
+        noi=240_000.0,
+        rent_psf_annual=20.0,
         percentage_rent_merch_rate=0.020,
         percentage_rent_food_rate=0.005,
         percentage_rent_rx_rate=0.005,
-        total_rent_cap_annual=552_000.0,
+        total_rent_cap_annual=480_000.0,
     )
 
 
@@ -50,26 +53,26 @@ def sample_property(
     sample_financials: NNLeaseFinancials,
 ) -> NNLeaseProperty:
     return NNLeaseProperty(
-        asset_id="nola-pharmacy-nn-001",
-        address="11297 Lake Forest Blvd, New Orleans, LA 70128",
-        lat=30.0218,
-        lon=-89.8570,
-        state="LA",
-        city="New Orleans",
-        msa="New Orleans-Metairie",
-        parcel_id="39W016593",
-        year_built=2000,
-        building_sqft=14_920,
-        land_acres=1.9,
-        land_sqft=82_677,
+        asset_id="example-pharmacy-nn-001",
+        address="100 Example Parkway, Anytown, TX 75000",
+        lat=32.0,
+        lon=-97.0,
+        state="TX",
+        city="Anytown",
+        msa="Anytown MSA",
+        parcel_id="EXAMPLE-0001",
+        year_built=2005,
+        building_sqft=12_000,
+        land_acres=1.5,
+        land_sqft=65_340,
         zoning="C1",
         ownership="fee_simple",
         corner_location=True,
         drive_thru=True,
-        parking_spaces=76,
-        parking_ratio_per_1000sf=5.09,
-        lease_start="2000-09-30",
-        lease_end="2030-09-29",
+        parking_spaces=60,
+        parking_ratio_per_1000sf=5.0,
+        lease_start="2005-01-01",
+        lease_end="2030-12-31",
         renewal_options=[
             NNLeaseRenewalOption(count=6, years_each=5)
         ],
@@ -118,7 +121,7 @@ def test_tenant_invalid_lease_type_raises() -> None:
 
 
 def test_financials_noi_set(sample_financials: NNLeaseFinancials) -> None:
-    assert sample_financials.noi == 284_000.0
+    assert sample_financials.noi == 240_000.0
 
 
 def test_financials_rent_cap_above_noi(sample_financials: NNLeaseFinancials) -> None:
@@ -128,20 +131,20 @@ def test_financials_rent_cap_above_noi(sample_financials: NNLeaseFinancials) -> 
 def test_financials_negative_noi_raises() -> None:
     with pytest.raises(ValueError, match="noi"):
         NNLeaseFinancials(
-            fixed_rent_annual=284_000.0,
-            fixed_rent_monthly=23_667.0,
+            fixed_rent_annual=240_000.0,
+            fixed_rent_monthly=20_000.0,
             noi=-1.0,
-            rent_psf_annual=19.03,
+            rent_psf_annual=20.0,
         )
 
 
 def test_financials_negative_rate_raises() -> None:
     with pytest.raises(ValueError, match="percentage_rent"):
         NNLeaseFinancials(
-            fixed_rent_annual=284_000.0,
-            fixed_rent_monthly=23_667.0,
-            noi=284_000.0,
-            rent_psf_annual=19.03,
+            fixed_rent_annual=240_000.0,
+            fixed_rent_monthly=20_000.0,
+            noi=240_000.0,
+            rent_psf_annual=20.0,
             percentage_rent_merch_rate=-0.01,
         )
 
@@ -167,12 +170,12 @@ def test_renewal_option_zero_count() -> None:
 
 
 def test_property_created(sample_property: NNLeaseProperty) -> None:
-    assert sample_property.asset_id == "nola-pharmacy-nn-001"
-    assert sample_property.building_sqft == 14_920
+    assert sample_property.asset_id == "example-pharmacy-nn-001"
+    assert sample_property.building_sqft == 12_000
 
 
 def test_property_lease_remaining_years(sample_property: NNLeaseProperty) -> None:
-    # From 2025 perspective: lease ends 2030-09-29 → ~5 years
+    # From 2025 perspective: lease ends 2030-12-31 → ~5 years
     remaining = sample_property.lease_remaining_years(as_of_year=2025)
     assert 4 <= remaining <= 6
 
@@ -204,7 +207,7 @@ def test_property_invalid_building_sqft_raises() -> None:
 
 def test_property_repr_contains_address(sample_property: NNLeaseProperty) -> None:
     r = repr(sample_property)
-    assert "Lake Forest" in r
+    assert "Example Parkway" in r
 
 
 def test_property_from_yaml_roundtrip(
@@ -215,4 +218,4 @@ def test_property_from_yaml_roundtrip(
     loaded = NNLeaseProperty.from_yaml(yaml_file)
     assert loaded.asset_id == sample_property.asset_id
     assert loaded.financials is not None
-    assert loaded.financials.noi == pytest.approx(284_000.0)
+    assert loaded.financials.noi == pytest.approx(240_000.0)

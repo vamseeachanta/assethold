@@ -9,7 +9,7 @@ Options:
     --date YYYY-MM-DD                 Override today's date for the report
     --no-cache                        Bypass market data cache
     --no-write                        Print to terminal only; do not write report files
-    --config PATH                     Path to daily_strategy.yaml (default: config/daily_strategy.yaml)
+    --config PATH                     Path to daily_strategy.yaml (default: $ASSETHOLD_DAILY_STRATEGY_CONFIG, then config/daily_strategy.yaml, then config/daily_strategy.example.yaml)
     --compare TICKER[,TICKER...]      Analyse arbitrary tickers alongside portfolio positions.
                                       Tickers are comma-separated (e.g. AAPL,MSFT,NVDA).
                                       When omitted, the watchlist: section in config is used
@@ -79,7 +79,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--config",
         type=str,
         default=None,
-        help="Path to daily_strategy.yaml (default: config/daily_strategy.yaml)",
+        help="Path to daily_strategy.yaml (default: $ASSETHOLD_DAILY_STRATEGY_CONFIG, then config/daily_strategy.yaml, then config/daily_strategy.example.yaml)",
     )
     parser.add_argument(
         "--compare",
@@ -149,7 +149,8 @@ def main(argv: list[str] | None = None) -> int:
     except FileNotFoundError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         print(
-            "Set FIDELITY_DATA_DIR or update loader.data_dir in config/daily_strategy.yaml.",
+            "Set FIDELITY_DATA_DIR or loader.data_dir in your private daily_strategy.yaml "
+            "(see config/daily_strategy.example.yaml).",
             file=sys.stderr,
         )
         return 1

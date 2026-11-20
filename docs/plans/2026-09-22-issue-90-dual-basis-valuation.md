@@ -6,8 +6,8 @@
 > **Issue:** https://github.com/vamseeachanta/assethold/issues/90
 > **Client:** N/A
 > **Lane:** lane:claude
-> **Review artifacts:** [`reviews/2026-09-22-plan-90-adversarial-review.md`](reviews/2026-09-22-plan-90-adversarial-review.md) — r1 REJECT (12 MAJOR), r2 REJECT (16 MAJOR)
-> **⚠ Do not implement from this document.** Five defects were verified first-hand: the core identity returns a non-zero gap on an at-market asset; the rent benchmark calls the repo's only asset under-rented when it is over-rented at 14.4% occupancy cost; two NOI bases differ by $240,745 of value; the traffic score is sign-inverted for retail; and the asserted CI legal scan does not exist in this repo.
+> **Review artifacts:** the adversarial review record (moved to private storage on 2026-11-15 because it quoted confidential data-room figures) — r1 REJECT (12 MAJOR), r2 REJECT (16 MAJOR)
+> **⚠ Do not implement from this document.** Five defects were verified first-hand: the core identity returns a non-zero gap on an at-market asset; the rent benchmark can call an over-rented asset under-rented because it ignores occupancy cost (rent as a share of tenant sales); two NOI bases (offering vs owner-reported) can differ materially and the plan names neither; the traffic score is sign-inverted for retail; and the asserted CI legal scan does not exist in this repo.
 
 ---
 
@@ -37,7 +37,7 @@
 - **Found:** `src/assethold/modules/multifamily/multifamily_analysis.py:189` —
   `sale_proceeds = NOI[-1] / project['exit']['Cap_Rate'] * 100`. The only income-approach arithmetic in
   the repo, hard-coded to a config-supplied exit cap, multifamily-only, not reusable.
-- **Found:** `data/cre/net_lease/nola-pharmacy-retail-nn-2025.yaml` — the abstraction precedent for this
+- **Found:** the former net-lease data-room file (removed from this public repo on 2026-11-15; kept in private storage) — the abstraction precedent for this
   repo. Carries `# Data abstracted per data-room confidentiality obligations`, `entity name abstracted`,
   `tenant_type: national_pharmacy_chain` rather than a brand. **This is the pattern all calibration data
   must follow**, because the repo is public.
@@ -103,8 +103,8 @@ class Confidence(Enum):
 
 `Valued[T]` wraps a figure with its `Confidence` and a `source` string. **Rule enforced in code: an
 exact amount, once supplied at `ACTUAL` or `CONTRACTUAL`, is never recomputed from a rounded per-unit
-figure.** This is a concrete defect that occurred in practice — a contractual $121,700 rendered as
-$121,722 because annual rent was back-computed from a rounded $/sq ft. The wrapper makes the override
+figure.** This is a concrete defect that occurred in practice — a contractual annual rent rendered
+slightly off because it was back-computed from a rounded $/sq ft. The wrapper makes the override
 explicit and a test asserts it.
 
 **`src/assethold/modules/net_lease/cap_rate_model.py`**
@@ -180,7 +180,7 @@ N=3 is the pattern — correct refusal beats a confident wrong number.
 
 | Module | Tests that must exist first |
 |---|---|
-| `confidence` | Round-trip; **an `ACTUAL` figure survives a per-unit recomputation attempt unchanged** (the $121,700 / $121,722 regression) |
+| `confidence` | Round-trip; **an `ACTUAL` figure survives a per-unit recomputation attempt unchanged** (the rounded per-unit rent regression) |
 | `cap_rate_model` | Monotonicity: absolute-NNN cap <= NN cap <= NN+ cap at equal credit and term; shorter term never yields a tighter cap; confidence degrades to `DERIVED` at low N; unknown structure raises rather than defaulting |
 | `rent_benchmark` | N below floor returns `NOT_DOCUMENTED`, not 0%; empty comp set raises; over- and under-rented signs are correct |
 | `use_feasibility` | A use needing more spaces than available is rejected **with the gate named**; the occupancy trigger fires on the incapable-of-self-preservation flag and not on "medical" generally |
@@ -196,7 +196,7 @@ Coverage gate >= 80% on new modules, per #31 and #32 precedent.
 | # | Risk | Mitigation |
 |---|---|---|
 | 1 | **False precision.** A cap rate to two decimals from n=6 implies rigour that is not there | Confidence labels in the return type, `n` surfaced in every output, `DERIVED` while low-N |
-| 2 | **Public repo leakage.** Calibration derived from private holdings could identify them | Follow the `nola-pharmacy` abstraction precedent: type not brand, no parcel IDs, no addresses for privately-held assets. **Correction, verified 2026-09-22: `scripts/legal/legal-sanity-scan.sh` does NOT exist in this repo and there is no `.legal-deny-list.yaml` here — the scan lives only in `workspace-hub`. CI here is `ci.yml`, `docs.yml`, `pages.yml`, `python-tests.yml` with no legal gate.** So this mitigation is currently unavailable and must be built, not assumed. Phase 1 must either port the scan and a deny-list into this repo's CI, or the corpus must be restricted to sources already public (broker marketing, public record) with no privately-held asset represented at all. **Decide this before the first reference row is written.** |
+| 2 | **Public repo leakage.** Calibration derived from private holdings could identify them | Follow the net-lease abstraction precedent: type not brand, no parcel IDs, no addresses for privately-held assets. **Correction, verified 2026-09-22: `scripts/legal/legal-sanity-scan.sh` does NOT exist in this repo and there is no `.legal-deny-list.yaml` here — the scan lives only in `workspace-hub`. CI here is `ci.yml`, `docs.yml`, `pages.yml`, `python-tests.yml` with no legal gate.** So this mitigation is currently unavailable and must be built, not assumed. Phase 1 must either port the scan and a deny-list into this repo's CI, or the corpus must be restricted to sources already public (broker marketing, public record) with no privately-held asset represented at all. **Decide this before the first reference row is written.** |
 | 3 | **Radius convention conflict** — #54 uses 2/5/10 miles, `NNLeaseDemographics` uses 1/3/5 | Resolve before Phase 2 writes any trade-area code. Carry both explicitly or migrate one; never mix |
 | 4 | Jurisdiction-specific parking ratios generalise badly across US municipalities | Ship a default table plus per-jurisdiction override; `feasible_uses` requires a jurisdiction argument and refuses a silent national default |
 | 5 | Scope sprawl into #74's asset-financial database | Keep reference data as file-local YAML; no DB schema in this issue |

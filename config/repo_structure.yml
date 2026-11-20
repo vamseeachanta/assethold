@@ -103,8 +103,6 @@ temporary_exceptions:
     owner: assethold maintainers
     review_date: "2026-06-30"
     follow_up: https://github.com/vamseeachanta/assethold/issues/49
-    justification: Tracked daily strategy report artifacts are preserved as existing durable evidence until a dedicated generated-evidence migration classifies retention, relocation, or deletion.
+    justification: Only the placeholder is tracked. Daily strategy reports are personal and generated locally; they were moved to private storage on 2026-11-15 and reports/daily-strategy/ is gitignored.
     allowed_paths:
       - reports/.gitkeep
-      - reports/daily-strategy/2026-02-18.md
-      - reports/daily-strategy/history/signals.csv

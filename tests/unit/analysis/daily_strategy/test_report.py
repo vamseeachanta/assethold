@@ -30,7 +30,7 @@ from assethold.risk_metrics import position_risk
 def _pos(ticker: str, shares: float = 50.0, account: str = "Individual - TOD") -> Position:
     return Position(
         account=account,
-        account_number="X78707567",
+        account_number="X00000001",
         ticker=ticker,
         shares=shares,
         tradeable=True,
@@ -189,8 +189,8 @@ class TestEdgeCases:
         reporter = _reporter(tmp_path)
         nontradeable = PositionSignal(
             position=Position(
-                account="CENCORA EMPLOYEE INV",
-                account_number="82897",
+                account="ACME EMPLOYEE INV",
+                account_number="00001",
                 ticker="FID 500 INDEX",
                 shares=100.0,
                 tradeable=False,
@@ -203,7 +203,7 @@ class TestEdgeCases:
         )
         md = reporter.render([nontradeable], report_date=datetime(2026, 2, 17))
         # Should not crash; non-tradeable excluded from combined portfolio value
-        assert "CENCORA EMPLOYEE INV" in md
+        assert "ACME EMPLOYEE INV" in md
 
 
 # ---------------------------------------------------------------------------
