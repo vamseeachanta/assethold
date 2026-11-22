@@ -10,7 +10,7 @@ migration, generated-output deletion, or package-layout reshuffling.
 ## Canonical roots
 
 The machine-readable source of truth is
-[`config/repo_structure.yml`](../../config/repo_structure.yml). The checker uses
+[`config/repo_structure.yml`](https://github.com/vamseeachanta/assethold/blob/main/config/repo_structure.yml). The checker uses
 that file to validate:
 
 - standard project roots (`src/`, `tests/`, `docs/`, `config/`, `scripts/`,

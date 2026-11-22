@@ -1,4 +1,4 @@
-[The Grave Dancer](re_cre\the_grave_dancer.pdf)
+[The Grave Dancer](the_grave_dancer.pdf)
 
 Sam Zell's influence is evident from the tributes that have poured in. Here are a few of our favorites, along with a 30-year-old "grave dancing" primer in Zell's own words.
 

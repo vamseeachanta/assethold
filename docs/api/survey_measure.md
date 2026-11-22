@@ -16,9 +16,9 @@ workflow, the verification steps that matter, and the failure modes.
 
 !!! warning "Check the registration before trusting a measurement"
     Two mis-picked corner pixels put every downstream area wrong while the overlay still
-    looks plausible. Always call [`RasterFrame.check_bearing`][] against a recorded
+    looks plausible. Always call [`RasterFrame.check_bearing`][assethold.property.survey_measure.RasterFrame.check_bearing] against a recorded
     bearing, and draw the closed traverse back onto its own drawing with
-    [`Canvas`][] before believing a number.
+    [`Canvas`][assethold.property.survey_measure.Canvas] before believing a number.
 
 ## Bearings and traverses
 

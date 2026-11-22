@@ -7,6 +7,10 @@ repo_name: vamseeachanta/assethold
 docs_dir: docs
 site_dir: site
 
+# docs/index.md is the home page; docs/README.md is for browsing the folder on GitHub.
+exclude_docs: |
+  /README.md
+
 theme:
   name: material
   features:

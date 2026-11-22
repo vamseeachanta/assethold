@@ -297,18 +297,19 @@ class Parcel:
         Lots within a group are cut by equal fractions of both bounding edges,
         which on a straight-sided figure gives exactly equal areas.
 
-        >>> p = Parcel([0, 60, 120], [58.0, 60.5, 63.5])
-        >>> lots = p.divide(2, 3)
-        >>> [round(l.area_sqyd, 2) for l in lots]
-        [161.67, 161.67, 161.67, 161.67, 161.67]
-        >>> round(lots[0].frontage_ft, 2), round(lots[-1].frontage_ft, 2)
-        (29.0, 21.17)
+        Examples:
+            >>> p = Parcel([0, 60, 120], [58.0, 60.5, 63.5])
+            >>> lots = p.divide(2, 3)
+            >>> [round(l.area_sqyd, 2) for l in lots]
+            [161.67, 161.67, 161.67, 161.67, 161.67]
+            >>> round(lots[0].frontage_ft, 2), round(lots[-1].frontage_ft, 2)
+            (29.0, 21.17)
 
-        Held on the title line instead, the lots come out unequal:
+            Held on the title line instead, the lots come out unequal:
 
-        >>> lots = p.divide(2, 3, equal_area=False, offset=60.0)
-        >>> [round(l.area_sqyd, 2) for l in lots]
-        [197.5, 197.5, 137.78, 137.78, 137.78]
+            >>> lots = p.divide(2, 3, equal_area=False, offset=60.0)
+            >>> [round(l.area_sqyd, 2) for l in lots]
+            [197.5, 197.5, 137.78, 137.78, 137.78]
         """
         if offset is None:
             offset = (

@@ -7,11 +7,12 @@ Provides functions to fetch and score equity holdings by key valuation
 metrics (P/E, P/B, EV/EBITDA) sourced from yfinance, and to rank a
 portfolio by composite value attractiveness.
 
-Classes:
-    FundamentalsScorer  — score and rank holdings by composite value score
-    SectorPeerRanker    — add percentile ranks within GICS sector peers;
-                          flag deep-value opportunities
-    FundamentalsReport  — render scored holdings to CSV and console output
+Main classes:
+
+- FundamentalsScorer: score and rank holdings by composite value score.
+- SectorPeerRanker: add percentile ranks within GICS sector peers and
+  flag deep-value opportunities.
+- FundamentalsReport: render scored holdings to CSV and console output.
 """
 
 from __future__ import annotations

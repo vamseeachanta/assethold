@@ -203,9 +203,10 @@ def road_length_table(
     Hand this to whoever is going to walk the road: they pace the distance from
     the frontage to the made road, find the row, and read off what to order.
 
-    >>> t = road_length_table(58.0, runs_ft=(0, 50))
-    >>> [(r["run_ft"], round(r["earth_loads"]), round(r["gravel_loads"])) for r in t]
-    [(0, 91, 18), (50, 170, 33)]
+    Examples:
+        >>> t = road_length_table(58.0, runs_ft=(0, 50))
+        >>> [(r["run_ft"], round(r["earth_loads"]), round(r["gravel_loads"])) for r in t]
+        [(0, 91, 18), (50, 170, 33)]
     """
     rows = []
     for run in runs_ft:

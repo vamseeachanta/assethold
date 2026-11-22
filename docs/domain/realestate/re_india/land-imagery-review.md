@@ -1,8 +1,8 @@
 # Land imagery review — generator
 
 > **First compiled**: 2026-08-04
-> **Tool**: [`scripts/python/india_land_maps/build_site_review.py`](../../../../scripts/python/india_land_maps/build_site_review.py)
-> **Tests**: [`tests/test_site_review.py`](../../../../tests/test_site_review.py) — 54 unit tests, no network
+> **Tool**: [`scripts/python/india_land_maps/build_site_review.py`](https://github.com/vamseeachanta/assethold/blob/main/scripts/python/india_land_maps/build_site_review.py)
+> **Tests**: [`tests/test_site_review.py`](https://github.com/vamseeachanta/assethold/blob/main/tests/test_site_review.py) — 54 unit tests, no network
 >
 > This page explains *why the tool is shaped this way*. How to run it against a
 > particular set of holdings belongs with that roster, not here.
