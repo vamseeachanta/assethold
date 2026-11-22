@@ -21,6 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Clone assetutilities sibling dependency
+        run: git clone --depth 1 https://github.com/vamseeachanta/assetutilities.git ../assetutilities
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
