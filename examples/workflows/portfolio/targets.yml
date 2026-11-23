@@ -1,0 +1,11 @@
+target_allocation:
+  VOO: 0.60
+  BRKB: 0.35
+  CASH: 0.05
+
+trim_rules:
+  threshold_pct: 5.0
+
+money_market_symbols:
+  - SPAXX
+  - FDRXX

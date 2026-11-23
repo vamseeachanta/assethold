@@ -1,0 +1,30 @@
+@startwbs will
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Will
+
+* Will
+
+** Expenses
+*** ?
+
+** Estate
+*** ?
+
+
+** Trust & Trustees
+*** ?
+*** ?
+
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@endwbs

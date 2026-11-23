@@ -1,0 +1,54 @@
+[tool.poetry]
+name = "assethold"
+version = "0.0.1"
+description = "stock hold analysis"
+authors = ["Shaik Samdan <samdanshaik8998@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+keywords = ["stock analysis", "stock hold", "back analysis", "investment"]
+homepage = "https://github.com/samdansk2/assethold"
+repository = "https://github.com/samdansk2/assethold"
+documentation = "https://github.com/samdansk2/assethold/blob/main/README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<4.0"
+
+[tool.poetry.extras]
+build = ["build", "twine"]
+dev = ["black", "bumpver", "isort", "mypy", "pytest"]
+
+[tool.poetry.scripts]
+asset_hold = "assethold.__main__:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.bumpver]
+current_version = "0.0.1"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message = "bump version {old_version} -> {new_version}"
+commit = true
+tag = true
+push = false
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = ['current_version = "{version}"', 'version = "{version}"']
+"src/assethold/__init__.py" = ["{version}"]
+"src/assethold/__main__.py" = ["- assethold v{version}"]
+
+[tool.isort]
+profile = "black"
+import_heading_stdlib = "Standard library imports"
+import_heading_thirdparty = "Third party imports"
+import_heading_firstparty = "Reader imports"
+
+[tool.mypy]
+strict = true
+
+[[tool.mypy.overrides]]
+module = "feedparser"
+ignore_missing_imports = true
+
+[tool.poetry.group.local.dependencies]
+assetutilities = { path = "../assetutilities", develop = true }

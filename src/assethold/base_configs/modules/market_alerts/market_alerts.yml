@@ -1,0 +1,25 @@
+basename: market_alerts
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+Analysis:
+  result_folder: examples/workflows/market-alerts/outputs
+  file_name: market-alerts-run
+
+market_alerts:
+  data:
+    source: fixture
+  positions: []
+  signals:
+    price_move_pct: 1.0
+    portfolio_move_pct: 0.5
+    fundamentals:
+      pe_max: 30
+      div_yield_min: 3.0
+  outputs:
+    snapshot_csv: examples/workflows/market-alerts/outputs/snapshot.csv
+    alerts_json: examples/workflows/market-alerts/outputs/alerts.json

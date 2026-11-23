@@ -1,0 +1,53 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portfolio Returns — __OWNER__</title>
+<style>
+:root{--ink:#1f2937;--mut:#6b7280;--line:#e5e7eb;--bg:#f4f6f8;--g:#1a7f5a;--r:#c0392b}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
+.wrap{max-width:1060px;margin:0 auto;padding:24px 18px 70px}
+h1{font-size:23px;margin:0 0 2px}.sub{color:var(--mut);font-size:12.5px;margin-bottom:14px}
+.acct-bar{display:flex;gap:8px;margin:12px 0 18px;flex-wrap:wrap}
+.acct-btn{padding:7px 16px;border:1px solid var(--line);background:#fff;border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--mut);text-transform:capitalize}
+.acct-btn.on{background:var(--g);color:#fff;border-color:var(--g)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:11px;margin-bottom:8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px 15px}
+.card .lab{font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.03em}
+.card .val{font-size:20px;font-weight:700;margin-top:3px}.card .val.big{color:var(--g)}
+.pos{color:var(--g)}.neg{color:var(--r)}
+h2{font-size:15px;margin:28px 0 4px;border-bottom:2px solid var(--g);padding-bottom:5px}
+.cap{font-size:12px;color:var(--mut);margin:6px 0 4px}
+.chart{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px;height:330px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+@media print{.acct-bar{display:none!important}body{background:#fff}.chart{break-inside:avoid}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body><div class="wrap">
+<h1>Portfolio Returns — __OWNER__</h1>
+<div class="sub">as of __ASOF__ · benchmark = __BENCH__ · <b>example / hypothetical data</b> · generated deterministically from config.yaml + frozen prices</div>
+
+<div class="acct-bar" id="acctbar"></div>
+<div class="cards" id="cards"></div>
+
+<h2>You vs. just buying the index (__BENCH__)</h2>
+<div class="cap">Green = your value. Gold = the <b>same dated deposits put into __BENCH__</b> (the dollar-matched clone — fair benchmark for irregular contributions). Grey step = working capital (money in). ▲ deposits / ▼ withdrawals.</div>
+<div class="chart" id="vsbench" style="height:370px"></div>
+
+<h2>Where the money went (lifetime money-flow)</h2>
+<div class="cap">Start → + deposits → − withdrawals → + investment gains → end.</div>
+<div class="chart" id="waterfall"></div>
+
+<div class="grid2">
+<div><h2>Returns by year</h2><div class="cap">TWR = how the picks did · XIRR = what your dollars earned.</div><div class="chart" id="returns"></div></div>
+<div><h2>New money vs. appreciation</h2><div class="cap">Each year in dollars: blue = money you added, green/red = investment gain/loss.</div><div class="chart" id="decomp"></div></div>
+</div>
+
+<div class="grid2">
+<div id="cashwrap"><h2>Capital at work vs. cash on sidelines</h2><div class="cap">Green = invested, gold = idle cash, red line = cash %.</div><div class="chart" id="cash"></div></div>
+<div><h2>Drawdown</h2><div class="cap">How far below the prior peak — the worst dips you lived through.</div><div class="chart" id="drawdown"></div></div>
+</div>
+
+<div class="sub" style="margin-top:26px">Method: XIRR (money-weighted) + TWR (time-weighted, Modified Dietz); benchmark clone replays each dated flow into __BENCH__ at that date's price (total return); risk at annual resolution. Deterministic: no network, no clock, no randomness — same config + frozen prices ⇒ identical output. See README.md.</div>
+
+<script>/*__ECHARTS__*/</script>
+<script>window.__DATA__ = /*__DATA__*/;</script>
+<script>/*__APP__*/</script>
+</div></body></html>

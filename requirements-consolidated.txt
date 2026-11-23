@@ -1,0 +1,85 @@
+# Consolidated Requirements
+# Generated from all requirements.txt files in repository
+# This file is now replaced by pyproject.toml
+# Kept for reference only
+
+# From: dev_tools/requirements.txt
+pandas == 2.2.3
+pyyaml == 6.0.2
+numpy_financial == 1.0.0
+bumpver == 2024.1130
+plotly == 6.0.1
+dash == 3.0.4
+dash_bootstrap_components == 2.0.2
+urllib3 == 2.4.0
+xmltodict == 0.14.2
+beautifulsoup4 == 4.13.4
+sqlalchemy == 2.0.40
+yfinance == 0.2.57
+yahoo_fin == 0.8.9.1
+finvizfinance == 1.1.0
+sec_edgar_downloader == 5.0.3
+ta == 0.11.0
+flask_wtf == 1.2.2
+flask_httpauth == 4.8.0
+flask_restful == 0.3.10
+ffn == 1.1.2
+# From: src/external/assetutilities/docs/sub_databases/COD/MySQL/deployment/requirements.txt
+
+# From: src/external/assetutilities/docs/sub_k8_starter/app/requirements.txt
+Flask
+# From: src/external/assetutilities/docs/sub_python/leg_pycodes/COD/Dockers/composetest/requirements.txt
+flask
+redis
+# From: src/external/assetutilities/requirements.txt
+loguru
+pandas
+openpyxl
+xlsxwriter
+excel2img
+ruff
+
+# From: src/external/assetutilities/scripts/requirements.txt
+assetutilities
+build
+twine
+bumpver
+pyyaml
+numpy
+pandas
+plotly
+matplotlib
+chardet
+python-certifi-win32
+webcolors
+xlsxwriter
+plantuml
+pytest
+deepdiff
+pandoc
+wkhtmltopdf
+python-docx
+ruff
+scrapy==2.12
+bs4
+gitpython==3.1.31
+excel2img; sys_platform == 'win32'
+PyPDF2
+tabula
+sympy>=1.13.3
+utm
+ruamel.yaml
+jinja2
+openpyxl
+crochet
+
+loguru
+
+playwright
+
+selenium
+fake_headers
+
+undetected-chromedriver 
+parsel
+

@@ -1,0 +1,19 @@
+# Pages-only MkDocs config — publishes ONLY the auto-generated API reference.
+#
+# Inherits the main mkdocs.yml (theme, mkdocstrings handler, extensions) but
+# overrides docs_dir to docs/api so the published site can ONLY contain the 7
+# API-reference pages. This is deliberate: the full docs/ tree holds 86+
+# third-party PDFs and personal business docs (see assethold#59), and mkdocs
+# copies every file under docs_dir to the output. Scoping docs_dir to docs/api
+# makes a content leak structurally impossible — worst case is a failed build,
+# never publication of docs/.
+INHERIT: mkdocs.yml
+docs_dir: docs/api
+nav:
+  - Overview: index.md
+  - daily_strategy: daily_strategy.md
+  - fundamentals: fundamentals.md
+  - risk_metrics: risk_metrics.md
+  - signals: signals.md
+  - portfolio: portfolio.md
+  - net_lease: net_lease.md

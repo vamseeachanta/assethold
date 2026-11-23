@@ -1,0 +1,28 @@
+basename: stock
+
+config-dependency: 
+  assethold\tests\basename.yml
+  assethold\tests\modules\basename.yml
+  file not found error
+
+  assethold\base_configs\basename.yml
+
+
+analysis:
+  flag: True
+  breakout: True
+
+data:
+  period: 1y
+  by_date:
+    - start: 2023-09-01
+    - end: 2024-09-30
+
+input:
+  ticker: XOM
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True

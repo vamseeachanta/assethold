@@ -1,0 +1,25 @@
+@startwbs Financial function Ffn
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Financial function Ffn
+
+* Investment strategy 
+
+** Daily_returns [ ffn.to_returns()]
+** Group objects [ffn.calc_stats()]
+*** performance stats
+**** Monthly Returns
+**** Visualizing the performance
+
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@endwbs

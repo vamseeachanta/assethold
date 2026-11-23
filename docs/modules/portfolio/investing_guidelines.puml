@@ -1,0 +1,40 @@
+@startwbs investing_guidelines
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Investing Guidelines for Working Professional
+
+* Personal Porfolio
+
+** Profession
+*** Invest in self \n (learning, reading books, networking)
+*** Invest in family
+
+** Fixed Deposit/Cash Deposit
+*** Create emergency fund
+*** Create Sufficient Money for n (=6) months of expenses
+
+** Stocks
+*** Index Fund 
+*** Individual (not advised)
+
+** RealEstate
+*** Own House
+*** Rental Property
+**** Multifamily (> 20 units)
+**** Commercial
+**** Single Family Home \n **Not preferred** \n Personal choice (learning, kid's house etc.)
+
+** Bonds
+*** TBA
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@endwbs

@@ -1,0 +1,6 @@
+- Equity deals
+ - 15%. Rarely come by
+- Debt deals
+    - Existing Production as collateral
+- Min Ticket size: 100k 
+- 

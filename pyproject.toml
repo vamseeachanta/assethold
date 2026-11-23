@@ -1,0 +1,258 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "assethold"
+version = "0.1.0"
+description = "Standardized project configuration for assethold"
+readme = "README.md"
+requires-python = ">=3.11.5"
+license = {text = "MIT"}
+authors = [
+    {name = "Development Team", email = "dev@example.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "assetutilities",
+    "beautifulsoup4==4.13.4",
+    "bumpver>=2023.1129",
+    "dash==3.0.4",
+    "dash_bootstrap_components==2.0.2",
+    "deepdiff",
+    "excel2img; sys_platform=='win32'",
+    "ffn",
+    "finvizfinance==1.1.0",
+    "flask",
+    "gitpython>=3.1.40",
+    "jinja2",
+    "loguru",
+    "matplotlib",
+    "mypy>=1.19.1",
+    "numpy",
+    "numpy_financial==1.0.0",
+    "openpyxl",
+    "pandas==2.2.3",
+    "pandas-market-calendars>=5.3.2",
+    "plotly>=5.17.0,<6.0.0",
+    "PyPDF2",
+    "python-certifi-win32; sys_platform=='win32'",
+    "python-docx",
+    "pyyaml==6.0.2",
+    "ruamel.yaml",
+    "sec_edgar_downloader==5.0.3",
+    "sqlalchemy==2.0.40",
+    "sympy>=1.13.3",
+    "ta==0.11.0",
+    "urllib3==2.8.0",
+    "webcolors",
+    "xlsxwriter",
+    "xmltodict==0.14.2",
+    "yahoo_fin==0.8.9.1",
+    "yfinance>=1.2.0",
+]
+
+[project.optional-dependencies]
+gis = [
+    "geopy>=2.4.0",
+    "folium>=0.15.0",
+    "simplekml>=1.3.6",
+    "shapely>=2.0.0",
+    "geopandas>=0.14.0",
+    "rasterio>=1.3.0",
+    # india_land_maps: tile stitching and lifting plan pages out of deed scans
+    "pillow>=10.0",
+    "pypdf>=4.0",
+]
+dev = [
+    "build",
+    "twine",
+    "ruff",
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-mock>=3.0",
+    "pytest-xdist>=3.5.0",
+    "black>=23.0",
+    "flake8>=6.0",
+    "mypy>=1.0",
+    "pre-commit>=3.0",
+]
+test = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-mock>=3.0",
+]
+docs = [
+    "sphinx>=6.0",
+    "sphinx-rtd-theme>=1.0",
+    "mkdocs>=1.6.0",
+    "mkdocstrings[python]>=0.25.0",
+    "mkdocs-material>=9.5.0",
+]
+providers = [
+    "diskcache>=5.6.0",
+    "finnhub-python>=2.4.0",
+]
+scraping = [
+    "scrapy==2.17.0",
+    "selenium",
+    "playwright",
+    "undetected-chromedriver",
+    "fake_headers",
+    "parsel",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/vamseeachanta/assethold"
+"Bug Tracker" = "https://github.com/vamseeachanta/assethold/issues"
+"Documentation" = "https://github.com/vamseeachanta/assethold#readme"
+
+[project.scripts]
+assethold = "assethold.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["assethold*"]
+exclude = ["tests*", "docs*", "scripts*", "business*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py311', 'py312']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+# python_version is deliberately UNSET so mypy targets whichever interpreter the
+# CI matrix leg is running. Do not pin it back:
+#   - "3.9" is rejected outright by current mypy ("must be 3.10 or higher")
+#   - any value below 3.12 makes mypy refuse to parse numpy's bundled stubs,
+#     which use PEP 695 `type` statements, killing the 3.12 leg with exit 2
+# Runtime support is declared by requires-python = ">=3.11.5".
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=src",
+    "--cov=.",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml:coverage.xml",
+    "--cov-fail-under=80",
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "-ra",
+    "--junitxml=pytest.xml"
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "slow: Slow running tests",
+    "api: API tests",
+    "database: Database tests",
+    "external: Tests requiring external services",
+    "financial: Financial calculation tests",
+    "scraping: Web scraping tests",
+    "dashboard: Dashboard/UI tests"
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning"
+]
+
+[tool.coverage.run]
+source = ["src", "."]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "*/build/*",
+    "*/dist/*",
+    "setup.py",
+    "conftest.py"
+]
+branch = true
+data_file = ".coverage"
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "if self.debug:",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod"
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+title = "Assethold Coverage Report"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.uv]
+python = "3.11"
+system = false
+seed = true
+compile = true
+required-environments = ["sys_platform == 'linux'", "sys_platform == 'win32'", "sys_platform == 'darwin'"]
+
+[tool.uv.sources]
+assetutilities = { path = "../assetutilities" }
+
+[tool.uv.pip]
+index-url = "https://pypi.org/simple"
+extra-index-url = []
+no-cache = false
+pre = false
+
+[dependency-groups]
+docs = [
+    "mkdocs>=1.6.0",
+    "mkdocstrings[python]>=0.25.0",
+    "mkdocs-material>=9.5.0",
+]
+dev = [
+    "pytest-cov>=7.0.0",
+    "pytest-mock>=3.15.1",
+    "pytest-xdist>=3.8.0",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", "docs"]
+skips = []
+
+[tool.parallel]
+enabled = true
+max_workers = 5
+use_threading = false
+use_asyncio = true
+batch_size = 10

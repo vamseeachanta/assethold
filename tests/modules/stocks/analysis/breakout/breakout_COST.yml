@@ -1,0 +1,21 @@
+basename: stock
+
+analysis:
+  flag: True
+  breakout: True
+
+data:
+  period: 1y
+  by_date:
+    - start: 2023-09-01
+    - end: 2024-09-30
+
+
+input:
+  ticker: COST
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True

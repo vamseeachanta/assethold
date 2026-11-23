@@ -1,0 +1,22 @@
+basename: dividend_forecast
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+Analysis:
+  result_folder: examples/workflows/dividend-forecast/outputs
+  file_name: dividend-forecast-run
+
+dividend_forecast:
+  current_dividend: 2.0
+  growth_rate: 0.05
+  required_return: 0.10
+  years: 5
+  purchase_price: 50.0
+  earnings_per_share: 4.0
+  outputs:
+    forecast_csv: examples/workflows/dividend-forecast/outputs/forecast.csv
+    summary_json: examples/workflows/dividend-forecast/outputs/summary.json

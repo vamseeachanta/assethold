@@ -1,0 +1,357 @@
+# ABOUTME: Tests for the portfolio package — ingest, positions, allocation modules.
+# ABOUTME: Uses synthetic CSV fixtures matching both Fidelity export formats.
+
+from __future__ import annotations
+
+import tempfile
+from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
+import pytest
+
+# ---------------------------------------------------------------------------
+# Fixture CSV data in the Fidelity export formats. All rows are fictional:
+# made-up dates, quantities, prices and account numbers.
+# ---------------------------------------------------------------------------
+
+OLD_FORMAT_CSV = """\xef\xbb\xbf\r
+\r
+Run Date,Account,Action,Symbol,Description,Type,Quantity,Price ($),Commission ($),Fees ($),Accrued Interest ($),Amount ($),Settlement Date\r
+ 01/05/2021,"Individual" X00000001," YOU BOUGHT BERKSHIRE HATHAWAY INC COM USD0.0033... (BRKB) (Cash)", BRKB," BERKSHIRE HATHAWAY INC COM USD0.0033 CL",Cash,30,200.00,,,,-6000.00,01/07/2021\r
+ 01/04/2021,"Individual" X00000001," YOU BOUGHT BERKSHIRE HATHAWAY INC COM USD0.0033... (BRKB) (Cash)", BRKB," BERKSHIRE HATHAWAY INC COM USD0.0033 CL",Cash,42,210.00,,,,-8820.00,01/06/2021\r
+ 01/06/2021,"Individual" X00000001," YOU BOUGHT EXXON MOBIL CORP COM (XOM) (Cash)", XOM," EXXON MOBIL CORP COM",Cash,60,40.00,,,,-2400.00,01/08/2021\r
+ 01/06/2021,"Individual" X00000001," YOU SOLD MODERNA INC COM (MRNA) (Cash)", MRNA," MODERNA INC COM",Cash,-50,100.00,,0.10,,4999.90,01/08/2021\r
+ 01/15/2021,"Individual" X00000001," DIVIDEND RECEIVED COCA-COLA CO COM (KO) (Cash)", KO," COCA-COLA CO COM",Cash,0.000,,,,,50.00,\r
+ 01/29/2021,"Individual" X00000001," REINVESTMENT FIDELITY GOVERNMENT MONEY MARKET (SPAXX) (Cash)", SPAXX," FIDELITY GOVERNMENT MONEY MARKET",Cash,0.10,1,,,,-0.10,\r
+ 01/29/2021,"Individual" X00000001," DIVIDEND RECEIVED FIDELITY GOVERNMENT MONEY MARKET (SPAXX) (Cash)", SPAXX," FIDELITY GOVERNMENT MONEY MARKET",Cash,0.000,,,,,0.10,\r
+
+"informational purposes only, and is not intended to provide advice"\r
+"Brokerage services are provided by Fidelity Brokerage Services LLC"\r
+
+Date downloaded 02/01/2021 9:00 am\r
+"""
+
+NEW_FORMAT_CSV = """\xef\xbb\xbf
+\n\
+Run Date,Account,Account Number,Action,Symbol,Description,Type,Price ($),Quantity,Commission ($),Fees ($),Accrued Interest ($),Amount ($),Settlement Date
+02/02/2026,"Individual - TOD","X00000001","YOU BOUGHT BERKSHIRE HATHAWAY INC COM USD0.0033... (BRKB) (Cash)",BRKB,"BERKSHIRE HATHAWAY INC COM USD0.0033 CL",Cash,500.00,10,,,,-5000.00,02/04/2026
+02/03/2026,"Individual - TOD","X00000001","YOU BOUGHT VANGUARD INDEX FUNDS S&P 500 ETF USD (VOO) (Cash)",VOO,"VANGUARD INDEX FUNDS S&P 500 ETF USD",Cash,600.00,10,,,,-6000.00,02/05/2026
+02/04/2026,"Individual - TOD","X00000001","YOU SOLD EXXON MOBIL CORP COM (XOM) (Cash)",XOM,"EXXON MOBIL CORP COM",Cash,100.00,-20,,,,2000.00,02/06/2026
+02/27/2026,"Individual - TOD","X00000001","DIVIDEND RECEIVED VANGUARD INDEX FUNDS S&P 500 ETF USD (VOO) (Cash)",VOO,"VANGUARD INDEX FUNDS S&P 500 ETF USD",Cash,,0.000,,,,100.00,
+02/27/2026,"Traditional IRA","000000002","DIVIDEND RECEIVED VANGUARD INDEX FUNDS S&P 500 ETF USD (VOO) (Cash)",VOO,"VANGUARD INDEX FUNDS S&P 500 ETF USD",Cash,,0.000,,,,50.00,
+02/27/2026,"Individual - TOD","X00000001","REINVESTMENT FIDELITY GOVERNMENT MONEY MARKET (SPAXX) (Cash)",SPAXX,"FIDELITY GOVERNMENT MONEY MARKET",Cash,1,40.00,,,,-40.00,
+
+"informational purposes only, and is not intended to provide advice"
+"Brokerage services are provided by Fidelity Brokerage Services LLC"
+
+Date downloaded 03/01/2026 9:00 am
+"""
+
+TARGETS_YAML = """\
+target_allocation:
+  VOO: 0.50
+  BRKB: 0.30
+  XOM: 0.10
+  OLDCO: 0.05
+  KO: 0.03
+  CASH: 0.02
+
+new_money_split:
+  VOO: 0.55
+  BRKB: 0.45
+
+trim_rules:
+  threshold_pct: 5.0
+  require_profitable: true
+  prefer_long_term_gains: true
+
+dca_cadence:
+  VOO:
+    interval_days: 7
+    lot_size_usd: 1000
+  BRKB:
+    interval_days: 14
+    lot_size_usd: 1000
+
+cash_reserve_pct: 0.02
+
+money_market_symbols:
+  - SPAXX
+  - QPIGQ
+  - FDRXX
+  - FCASH
+
+legacy_positions:
+  OLDCO:
+    action: reduce
+    exit_above: 5.00
+"""
+
+
+@pytest.fixture
+def data_dir(tmp_path: Path) -> Path:
+    """Write fixture CSV files and targets.yaml into a temp directory."""
+    (tmp_path / "2021.csv").write_text(OLD_FORMAT_CSV, encoding="utf-8")
+    (tmp_path / "01.01.2026 to 03.01.2026.csv").write_text(
+        NEW_FORMAT_CSV, encoding="utf-8"
+    )
+    config_dir = tmp_path.parent / "config"
+    config_dir.mkdir(exist_ok=True)
+    (config_dir / "targets.yaml").write_text(TARGETS_YAML, encoding="utf-8")
+    return tmp_path
+
+
+@pytest.fixture
+def config(tmp_path: Path) -> dict:
+    import yaml
+    return yaml.safe_load(TARGETS_YAML)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Ingest tests
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class TestIngestParseCSV:
+    """Test CSV parsing for both Fidelity formats."""
+
+    def test_parse_old_format(self, tmp_path: Path) -> None:
+        fp = tmp_path / "old.csv"
+        fp.write_text(OLD_FORMAT_CSV, encoding="utf-8")
+
+        from assethold.portfolio.ingest import parse_csv
+
+        df = parse_csv(fp)
+        assert not df.empty
+        # Should have 7 data rows (excluding header, footer, blanks).
+        assert len(df) == 7
+
+    def test_parse_new_format(self, tmp_path: Path) -> None:
+        fp = tmp_path / "new.csv"
+        fp.write_text(NEW_FORMAT_CSV, encoding="utf-8")
+
+        from assethold.portfolio.ingest import parse_csv
+
+        df = parse_csv(fp)
+        assert not df.empty
+        assert len(df) == 6
+
+    def test_old_format_columns_normalized(self, tmp_path: Path) -> None:
+        fp = tmp_path / "old.csv"
+        fp.write_text(OLD_FORMAT_CSV, encoding="utf-8")
+
+        from assethold.portfolio.ingest import NORMALIZED_COLUMNS, parse_csv
+
+        df = parse_csv(fp)
+        for col in NORMALIZED_COLUMNS:
+            assert col in df.columns, f"Missing column: {col}"
+
+    def test_old_format_buy_values(self, tmp_path: Path) -> None:
+        fp = tmp_path / "old.csv"
+        fp.write_text(OLD_FORMAT_CSV, encoding="utf-8")
+
+        from assethold.portfolio.ingest import parse_csv
+
+        df = parse_csv(fp)
+        brkb_buys = df[(df["symbol"] == "BRKB") & (df["quantity"] > 0)]
+        assert len(brkb_buys) == 2
+        assert brkb_buys.iloc[0]["quantity"] == 30.0
+        assert brkb_buys.iloc[0]["price"] == 200.0
+
+    def test_new_format_account_number(self, tmp_path: Path) -> None:
+        fp = tmp_path / "new.csv"
+        fp.write_text(NEW_FORMAT_CSV, encoding="utf-8")
+
+        from assethold.portfolio.ingest import parse_csv
+
+        df = parse_csv(fp)
+        assert "X00000001" in df["account_number"].values
+
+    def test_footer_stripped(self, tmp_path: Path) -> None:
+        fp = tmp_path / "new.csv"
+        fp.write_text(NEW_FORMAT_CSV, encoding="utf-8")
+
+        from assethold.portfolio.ingest import parse_csv
+
+        df = parse_csv(fp)
+        actions = df["action"].str.lower()
+        assert not actions.str.contains("informational").any()
+        assert not actions.str.contains("brokerage services").any()
+
+
+class TestIngestClassifyAction:
+    def test_buy(self) -> None:
+        from assethold.portfolio.ingest import classify_action
+        assert classify_action("YOU BOUGHT VANGUARD INDEX FUNDS") == "buy"
+
+    def test_sell(self) -> None:
+        from assethold.portfolio.ingest import classify_action
+        assert classify_action("YOU SOLD MODERNA INC COM") == "sell"
+
+    def test_dividend(self) -> None:
+        from assethold.portfolio.ingest import classify_action
+        assert classify_action("DIVIDEND RECEIVED VANGUARD") == "dividend"
+
+    def test_reinvestment(self) -> None:
+        from assethold.portfolio.ingest import classify_action
+        assert classify_action("REINVESTMENT FIDELITY") == "reinvestment"
+
+
+class TestIngestLoadAll:
+    def test_load_excludes_money_market(self, data_dir: Path, config: dict) -> None:
+        from assethold.portfolio.ingest import load_all_csvs
+
+        df = load_all_csvs(data_dir, config=config)
+        assert "SPAXX" not in df["symbol"].values
+
+    def test_load_has_action_type(self, data_dir: Path, config: dict) -> None:
+        from assethold.portfolio.ingest import load_all_csvs
+
+        df = load_all_csvs(data_dir, config=config)
+        assert "action_type" in df.columns
+        assert set(df["action_type"].unique()) <= {
+            "buy", "sell", "dividend", "reinvestment", "interest", "transfer", "other"
+        }
+
+    def test_load_sorted_by_date(self, data_dir: Path, config: dict) -> None:
+        from assethold.portfolio.ingest import load_all_csvs
+
+        df = load_all_csvs(data_dir, config=config)
+        dates = df["run_date"].dropna()
+        assert (dates == dates.sort_values()).all()
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Positions tests
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class TestPositions:
+    def _load_txns(self, data_dir: Path, config: dict) -> pd.DataFrame:
+        from assethold.portfolio.ingest import load_all_csvs
+        return load_all_csvs(data_dir, config=config)
+
+    def test_net_shares_brkb(self, data_dir: Path, config: dict) -> None:
+        from assethold.portfolio.positions import compute_positions
+
+        txns = self._load_txns(data_dir, config)
+        positions = compute_positions(txns)
+        brkb = positions.get("BRKB")
+        assert brkb is not None
+        # 22 + 50 (old) + 10 (new) = 82
+        assert brkb.shares == 82.0
+
+    def test_sell_reduces_shares(self, data_dir: Path, config: dict) -> None:
+        from assethold.portfolio.positions import compute_positions
+
+        txns = self._load_txns(data_dir, config)
+        positions = compute_positions(txns)
+        xom = positions.get("XOM")
+        assert xom is not None
+        # Bought 60 (old), sold 20 (new) = 40
+        assert xom.shares == 40.0
+
+    def test_sold_out_position_not_in_results(self, data_dir: Path, config: dict) -> None:
+        from assethold.portfolio.positions import compute_positions
+
+        txns = self._load_txns(data_dir, config)
+        positions = compute_positions(txns)
+        mrna = positions.get("MRNA")
+        # MRNA: sold 50 shares (never bought in fixture) → negative, excluded
+        assert mrna is None or mrna.shares <= 0
+
+    def test_cost_basis_average(self, data_dir: Path, config: dict) -> None:
+        from assethold.portfolio.positions import compute_positions
+
+        txns = self._load_txns(data_dir, config)
+        positions = compute_positions(txns)
+        brkb = positions["BRKB"]
+        # Avg cost should reflect weighted average of 3 buys.
+        assert brkb.avg_cost > 0
+        assert brkb.total_cost > 0
+
+    def test_dividend_tracked(self, data_dir: Path, config: dict) -> None:
+        from assethold.portfolio.positions import compute_positions
+
+        txns = self._load_txns(data_dir, config)
+        positions = compute_positions(txns)
+        # KO had a $50.00 dividend in the old-format file.
+        cor = positions.get("KO")
+        assert cor is not None
+        assert cor.total_dividends >= 50.0
+
+    def test_buying_cadence(self, data_dir: Path, config: dict) -> None:
+        from assethold.portfolio.positions import buying_cadence
+
+        txns = self._load_txns(data_dir, config)
+        cadence = buying_cadence(txns, "BRKB")
+        assert len(cadence) == 3  # 2 old + 1 new buy
+        assert "days_since_last" in cadence.columns
+
+    def test_dividend_summary(self, data_dir: Path, config: dict) -> None:
+        from assethold.portfolio.positions import dividend_summary
+
+        txns = self._load_txns(data_dir, config)
+        div_df = dividend_summary(txns)
+        assert not div_df.empty
+        assert "symbol" in div_df.columns
+        assert "year" in div_df.columns
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Allocation tests
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class TestAllocation:
+    def test_compute_allocation_signals(self) -> None:
+        from assethold.portfolio.allocation import compute_allocation
+        from assethold.portfolio.positions import Position
+
+        positions = {
+            "VOO": Position("VOO", 100, 500.0, 50000, 0, 10, 0, None, None),
+            "BRKB": Position("BRKB", 50, 400.0, 20000, 0, 5, 0, None, None),
+            "XOM": Position("XOM", 1000, 40.0, 40000, 0, 20, 0, None, None),
+        }
+        targets = {"VOO": 0.50, "BRKB": 0.30, "XOM": 0.10}
+        prices = {"VOO": 600.0, "BRKB": 480.0, "XOM": 100.0}
+
+        rows = compute_allocation(positions, targets, prices=prices)
+        assert len(rows) > 0
+        symbols = {r.symbol for r in rows}
+        assert "VOO" in symbols
+
+        # XOM is heavily overweight at 100k / total — should be trim.
+        xom_row = next(r for r in rows if r.symbol == "XOM")
+        assert xom_row.signal == "trim"
+
+    def test_new_money_split(self) -> None:
+        from assethold.portfolio.allocation import new_money_split
+
+        split = new_money_split(
+            10000.0,
+            {"VOO": 0.55, "BRKB": 0.45},
+            prices={"VOO": 600.0, "BRKB": 480.0},
+        )
+        assert split.total_usd == 10000.0
+        assert len(split.allocations) == 2
+
+        voo_alloc = next(a for a in split.allocations if a[0] == "VOO")
+        assert voo_alloc[1] == 5500.0  # 55% of 10k
+        assert voo_alloc[2] == 9  # int(5500/600) = 9 shares
+
+        brkb_alloc = next(a for a in split.allocations if a[0] == "BRKB")
+        assert brkb_alloc[1] == 4500.0
+        assert brkb_alloc[2] == 9  # int(4500/480) = 9 shares
+
+    def test_allocation_to_dataframe(self) -> None:
+        from assethold.portfolio.allocation import AllocationRow, allocation_to_dataframe
+
+        rows = [
+            AllocationRow("VOO", 100, 600.0, 60000.0, 40.0, 50.0, -10.0, "hold"),
+            AllocationRow("XOM", 500, 100.0, 50000.0, 33.0, 10.0, 23.0, "trim"),
+        ]
+        df = allocation_to_dataframe(rows)
+        assert len(df) == 2
+        assert "Signal" in df.columns

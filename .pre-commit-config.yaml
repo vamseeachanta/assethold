@@ -1,0 +1,45 @@
+# Pre-commit configuration for assethold
+# Install: uv run pre-commit install
+# Run manually: uv run pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        types_or: [python, pyi]
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  # Local policy checks
+  - repo: local
+    hooks:
+      - id: repo-structure-contract
+        name: repo structure contract
+        language: system
+        entry: uv run python scripts/maintenance/verify_repo_structure.py
+        pass_filenames: false
+
+      - id: bandit-staged
+        name: bandit security scan (staged Python files)
+        language: system
+        entry: uvx bandit[toml]==1.9.4
+        args: [-ll, -c, pyproject.toml, -b, ../config/quality/bandit-baseline-assethold.json]
+        types: [python]
+        exclude: ^tests/
+
+      - id: legal-sanity-scan
+        name: Legal sanity scan (deny list)
+        language: script
+        entry: ../scripts/legal/legal-sanity-scan.sh
+        args: [--repo=assethold]
+        pass_filenames: false
+        stages: [pre-commit]
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+        # Note: requires workspace-hub parent checkout; ../.gitleaks.toml is hub-relative
+        args: [--config, ../.gitleaks.toml]

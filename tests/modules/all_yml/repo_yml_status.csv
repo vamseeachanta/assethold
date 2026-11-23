@@ -1,0 +1,17 @@
+Folder,Filename,Status
+modules\stocks,asset2.yml,Success
+modules\stocks\analysis\breakout,breakout_COST.yml,Success
+modules\stocks\analysis\breakout,breakout_CVX.yml,Success
+modules\stocks\analysis\breakout,breakout_RIG.yml,Success
+modules\stocks\analysis\breakout,breakout_TCS.yml,Success
+modules\stocks\analysis\breakout,breakout_TSLA.yml,Success
+modules\stocks\analysis\breakout,breakout_WMT.yml,Success
+modules\stocks\analysis\breakout,breakout_XOM.yml,Success
+modules\stocks\analysis\investment,ffn_AAPL.yml,Success
+modules\stocks\analysis\investment,ffn_DJIA.yml,Success
+modules\stocks\analysis\investment,ffn_SPY.yml,Success
+modules\stocks\analysis\investment,ffn_XOM.yml,Success
+modules\stocks\analysis\investment,investment_value.yml,Success
+modules\stocks\analysis\portfolio,portfolio_AI.yml,Success
+modules\stocks\data,data_AAPL.yml,Success
+modules\stocks\data,data_RIG.yml,Success

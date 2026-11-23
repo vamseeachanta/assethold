@@ -1,0 +1,10 @@
+name: assethold
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  # - anaconda
+  - python=3.11
+  - pip
+  - pip:
+      - -r requirements.txt # source pip specific requirements

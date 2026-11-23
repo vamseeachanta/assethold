@@ -1,0 +1,58 @@
+
+projects:
+
+- Name: A
+  Property_Value: Assumed same as purchase price
+  Purchase_Price: 10000000
+  Renovation_Costs: 500000
+  entry_date: '01312020' # mmddyyyy
+  hold_years: 10
+  Cap_Rate: 
+    entry: 6
+    exit: 7
+  NOI: 
+    Amount: []
+    growth_rate: 3
+  finance:
+    Equity: 4000000
+    Loan: 
+      Amount: 6000000
+      r: 4.65
+      Amortization: 30
+      annual_loan_payment: NULL
+      closing_cost_percentage: 2.143
+      ltv: NULL
+      ltc: NULL
+      dscr: NULL
+      debt_ratio: NULL
+  cash_flow:
+    principle_payment: []
+    interest_payment: []
+    after_debt_service: []
+    cash_on_cash_return: []
+    cash_flow_0: []
+    irr: NULL
+    equity_multiple: NULL
+
+- Name: B
+  Purchase_Price: NULL
+  entry_date: '01312020' # mmddyyyy
+  hold_years: 10
+  Cap_Rate: 
+    entry: 5
+    exit: 6
+  NOI: 
+    Amount: [100000]
+    growth_rate: 3
+
+- Name: C
+  Purchase_Price: 7500000
+  entry_date: '01312020' # mmddyyyy
+  hold_years: 10
+  Cap_Rate: 
+    entry: NULL
+    exit: 7.5
+  NOI: 
+    Amount: [450000]
+    growth_rate: 3
+

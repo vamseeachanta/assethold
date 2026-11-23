@@ -1,0 +1,31 @@
+@startwbs data
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Asset Data
+
+* Asset Data \n Availability Status
+
+** Stocks
+*** Daily
+*** Insider Info
+*** Intraday
+
+** Stock Options
+*** Calls
+*** Puts
+
+** Houses
+*** ?
+
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@endwbs

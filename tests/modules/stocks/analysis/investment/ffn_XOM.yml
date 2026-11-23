@@ -1,0 +1,19 @@
+basename: stocks
+
+analysis:
+  flag: True
+  breakout: False
+  portfolio: False
+  ffn: True
+
+data:
+  period: 1y
+
+input:
+  ticker: XOM
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True

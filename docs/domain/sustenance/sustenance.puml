@@ -1,0 +1,31 @@
+@startwbs sustenance
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Legal Documents
+
+* Legal Documents
+
+** Will \n Upon Death
+
+
+** Medical Power of Attorney (PoA) \n Upon Incapacity
+** Physician's Directive (PD)\n Upon Incapacity
+** Transfer on Death Deed (ToDD)\n Upon Death
+
+
+** Trust \n Immediate
+*** Trustees \n Pass-Through 
+*** ?
+
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@endwbs

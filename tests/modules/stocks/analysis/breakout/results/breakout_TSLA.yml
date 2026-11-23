@@ -1,0 +1,40 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: stock
+  default:
+    log_level: INFO
+    config:
+      overwrite:
+        output: true
+  analysis:
+    flag: true
+    breakout: true
+  data:
+    period: 1y
+    by_date:
+    - start: 2023-09-01
+    - end: 2024-09-30
+  input:
+    ticker: TSLA
+  Analysis:
+    basename: stock
+    analysis_root_folder: c:\Users\Sk Samdan\Desktop\assethold\src\assethold\tests\test_data\modules\stocks\analysis\breakout
+    file_name: breakout_TSLA
+    file_name_for_overwrite: breakout_TSLA
+    result_folder: c:\Users\Sk Samdan\Desktop\assethold\src\assethold\tests\test_data\modules\stocks\analysis\breakout\results
+    log_folder: c:\Users\Sk Samdan\Desktop\assethold\src\assethold\tests\test_data\modules\stocks\analysis\breakout\logs
+    start_time: 2024-11-20 12:54:17.320057
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: c:\Users\Sk Samdan\Desktop\assethold\src\assethold\tests\test_data\modules\stocks\analysis\breakout\breakout_TSLA.yml
+    fe_folder: c:\Users\Sk Samdan\Desktop\assethold\src\assethold\tests\test_data\modules\stocks\analysis\breakout\results
+  stock:
+    data:
+      status:
+        daily: true
+        info: true
+        insider: false
+    analysis:
+      status:
+        breakout_trend: true

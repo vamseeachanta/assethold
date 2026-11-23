@@ -1,0 +1,59 @@
+basename: stock
+
+analysis:
+  flag: True
+  breakout: True
+  portfolio: False
+
+data:
+  period: 10y
+  by_date:
+    - start: 2010-09-01
+    - end: 2024-09-30
+
+breakout_settings:
+  portfolio:
+    - criteria: breakout_2_or_more_fail
+      colour: red
+      action: sell
+      amount: 500 # per week
+      limit: 20 # % of the total holdings
+    - criteria: breakout_1_fail
+      colour: gold
+      action: sell
+      amount: 200 # per week
+      limit: 50 # % of the total holdings
+    - criteria: breakout_0_fail
+      colour: green
+      action: buy
+      amount: 1000 # per week
+      limit: 50 # % of the total holdings
+
+portfolio:
+  by_date: # Automate. i.e. n=1 years before first transation date.
+    - start: 2019-09-01
+    - end: 2024-09-30
+  transactions:
+    - date: 2020-03-01
+      cash: 10000
+    - date: 2020-04-01
+      stocks:
+        - ticker: XOM
+          action: buy
+          amount: 5000
+    - date: 2021-03-01
+      stocks:
+        - ticker: XOM
+          action: sell
+          shares: 20
+    - date: 2021-03-01
+      cash: -2000
+
+input:
+  ticker: CVX
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True

@@ -1,0 +1,14 @@
+basename: stock
+
+data:
+  flag: True
+  period: 1y
+
+input:
+  ticker: RIG
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True

@@ -1,0 +1,5 @@
+# UV Configuration for assethold
+compile-bytecode = true
+
+[pip]
+index-url = "https://pypi.org/simple"

@@ -1,0 +1,384 @@
+# Python Tests GitHub Actions Workflow for Assethold
+#
+# Comprehensive testing workflow for assethold financial asset management application
+
+name: Python Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '**/*.py'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+      - 'uv.toml'
+      - 'setup.py'
+      - 'setup.cfg'
+      - 'config/repo_structure.yml'
+      - 'docs/standards/repo-structure.md'
+      - '.github/workflows/python-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - '**/*.py'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+      - 'uv.toml'
+      - 'setup.py'
+      - 'setup.cfg'
+      - 'config/repo_structure.yml'
+      - 'docs/standards/repo-structure.md'
+      - '.github/workflows/python-tests.yml'
+  workflow_dispatch:
+  schedule:
+    # Run tests every Sunday at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+env:
+  # Global environment variables
+  PYTHONUNBUFFERED: 1
+  FORCE_COLOR: 1
+
+jobs:
+  test:
+    name: Test on Python ${{ matrix.python-version }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Python 3.9 is dropped: setup-python has no 3.9 build for the current ubuntu-latest image.
+        # Python 3.10 is dropped: requires-python is >=3.11.5 (fixed pillow, soupsieve and
+        # filelock releases need Python 3.11+; 3.10 reached end of life in October 2026).
+        python-version: ['3.11', '3.12']
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Clone assetutilities sibling dependency
+      run: git clone --depth 1 https://github.com/vamseeachanta/assetutilities.git ../assetutilities
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
+    - name: Install dependencies with uv
+      run: |
+        uv pip install --system -e ../assetutilities
+        uv pip install --system pytest pytest-cov pytest-mock pytest-xdist pytest-benchmark
+        uv pip install --system black flake8 mypy bandit safety types-PyYAML==6.0.12.20240917
+
+    - name: Install project in development mode
+      run: uv pip install --system -e .
+
+    - name: Verify Python Tests workflow contract
+      run: python scripts/ci/verify_python_tests_workflow.py
+
+    - name: Verify repository structure contract
+      run: python scripts/maintenance/verify_repo_structure.py
+
+    - name: Run smoke tests first
+      run: pytest tests/test_smoke.py --verbose --tb=short
+      env:
+        TESTING: true
+
+    - name: Lint with flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 src/assethold tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 src/assethold tests/ --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+    - name: Type checking with mypy
+      # Temporary targeted tranche for #2459; repo-wide re-expansion remains tracked in assethold#31.
+      run: mypy src/assethold/signals/watchlist.py src/assethold/modules/reporting/utils/path_utils.py --ignore-missing-imports --follow-imports=silent
+      continue-on-error: false
+
+    - name: Security check with bandit
+      run: bandit -r src/ -f json -o bandit-report.json
+      continue-on-error: true
+
+    - name: Safety check for vulnerabilities
+      run: safety check --output json > safety-report.json
+      continue-on-error: true
+
+    - name: Run unit tests with coverage
+      # Keep this command single-line: the matrix runs on PowerShell by default on Windows.
+      # The current repository-wide unit baseline is ~60.45%; coverage uplift is tracked separately.
+      run: pytest tests/unit/ --cov=src --cov=. --cov-report=xml --cov-report=html --cov-report=term-missing --cov-fail-under=60 --junitxml=pytest-unit.xml --verbose -m "unit"
+      env:
+        TESTING: true
+        DATABASE_URL: "sqlite:///:memory:"
+
+    - name: Run all tests with coverage
+      # Keep this command single-line for shell neutrality across Linux, macOS, and Windows.
+      run: pytest tests/ --ignore=tests/modules/multifamily --ignore=tests/modules/stocks/analysis/breakout --ignore=tests/modules/stocks/analysis/investment --ignore=tests/modules/stocks/analysis/portfolio --ignore=tests/modules/stocks/data --cov=src --cov=. --cov-report=xml --cov-report=html --cov-report=term-missing --cov-fail-under=60 --junitxml=pytest.xml --verbose
+      env:
+        # Environment variables for testing
+        TESTING: true
+        DATABASE_URL: "sqlite:///:memory:"
+        ALPHA_VANTAGE_API_KEY: test-key
+        FINNHUB_API_KEY: test-key
+        FLASK_ENV: testing
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      if: matrix.python-version == '3.11' && matrix.os == 'ubuntu-latest'
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.python-version }}-${{ matrix.os }}
+        path: |
+          pytest.xml
+          pytest-unit.xml
+          htmlcov/
+          bandit-report.json
+          safety-report.json
+        retention-days: 30
+
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v4
+      if: matrix.python-version == '3.11' && matrix.os == 'ubuntu-latest'
+      with:
+        name: coverage-report
+        path: |
+          coverage.xml
+          htmlcov/
+        retention-days: 30
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 60
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_assethold_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Clone assetutilities sibling dependency
+      run: git clone --depth 1 https://github.com/vamseeachanta/assetutilities.git ../assetutilities
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
+    - name: Install dependencies
+      run: |
+        uv pip install --system -e ../assetutilities
+        uv pip install --system pytest pytest-cov pytest-mock pytest-xdist
+        uv pip install --system -e .
+
+    - name: Run integration tests
+      run: |
+        pytest tests/integration/ \
+          --cov=src \
+          --cov-report=xml \
+          --verbose \
+          -m "integration" \
+          --tb=short
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_assethold_db
+        REDIS_URL: redis://localhost:6379/0
+        TESTING: true
+
+  financial-data-tests:
+    name: Financial Data Integration
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Clone assetutilities sibling dependency
+      run: git clone --depth 1 https://github.com/vamseeachanta/assetutilities.git ../assetutilities
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
+    - name: Install dependencies
+      run: |
+        uv pip install --system -e ../assetutilities
+        uv pip install --system pytest pytest-cov pytest-mock
+        uv pip install --system -e .
+
+    - name: Run financial calculation tests
+      run: |
+        pytest tests/ \
+          --ignore=tests/modules/multifamily \
+          --ignore=tests/modules/stocks/analysis/investment \
+          --ignore=tests/modules/stocks/data/test_stock_data.py \
+          --cov=src \
+          --verbose \
+          -k "financial or portfolio" \
+          --tb=short
+      env:
+        TESTING: true
+
+    - name: Run scraping tests (mocked)
+      # The scraping tests patch the HTTP layer and block DNS/socket connects,
+      # so no live request leaves CI. pytest exit 5 (nothing selected) fails the step.
+      run: |
+        pytest tests/ \
+          --ignore=tests/modules/multifamily \
+          --ignore=tests/modules/stocks/analysis/investment \
+          --ignore=tests/modules/stocks/data/test_stock_data.py \
+          --verbose \
+          -m "scraping" \
+          --tb=short
+      env:
+        TESTING: true
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
+    - name: Install security tools
+      run: |
+        uv pip install --system bandit safety
+
+    - name: Run bandit security scan
+      run: |
+        bandit -r . \
+          -f json \
+          -o bandit-security-report.json \
+          --exclude tests/
+      continue-on-error: true
+
+    - name: Run safety vulnerability check
+      run: |
+        safety check \
+          --output json > safety-vulnerability-report.json
+      continue-on-error: true
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          bandit-security-report.json
+          safety-vulnerability-report.json
+          trivy-results.sarif
+        retention-days: 30
+
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [test, integration-tests, financial-data-tests]
+    if: always()
+
+    steps:
+    - name: Check test results
+      run: |
+        echo "Checking test results..."
+        if [[ "${{ needs.test.result }}" != "success" ]]; then
+          echo "❌ Unit tests failed"
+          exit 1
+        fi
+        if [[ "${{ needs.integration-tests.result }}" != "success" ]]; then
+          echo "❌ Integration tests failed"
+          exit 1
+        fi
+        if [[ "${{ needs.financial-data-tests.result }}" != "success" ]]; then
+          echo "❌ Financial data tests failed"
+          exit 1
+        fi
+        echo "✅ All tests passed"
+
+    - name: Quality gate passed
+      run: |
+        echo "🎉 Quality gate passed! Assethold testing infrastructure is ready."
+        echo "📊 All financial calculations and data processing tests passed"
+        echo "🔒 Security scans completed"
+        echo "🚀 Ready for deployment"

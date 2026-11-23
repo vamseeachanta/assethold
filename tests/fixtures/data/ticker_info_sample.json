@@ -1,0 +1,14 @@
+{
+  "symbol": "AAPL",
+  "shortName": "Apple Inc.",
+  "sector": "Technology",
+  "industry": "Consumer Electronics",
+  "marketCap": 3000000000000,
+  "trailingPE": 28.5,
+  "forwardPE": 25.0,
+  "dividendYield": 0.005,
+  "beta": 1.2,
+  "fiftyTwoWeekHigh": 200.0,
+  "fiftyTwoWeekLow": 130.0,
+  "currentPrice": 155.0
+}

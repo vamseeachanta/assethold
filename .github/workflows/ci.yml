@@ -1,0 +1,78 @@
+name: CI
+
+# Modular per-domain PR gate. A PR fans out into one CI job per touched domain
+# (+ the always-on cross-cutting core), so each domain passes/fails in isolation
+# (a red domain no longer blocks green siblings) and they run in parallel.
+#
+# The discover -> test-domain (matrix) -> aggregate scaffolding now lives in the
+# shared reusable workflow at vamseeachanta/workspace-hub (worldenergydata#530,
+# P4); this file is just the caller. The repo keeps its OWN selector
+# (scripts/ci/select_test_targets.py --emit-matrix — a module is mapped iff
+# tests/modules/<module>/ exists; guarded by tests/ci/test_select_test_targets.py)
+# and its OWN quarantine list (scripts/ci/quarantine.txt). On core-path changes
+# the matrix fans out to EVERY domain.
+#
+# This workflow is additive: the comprehensive multi-OS / multi-Python matrix
+# and its workflow-contract verifier still live in python-tests.yml (unchanged).
+#
+# install-cmd is custom for this repo: assethold depends on the sibling
+# assetutilities package, so each domain job clones it and installs both into the
+# system interpreter (uv pip install --system), rather than the reusable
+# default's `uv sync --all-extras`. test-runner is overridden to bare `pytest`
+# accordingly (deps live in the system env, not an ephemeral `uv run` venv).
+#
+# NOTE: adopting the reusable workflow renames the status checks. The aggregate
+# gate now reports as "domain-tests / Aggregate domain results" (was the inlined
+# "Test (PR gate)"). assethold has no branch protection, so the rename is
+# harmless; no required-check update is needed.
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  domain-tests:
+    uses: vamseeachanta/workspace-hub/.github/workflows/domain-matrix.yml@main
+    with:
+      # Use actions/setup-python so the interpreter is ON PATH as the system
+      # python. assethold installs via `uv pip install --system` (below), which
+      # needs a system interpreter — the reusable default ("uv") provisions a
+      # uv-managed python NOT on PATH and would fail on Debian's PEP-668 /usr.
+      python-setup: setup-python
+      # Custom install: clone the sibling assetutilities dependency, then install
+      # it, the pytest plugins, and assethold itself into the system interpreter.
+      install-cmd: |
+        git clone --depth 1 https://github.com/vamseeachanta/assetutilities.git ../assetutilities
+        uv pip install --system -e ../assetutilities
+        uv pip install --system pytest pytest-cov pytest-mock pytest-xdist pytest-benchmark
+        uv pip install --system -e .
+      # Deps are installed into the system interpreter above, so run pytest
+      # directly instead of the reusable default's `uv run ... pytest`.
+      test-runner: pytest
+      # selector / python-version / max-parallel / quarantine-file all match the
+      # reusable defaults, so they are intentionally omitted.
+
+  # Leak scan for this public repository: fails on the owner's email address,
+  # on paths that were moved to private storage (2026-11-15), and on any literal
+  # in the LEAK_SCAN_EXTRA_PATTERNS secret (private names and numbers are kept
+  # there so they never appear in this public tree). Standard library only.
+  leak-scan:
+    name: Leak scan (private data)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Scan tracked files
+        env:
+          LEAK_SCAN_EXTRA_PATTERNS: ${{ secrets.LEAK_SCAN_EXTRA_PATTERNS }}
+        run: python scripts/ci/leak_scan.py
+      - name: Path rules cover the frozen list of removed files
+        run: |
+          python -m pip install --quiet pytest
+          python -m pytest -q -o addopts="" -p no:cacheprovider --noconftest tests/ci/test_leak_scan.py

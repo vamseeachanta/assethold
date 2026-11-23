@@ -1,0 +1,25 @@
+basename: stocks
+
+analysis:
+  flag: True
+  breakout: False
+  portfolio: True
+
+data:
+  period: 10y
+
+portfolio:
+  2020_csv : src/assethold/modules/stocks/data/client1/2020.csv 
+  2021_csv : src/assethold/modules/stocks/data/client1/2021.csv
+  2022_csv : src/assethold/modules/stocks/data/client1/2022.csv
+  2023_csv : src/assethold/modules/stocks/data/client1/2023.csv
+  2024_csv : src/assethold/modules/stocks/data/client1/2024.csv
+
+input:
+  ticker: XOM
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True

@@ -1,0 +1,50 @@
+@startuml architecture
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Stock Hold\n Analysis Architecture
+
+start
+
+    note right
+        Objective: A dynamic strategy for holding a stock
+    end note
+
+    partition "Data" {
+
+        :End of Day: Yahoo Finance;
+        :Options: Yahoo Finance;
+        :Insider Info: FinViz;
+        :SEC Form Data: SEC;
+    }
+
+    partition "Perform Analysis" {
+
+        :Technical;
+        :Breakout & sell-off indicators;
+        :Insider;
+        :Option;
+        :Ad Hoc Analysis on SEC Forms;
+
+    }
+
+    partition "Dashboard" {
+        
+        :Summary;
+        :Breakout & sell-off indicators;
+        :Technical indictors;
+        :Back analysis results;
+        :other charts;
+
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

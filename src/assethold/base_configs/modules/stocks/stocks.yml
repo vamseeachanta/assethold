@@ -1,0 +1,7 @@
+basename: stocks
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True

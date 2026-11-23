@@ -1,0 +1,20 @@
+Detailed output:                                 Folder              Filename   Status
+0                       modules\stocks            asset2.yml  Success
+1     modules\stocks\analysis\breakout     breakout_COST.yml  Success
+2     modules\stocks\analysis\breakout      breakout_CVX.yml  Success
+3     modules\stocks\analysis\breakout      breakout_RIG.yml  Success
+4     modules\stocks\analysis\breakout      breakout_TCS.yml  Success
+5     modules\stocks\analysis\breakout     breakout_TSLA.yml  Success
+6     modules\stocks\analysis\breakout      breakout_WMT.yml  Success
+7     modules\stocks\analysis\breakout      breakout_XOM.yml  Success
+8   modules\stocks\analysis\investment          ffn_AAPL.yml  Success
+9   modules\stocks\analysis\investment          ffn_DJIA.yml  Success
+10  modules\stocks\analysis\investment           ffn_SPY.yml  Success
+11  modules\stocks\analysis\investment           ffn_XOM.yml  Success
+12  modules\stocks\analysis\investment  investment_value.yml  Success
+13   modules\stocks\analysis\portfolio      portfolio_AI.yml  Success
+14                 modules\stocks\data         data_AAPL.yml  Success
+15                 modules\stocks\data          data_RIG.yml  Success
+No. of files processed: 16
+Tests passed: 16
+Tests Failed: 0

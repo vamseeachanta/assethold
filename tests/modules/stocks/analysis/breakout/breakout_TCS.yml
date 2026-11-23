@@ -1,0 +1,26 @@
+basename: stock
+
+analysis:
+  flag: True
+  breakout: True
+
+breakout_settings:
+  duration: 5 yrs
+  period:
+    - start_date: 2018-09-01
+    - end_date: 2024-09-30
+
+data:
+  period: 1y
+  by_date:
+    - start: 2023-09-01
+    - end: 2024-09-30
+    
+input:
+  ticker: TCS
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True

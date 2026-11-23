@@ -1,0 +1,38 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: stocks
+  default:
+    log_level: INFO
+    config:
+      overwrite:
+        output: true
+  analysis:
+    flag: true
+    breakout: false
+    portfolio: false
+    ffn: true
+  data:
+    period: 1y
+  input:
+    ticker: SPY
+  Analysis:
+    basename: stocks
+    analysis_root_folder: c:\Users\Sk Samdan\Desktop\assethold\tests\modules\stocks\analysis\investment
+    file_name: ffn_SPY
+    file_name_for_overwrite: ffn_SPY
+    result_folder: c:\Users\Sk Samdan\Desktop\assethold\tests\modules\stocks\analysis\investment\results
+    log_folder: c:\Users\Sk Samdan\Desktop\assethold\tests\modules\stocks\analysis\investment\logs
+    start_time: 2024-12-05 11:33:08.045017
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: c:\Users\Sk Samdan\Desktop\assethold\tests\modules\stocks\analysis\investment\ffn_SPY.yml
+    fe_folder: c:\Users\Sk Samdan\Desktop\assethold\tests\modules\stocks\analysis\investment\results
+  stocks:
+    data:
+      status:
+        daily: true
+        info: true
+        insider: false
+    analysis:
+      status: {}

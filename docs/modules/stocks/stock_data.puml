@@ -1,0 +1,27 @@
+@startwbs stock_investment_value
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Stock Investment Value
+
+* Stock Data
+
+** interval (? options)
+*** 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max
+
+** Dividend
+*** yfinance
+
+** Insider Trading
+*** yfinance?
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@endwbs

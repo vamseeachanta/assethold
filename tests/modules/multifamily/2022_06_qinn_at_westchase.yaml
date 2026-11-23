@@ -1,0 +1,139 @@
+projects:
+- Name: 2022__06_TX_qinn
+
+  entry:
+    Property_Value: NULL                    # Assumed same as purchase price
+    Purchase_Price: 41000000
+    Cap_Rate: NULL
+    closing_cost:
+      percentage: NULL
+      amount: 2300000
+    acquisition_fee: 
+      percentage: 1
+      amount: NULL
+    average_rent_per_unit: NULL
+    Date: '06302020'                        # mmddyyyy
+    other_income_per_month:                 # If unknown assume 0
+      pet: 0
+      parking: 40
+      laundry: 0
+      late_charge: 0
+      commercial_rent: 0
+    renovation_costs: 
+      amount: 2000000
+      yearly_percent: [50, 50]
+      construction_management_fee:
+        yearly_percent: [7, 7]
+        amount: NULL
+    expenses_breakdown: 
+      personnel: 
+        per_unit_per_year: 1200
+      general_and_administration: 
+        per_unit_per_year: 200
+      marketing: 
+        per_unit_per_year: 150
+      turnover:
+        per_unit_per_year: 200
+      repair_and_maintenance:
+        per_unit_per_year: 500
+      contract_servies:
+        per_unit_per_year: 175
+      utilities:
+        per_unit_per_year: 775
+        reimbursments_per_unit_per_year: -225
+      property_taxes:
+        per_unit_per_year: 1400
+      insurance:
+        per_unit_per_year: 350
+      capital_expense_reserve:
+        per_unit_per_year: 350
+      bad_debt:                         # Not programmed
+        percent: 0.5
+
+  exit:
+    Cap_Rate: 6
+    closing_cost_percentage: 2.5
+    disposition_fee: 
+      percentage: 1
+      amount: NULL
+
+  total_units: NULL
+  renovation_costs: []
+  rent_growth_rate: 4
+  expense_growth_rate: 3
+  GPR: []
+  vacancy: 
+    amount: []
+    percent: 9
+  NOI: 
+    amount: []
+  other_income: []
+  expenses: []
+  property_management_fee: 
+    percent_of_EGR: 3
+    amount: []
+  asset_management_fee: 
+    percent: 1
+    amount: []
+
+  hold_years: 10
+
+  finance:
+    loan: 
+      Amount: 33000000
+      r: 7.0
+      Amortization: 30
+      annual_loan_payment: NULL
+      loan_fee_percent: 1
+      ltv: NULL
+      ltc: NULL
+      dscr: NULL
+      debt_ratio: NULL
+    equity: 
+      amount: NULL      # Not required. Determined by loan amount and fees
+      preferred_return_percent: 8
+      promotion_over_preferred_return_percent: 20
+
+      limited_partner:
+        equity_percent: NULL # Determined by gp_equity_percent
+        equity_contributions: []
+        preferred_interest: []
+        distributions: []
+        beginning_balance: []
+        cash_flow: []
+        irr: NULL
+        equity_multiple: NULL
+
+      general_partner:
+        equity_percent: 5
+        equity_contributions: []
+        preferred_interest: []
+        distributions: []
+        beginning_balance: []
+        cash_flow: []
+        irr: NULL
+        equity_multiple: NULL
+      sale_cash_for_final_split: 
+  cash_flow:
+    principle_payment: []
+    interest_payment: []
+    free_cash_flow: []
+    cash_on_cash_return: []
+    unleveraged_cash_flow: []
+    leveraged_cash_flow: []
+    irr: NULL
+    equity_multiple: NULL
+
+  unit_mix:
+    - Type: Studio
+      number: 369
+      sqft: 808
+      rent: 947
+      rent_sq_ft: NULL
+
+  sensitivity: # All sensitivity numbers are percent change
+    entry_Operating_Expenses: [-20, -10, 0, 10, 20]
+    entry_Renovation_Costs: [0, 50, 100]
+    finance_Loan_r: []
+    entry_NOI_growth_rate: [0, 50]
+    exit_cap_rate: [-20, 0, 20]

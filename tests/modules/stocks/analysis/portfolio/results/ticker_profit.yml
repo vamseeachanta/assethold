@@ -1,0 +1,42 @@
+&id001 !!python/object/new:assetutilities.common.data.AttributeDict
+state: *id001
+dictitems:
+  basename: stock
+  default:
+    log_level: INFO
+    config:
+      overwrite:
+        output: true
+  analysis:
+    flag: true
+    breakout: false
+    portfolio: false
+    investment: true
+  data:
+    period: 1y
+  parameters:
+    initial_investment: 100
+    interval: 1d
+    buy_date: 2023-11-01
+  input:
+    ticker: XOM
+  Analysis:
+    basename: stock
+    analysis_root_folder: c:\github\assethold\tests\modules\stocks\analysis\portfolio
+    file_name: ticker_profit
+    file_name_for_overwrite: ticker_profit
+    result_folder: c:\github\assethold\tests\modules\stocks\analysis\portfolio\results
+    log_folder: c:\github\assethold\tests\modules\stocks\analysis\portfolio\logs
+    start_time: 2024-11-22 10:04:06.284204
+    cfg_array_file_names: ~
+    DefaultInputFile: ~
+    CustomInputFile: c:\github\assethold\tests\modules\stocks\analysis\portfolio\ticker_profit.yml
+    fe_folder: c:\github\assethold\tests\modules\stocks\analysis\portfolio\results
+  stock:
+    data:
+      status:
+        daily: true
+        info: true
+        insider: true
+    analysis:
+      status: {}

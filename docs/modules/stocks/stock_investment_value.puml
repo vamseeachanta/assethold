@@ -1,0 +1,27 @@
+@startwbs stock_data
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Stock Data
+
+* Stock Data
+
+** Price Data
+*** yfinance
+
+** Dividend
+*** yfinance
+
+** Insider Trading
+*** yfinance?
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@endwbs

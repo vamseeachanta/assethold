@@ -1,0 +1,42 @@
+<html>
+
+<body>
+
+    Typical farmfolio process:
+
+    <div class="mermaid">
+        graph TD
+
+        FS --> TT
+
+        subgraph Los Lamos Lot : Scope
+        FL[Farm Land Identification: <br> Suitable land in South America <br> ability to own land <br> title for plot]
+        FD[Farm Development and Maintenance: <br> Plant and grow plans <br> ensure health, nutrition etc.]
+        FH[Farm Harvesting: <br> Pick up harvest as tonnage]
+        FS[Farm Sale: <br> Point of Sale for harvest]
+        FL --> FD
+        FD --> FH
+        FH --> FS
+        end
+
+        subgraph Logistics : From farm to market traceability
+        TT[Truck Transport: <br> From farm to Port <br> Improving infrastructure reduces time]
+        Pack[Packaging: <br> 3 times washed <br> Computerized sorting by quality <br> Packaged]
+        PT[Port Transport: <br> In standard containers <br> to Europe and US markets]
+        IQA[Incoming Quality Assesmment : <br> Comprehensive report]
+        TT --> Pack
+        Pack --> PT
+        PT --> IQA
+        end
+
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+</body>
+
+</html>

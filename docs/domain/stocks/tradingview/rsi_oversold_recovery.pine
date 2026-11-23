@@ -1,0 +1,63 @@
+//@version=5
+indicator("RSI Oversold Recovery", overlay=true)
+
+// Input Parameters
+rsiLen = input.int(14, "RSI Length", minval=1)
+maLen = input.int(9, "MA Length", minval=1)
+oversold = input.float(30, "Oversold Level", 0, 100)
+overbought = input.float(70, "Overbought Level", 0, 100)
+showLabels = input.bool(true, "Show Labels")
+
+// Calculations
+price = (high + low + close + open) / 4
+rsi = ta.rsi(price, rsiLen)
+rsiMA = ta.sma(rsi, maLen)
+
+// State Management
+var bool inOversoldTracking = false
+var bool firstCrossDetected = false
+var int daysInOversold = 0
+
+// Condition Detection
+isOversold = rsi < oversold
+rsiCrossesMA = ta.crossover(rsi, rsiMA)
+
+// State Logic
+if isOversold and not inOversoldTracking
+    inOversoldTracking := true
+    firstCrossDetected := false
+    daysInOversold := 1
+else if inOversoldTracking
+    if isOversold
+        daysInOversold += 1
+    
+    if rsi >= oversold and not firstCrossDetected
+        inOversoldTracking := false
+        daysInOversold := 0
+    else if rsiCrossesMA and not firstCrossDetected
+        firstCrossDetected := true
+    else if isOversold and firstCrossDetected and rsiCrossesMA
+        // Buy Signal Condition
+        label.new(bar_index, low, "BUY\n" + str.tostring(rsi, "#.##"), 
+             color=color.green, style=label.style_label_up, textcolor=color.white)
+        inOversoldTracking := false
+        daysInOversold := 0
+
+// Visual Elements
+if showLabels
+    if inOversoldTracking and not firstCrossDetected
+        label.new(bar_index, high, "WATCH\nRSI: " + str.tostring(rsi, "#.##"), 
+             color=color.yellow, style=label.style_label_down)
+    if firstCrossDetected and inOversoldTracking
+        label.new(bar_index, high, "ALERT\nRSI: " + str.tostring(rsi, "#.##"), 
+             color=color.orange, style=label.style_label_down)
+
+// Plots
+plotRSI = plot(ta.sma(close, 1), "Price", color=color.new(color.blue, 70))
+plotMA = plot(ta.sma(close, 20), "MA", color=color.new(color.red, 70))
+fill(plotRSI, plotMA, color=color.new(color.gray, 90))
+
+// Alerts
+alertcondition(inOversoldTracking and not firstCrossDetected, "Watch Mode", "Stock entered oversold territory")
+alertcondition(firstCrossDetected and inOversoldTracking, "Alert Mode", "First RSI-MA cross detected")
+alertcondition(isOversold and firstCrossDetected and rsiCrossesMA, "Buy Signal", "Buy condition met")

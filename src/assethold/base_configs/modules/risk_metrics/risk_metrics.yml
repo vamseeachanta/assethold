@@ -1,0 +1,22 @@
+basename: risk_metrics
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+Analysis:
+  result_folder: examples/workflows/risk-metrics/outputs
+  file_name: risk-metrics-run
+
+risk_metrics:
+  returns_csv: examples/workflows/risk-metrics/data/returns.csv
+  date_column: date
+  weights:
+    VOO: 0.6
+    BRKB: 0.4
+  risk_free_rate: 0.04
+  outputs:
+    metrics_csv: examples/workflows/risk-metrics/outputs/metrics.csv
+    report_txt: examples/workflows/risk-metrics/outputs/report.txt
